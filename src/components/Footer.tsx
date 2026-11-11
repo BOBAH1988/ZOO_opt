@@ -1,5 +1,9 @@
 import { APP_VERSION_STR } from '@/version';
 
+const START_YEAR = 2026;
+const currentYear = new Date().getFullYear();
+const yearLabel = currentYear === START_YEAR ? String(START_YEAR) : `${START_YEAR}-${String(currentYear).slice(-2)}`;
+
 export function Footer() {
   return (
     <footer style={{
@@ -11,7 +15,7 @@ export function Footer() {
       borderTop: '1px solid #e5e7eb',
     }}>
       <p>
-        <span style={{ fontWeight: 500 }}>Версия:</span> {APP_VERSION_STR}
+        {yearLabel} · <span style={{ fontWeight: 500 }}>Версия:</span> {APP_VERSION_STR}
       </p>
     </footer>
   );
