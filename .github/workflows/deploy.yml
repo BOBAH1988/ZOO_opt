@@ -73,6 +73,11 @@ jobs:
             console.error(`::error::Secret ZOO is missing required Firebase settings: ${missing.join(', ')}`);
             process.exit(1);
           }
+
+          if (!/^AIza[0-9A-Za-z_-]{30,}$/.test(config.VITE_FIREBASE_API_KEY)) {
+            console.error('::error::VITE_FIREBASE_API_KEY is not a valid Firebase Web API key. Copy the actual apiKey from Firebase Console; do not use an example placeholder.');
+            process.exit(1);
+          }
           NODE
 
       - name: Build PWA
