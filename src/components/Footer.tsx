@@ -3,7 +3,7 @@ import { APP_VERSION_STR } from '@/version';
 export function Footer() {
   return (
     <footer style={{
-      marginTop: '24px',
+      marginTop: 'auto',
       padding: '16px 24px',
       textAlign: 'center',
       color: '#6b7280',

@@ -6,7 +6,6 @@ import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { ReportsPage } from '@/pages/ReportsPage';
 import { RunProcessesPage } from '@/pages/RunProcessesPage';
 import { ClientsPage } from '@/pages/ClientsPage';
-import { Footer } from '@/components/Footer';
 
 export default function App() {
   const { initialized, loading, user } = useAuth();
@@ -37,7 +36,6 @@ export default function App() {
       ) : (
         <Login onLogin={() => {}} />
       )}
-      <Footer />
     </div>
   );
 }
