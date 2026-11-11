@@ -206,14 +206,9 @@ VITE_API_BASE_URL=  # опционально, серверный API для за
 ```
 
 ### GitHub Secrets (для workflow деплоя)
-При публикации через GitHub Actions переменные передаются из Secrets репозитория `ZOO_opt`:
-- `VITE_FIREBASE_API_KEY`
-- `VITE_FIREBASE_AUTH_DOMAIN`
-- `VITE_FIREBASE_PROJECT_ID`
-- `VITE_FIREBASE_STORAGE_BUCKET`
-- `VITE_FIREBASE_MESSAGING_SENDER_ID`
-- `VITE_FIREBASE_APP_ID`
-- `VITE_API_BASE_URL` (если серверный API настроен)
+Для публикации через GitHub Actions создайте один repository secret с именем `ZOO` в **Settings → Secrets and variables → Actions** репозитория `ZOO_opt`. Его значение должно содержать переменные из `.env.example` строками `ИМЯ=значение`, например, по одной переменной на строку (без кавычек и блока Markdown). Используйте реальные значения из настроек веб-приложения Firebase; `VITE_API_BASE_URL` можно добавить, если настроен серверный API.
+
+Workflow записывает содержимое `ZOO` во временный `.env` (этот файл игнорируется Git), проверяет наличие параметров, необходимых для входа (`VITE_FIREBASE_API_KEY`, `VITE_FIREBASE_AUTH_DOMAIN`, `VITE_FIREBASE_PROJECT_ID`, `VITE_FIREBASE_APP_ID`), и только затем собирает сайт. После изменения секрета повторно запустите публикацию.
 
 **Никогда не записывайте реальные ключи, пароли, токены или персональные данные в README, коммиты или клиентский код.**
 

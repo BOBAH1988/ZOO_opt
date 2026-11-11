@@ -32,15 +32,30 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Build PWA
+      - name: Load and validate Firebase configuration
         env:
-          VITE_FIREBASE_API_KEY: ${{ secrets.VITE_FIREBASE_API_KEY }}
-          VITE_FIREBASE_AUTH_DOMAIN: ${{ secrets.VITE_FIREBASE_AUTH_DOMAIN }}
-          VITE_FIREBASE_PROJECT_ID: ${{ secrets.VITE_FIREBASE_PROJECT_ID }}
-          VITE_FIREBASE_STORAGE_BUCKET: ${{ secrets.VITE_FIREBASE_STORAGE_BUCKET }}
-          VITE_FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.VITE_FIREBASE_MESSAGING_SENDER_ID }}
-          VITE_FIREBASE_APP_ID: ${{ secrets.VITE_FIREBASE_APP_ID }}
-          VITE_API_BASE_URL: ${{ secrets.VITE_API_BASE_URL }}
+          ZOO_CONFIG: ${{ secrets.ZOO }}
+        run: |
+          if [ -z "$ZOO_CONFIG" ]; then
+            echo "::error::Missing GitHub Actions secret ZOO"
+            exit 1
+          fi
+
+          umask 077
+          printf '%s\n' "$ZOO_CONFIG" > .env
+
+          missing=""
+          for name in VITE_FIREBASE_API_KEY VITE_FIREBASE_AUTH_DOMAIN VITE_FIREBASE_PROJECT_ID VITE_FIREBASE_APP_ID; do
+            if ! grep -Eq "^${name}=.+" .env; then
+              missing="$missing $name"
+            fi
+          done
+          if [ -n "$missing" ]; then
+            echo "::error::Secret ZOO is missing required Firebase settings:$missing"
+            exit 1
+          fi
+
+      - name: Build PWA
         run: npm run build
 
       - name: Upload GitHub Pages artifact
