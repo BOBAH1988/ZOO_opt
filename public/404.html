@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Перенаправление…</title>
+</head>
+<body>
+  <script>
+    // SPA fallback для GitHub Pages с HashRouter:
+    // перенаправляет на index.html, сохраняя путь в hash-фрагменте.
+    (function () {
+      var path = window.location.pathname;
+      var base = '/ZOO_opt/';
+      if (path.startsWith(base)) {
+        path = path.slice(base.length);
+      }
+      window.location.replace(
+        window.location.origin + base + 'index.html#/' + path
+      );
+    })();
+  </script>
+</body>
+</html>
