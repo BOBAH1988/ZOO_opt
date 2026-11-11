@@ -25,21 +25,21 @@ def draw_paw(draw, cx, cy, scale=1.0):
 
 
 def draw_shield(draw, cx, cy, scale=1.0):
-    """Большой щит с двойным контуром."""
+    """Щит, растянут вниз."""
     outer = [
         (cx, cy - int(390 * scale)),
         (cx + int(258 * scale), cy - int(130 * scale)),
-        (cx + int(258 * scale), cy + int(150 * scale)),
-        (cx, cy + int(260 * scale)),
-        (cx - int(258 * scale), cy + int(150 * scale)),
+        (cx + int(258 * scale), cy + int(190 * scale)),
+        (cx, cy + int(350 * scale)),
+        (cx - int(258 * scale), cy + int(190 * scale)),
         (cx - int(258 * scale), cy - int(130 * scale)),
     ]
     inner = [
         (cx, cy - int(342 * scale)),
         (cx + int(238 * scale), cy - int(120 * scale)),
-        (cx + int(238 * scale), cy + int(140 * scale)),
-        (cx, cy + int(240 * scale)),
-        (cx - int(238 * scale), cy + int(140 * scale)),
+        (cx + int(238 * scale), cy + int(170 * scale)),
+        (cx, cy + int(320 * scale)),
+        (cx - int(238 * scale), cy + int(170 * scale)),
         (cx - int(238 * scale), cy - int(120 * scale)),
     ]
     draw.line(outer + [outer[0]], fill=SHIELD, width=int(28 * scale), joint="curve")

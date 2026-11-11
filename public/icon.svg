@@ -2,16 +2,16 @@
   <title>ЗооКонтроль</title>
   <desc>Иконка приложения ЗооКонтроль: белая лапа в щите.</desc>
   <rect x="0" y="0" width="1024" height="1024" rx="192" ry="192" fill="#0F2A43"/>
-  <!-- Щит: большой, отчётливый контур -->
-  <polygon points="512,120 770,250 770,470 512,780 254,470 254,250"
+  <!-- Щит: растянут вниз, вершина на месте -->
+  <polygon points="512,120 770,250 770,560 512,870 254,560 254,250"
            fill="none" stroke="#2E7D5B" stroke-width="28" stroke-linejoin="round"/>
   <!-- Внутренняя обводка щита -->
-  <polygon points="512,170 730,280 730,460 512,740 292,460 292,280"
+  <polygon points="512,170 730,280 730,540 512,820 292,540 292,280"
            fill="none" stroke="#2E7D5B" stroke-width="8" stroke-linejoin="round"/>
   <!-- Белая лапа внутри щита -->
-  <ellipse cx="512" cy="540" rx="120" ry="85" fill="#FFFFFF"/>
-  <circle cx="408" cy="400" r="44" fill="#FFFFFF"/>
-  <circle cx="496" cy="360" r="48" fill="#FFFFFF"/>
-  <circle cx="528" cy="360" r="48" fill="#FFFFFF"/>
-  <circle cx="616" cy="400" r="44" fill="#FFFFFF"/>
+  <ellipse cx="512" cy="560" rx="120" ry="85" fill="#FFFFFF"/>
+  <circle cx="408" cy="420" r="44" fill="#FFFFFF"/>
+  <circle cx="496" cy="380" r="48" fill="#FFFFFF"/>
+  <circle cx="528" cy="380" r="48" fill="#FFFFFF"/>
+  <circle cx="616" cy="420" r="44" fill="#FFFFFF"/>
 </svg>
