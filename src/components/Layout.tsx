@@ -15,7 +15,7 @@ export function Layout() {
   return (
     <>
       <header className="header">
-        <div className="brand">ЗоКонтроль</div>
+        <div className="brand">ЗооКонтроль</div>
         <nav className="nav">
           {NAV_ITEMS.map((item) => (
             <a key={item.to} href={item.to} className={active === item.to ? 'active' : ''}>

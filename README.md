@@ -1,4 +1,4 @@
-# ЗоКонтроль — клиенты, отчёты, KPI, автоматизация
+# ЗооКонтроль — клиенты, отчёты, KPI, автоматизация
 
 MVP-приложение для управления почтовыми автоматизациями из репозитория [BOBAH1988/mail-automation](https://github.com/BOBAH1988/mail-automation) (приватное). Приложение размещается на GitHub Pages, использует Firebase Authentication и Firestore, а запуск GitHub Actions workflows выполняется через защищённый серверный API-посредник.
 
