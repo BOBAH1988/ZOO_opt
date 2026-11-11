@@ -59,7 +59,7 @@ MVP-приложение для управления почтовыми авто
 - **Базовый путь:** `/ZOO_opt/` (имя репозитория).
 - **Авторизация:** Firebase Authentication (email + пароль). Все разделы защищены `ProtectedRoute`.
 - **База клиентов:** Firebase Firestore, коллекция `clients`.
-- **PWA:** `manifest.json`, `service worker` (`public/sw.js`), иконки 192×192 и 512×512. Service Worker кэширует только статическую оболочку; не кэширует данные клиентов, токены или результаты авторизованных запросов.
+- **PWA:** `manifest.json`, `service worker` (`public/sw.js`), иконки: SVG (`icon.svg`, `favicon.svg`), PNG (`icon-192.png`, `icon-512.png`, `maskable-icon-192.png`, `maskable-icon-512.png`, `apple-touch-icon.png`), favicon (`favicon-32.png`, `favicon-48.png`). Service Worker кэширует только статическую оболочку; не кэширует данные клиентов, токены или результаты авторизованных запросов.
 - **Клиентский API-контракт:** модуль `src/api.ts` с функцией `runWorkflow()` и списком `ALLOWED_WORKFLOWS`.
 
 ### План / не реализовано
@@ -95,9 +95,17 @@ MVP-приложение для управления почтовыми авто
 │   ├── manifest.json         # веб-манифест PWA
 │   ├── sw.js                 # service worker (кэш только статической оболочки)
 │   ├── 404.html              # fallback для HashRouter на GitHub Pages
-│   └── icons/
-│       ├── icon-192.svg
-│       └── icon-512.svg
+│   ├── icon.svg              # SVG-иконка (полная: лапа, щит, график)
+│   ├── favicon.svg            # SVG favicon (только лапа)
+│   ├── icon-192.png          # PNG 192×192
+│   ├── icon-512.png          # PNG 512×512
+│   ├── maskable-icon-192.png # PNG 192×192 для Android (maskable)
+│   ├── maskable-icon-512.png # PNG 512×512 для Android (maskable)
+│   ├── apple-touch-icon.png  # PNG 180×180 для iOS
+│   ├── favicon-32.png        # PNG 32×32
+│   └── favicon-48.png        # PNG 48×48
+├── scripts/
+│   └── generate_icons.py     # генератор PNG-иконок (PIL)
 ├── src/
 │   ├── main.tsx              # точка входа React (HashRouter, инициализация Firebase)
 │   ├── App.tsx               # корневой компонент с маршрутизацией
@@ -109,12 +117,14 @@ MVP-приложение для управления почтовыми авто
 │   ├── firebase.ts           # инициализация Firebase app/auth/db
 │   ├── api.ts                # клиентский контракт с серверным API (runWorkflow)
 │   ├── types.ts              # общие типы (Client, WorkflowScenario и др.)
+│   ├── version.ts            # версия приложения (0.0.5)
 │   ├── context/
 │   │   └── AuthContext.tsx   # контекст авторизации (user, signIn, signUp, signOut)
 │   ├── components/
 │   │   ├── Layout.tsx        # общая раскладка (header, навигация, выход)
 │   │   ├── Login.tsx         # форма входа / регистрации
 │   │   ├── ProtectedRoute.tsx# защита маршрутов (только для авторизованных)
+│   │   ├── Footer.tsx        # футер с версией
 │   │   └── EmptyState.tsx    # компонент пустого состояния
 │   └── pages/
 │       ├── ReportsPage.tsx   # страница «Отчёты»
@@ -158,6 +168,25 @@ npx tsc --noEmit
 
 ### Тесты
 Тестовый фреймворк не настроен. В `package.json` нет скрипта `test`.
+
+### Иконки PWA
+Иконки лежат в `public/`. Пути в `manifest.json` и `index.html` начинаются с `/ZOO_opt/` — базы, заданной в `vite.config.ts`, чтобы при публикации на GitHub Pages (`https://BOBAH1988.github.io/ZOO_opt/`) иконки загружались корректно.
+
+| Файл | Размер | Назначение |
+|------|--------|-----------|
+| `icon.svg` | 1024×1024 | Основная SVG-иконка (лапа, щит, график) |
+| `favicon.svg` | 1024×1024 | SVG favicon для вкладки браузера (только лапа) |
+| `icon-192.png` | 192×192 | PNG для Android/Chrome |
+| `icon-512.png` | 512×512 | PNG для iOS/Chrome |
+| `maskable-icon-192.png` | 192×192 | PNG с безопасной зоной (Android adaptive icon) |
+| `maskable-icon-512.png` | 512×512 | PNG с безопасной зоной (Android adaptive icon) |
+| `apple-touch-icon.png` | 180×180 | PNG для iOS |
+| `favicon-32.png` | 32×32 | favicon для браузеров |
+| `favicon-48.png` | 48×48 | favicon для браузеров |
+
+Дизайн: тёмно-синий фон `#0F2A43`, белая лапа, контур щита `#2E7D5B`, восходящий график `#4ADE80`, KPI-точка `#FF7A00`. Для maskable-иконок элементы уменьшены до 85%, оставляя ≥15% свободы по краям.
+
+**Регенерация PNG:** `python3 scripts/generate_icons.py` (требуется Pillow). SVG-файлы править вручную.
 
 ---
 
