@@ -15,7 +15,7 @@ export function Footer() {
       borderTop: '1px solid #e5e7eb',
     }}>
       <p>
-        {yearLabel} · <span style={{ fontWeight: 500 }}>Версия:</span> {APP_VERSION_STR}
+        Vladimir Sokolov · {yearLabel} · <span style={{ fontWeight: 500 }}>Версия:</span> {APP_VERSION_STR}
       </p>
     </footer>
   );
