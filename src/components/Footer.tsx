@@ -9,7 +9,6 @@ export function Footer() {
       color: '#6b7280',
       fontSize: '12px',
       borderTop: '1px solid #e5e7eb',
-      background: '#ffffff',
     }}>
       <p>
         <span style={{ fontWeight: 500 }}>Версия:</span> {APP_VERSION_STR}
