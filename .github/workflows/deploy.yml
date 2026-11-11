@@ -36,24 +36,44 @@ jobs:
         env:
           ZOO_CONFIG: ${{ secrets.ZOO }}
         run: |
-          if [ -z "$ZOO_CONFIG" ]; then
-            echo "::error::Missing GitHub Actions secret ZOO"
-            exit 1
-          fi
-
           umask 077
-          printf '%s\n' "$ZOO_CONFIG" > .env
+          node --input-type=module <<'NODE'
+          import { writeFileSync } from 'node:fs';
+          import { loadEnv } from 'vite';
 
-          missing=""
-          for name in VITE_FIREBASE_API_KEY VITE_FIREBASE_AUTH_DOMAIN VITE_FIREBASE_PROJECT_ID VITE_FIREBASE_APP_ID; do
-            if ! grep -Eq "^${name}=.+" .env; then
-              missing="$missing $name"
-            fi
-          done
-          if [ -n "$missing" ]; then
-            echo "::error::Secret ZOO is missing required Firebase settings:$missing"
-            exit 1
-          fi
+          const raw = process.env.ZOO_CONFIG;
+          if (!raw) {
+            console.error('::error::Missing GitHub Actions secret ZOO');
+            process.exit(1);
+          }
+
+          let envText = raw;
+          try {
+            const config = JSON.parse(raw);
+            if (config && typeof config === 'object' && !Array.isArray(config)) {
+              envText = Object.entries(config)
+                .map(([key, value]) => `${key}=${String(value)}`)
+                .join('\n');
+            }
+          } catch (error) {
+            if (!(error instanceof SyntaxError)) throw error;
+          }
+
+          writeFileSync('.env', envText, { mode: 0o600 });
+
+          const config = loadEnv('production', process.cwd(), 'VITE_');
+          const required = [
+            'VITE_FIREBASE_API_KEY',
+            'VITE_FIREBASE_AUTH_DOMAIN',
+            'VITE_FIREBASE_PROJECT_ID',
+            'VITE_FIREBASE_APP_ID',
+          ];
+          const missing = required.filter((key) => !config[key]);
+          if (missing.length) {
+            console.error(`::error::Secret ZOO is missing required Firebase settings: ${missing.join(', ')}`);
+            process.exit(1);
+          }
+          NODE
 
       - name: Build PWA
         run: npm run build
