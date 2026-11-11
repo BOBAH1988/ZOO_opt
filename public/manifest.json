@@ -1,6 +1,6 @@
 {
-  "name": "ЗоКонтроль",
-  "short_name": "ЗоКонтроль",
+  "name": "ЗооКонтроль",
+  "short_name": "ЗооКонтроль",
   "description": "Клиенты • Отчёты • KPI • Автоматизация",
   "start_url": "/ZOO_opt/",
   "scope": "/ZOO_opt/",
