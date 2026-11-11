@@ -3,6 +3,36 @@ import { useAuth } from '@/context/AuthContext';
 import { isFirebaseConfigured } from '@/firebase.config';
 import { Footer } from '@/components/Footer';
 
+/** Превращает ошибку Firebase Auth в понятное русское сообщение. */
+function formatAuthError(err: any, action: 'входа' | 'регистрации'): string {
+  const code = err?.code || '';
+  const base = `Ошибка ${action}: `;
+  switch (code) {
+    case 'auth/user-not-found':
+      return base + 'Пользователь с таким email не найден.';
+    case 'auth/wrong-password':
+      return base + 'Неверный пароль.';
+    case 'auth/invalid-email':
+      return base + 'Email указан некорректно.';
+    case 'auth/user-disabled':
+      return base + 'Аккаунт отключён.';
+    case 'auth/too-many-requests':
+      return base + 'Слишком много попыток. Попробуйте позже.';
+    case 'auth/email-already-in-use':
+      return base + 'Этот email уже зарегистрирован. Войдите или используйте другой email.';
+    case 'auth/weak-password':
+      return base + 'Пароль слишком простой (минимум 6 символов).';
+    case 'auth/operation-not-allowed':
+      return base + 'Метод входа не включён в Firebase Console. Включите Email/Password провайдер.';
+    case 'auth/network-request-failed':
+      return base + 'Проблема с сетью. Проверьте подключение.';
+    case 'auth/internal-error':
+      return base + 'Внутренняя ошибка Firebase. Проверьте, что Email/Password провайдер включён и пароль соответствует требованиям.';
+    default:
+      return base + (err?.message || 'Неизвестная ошибка.');
+  }
+}
+
 interface LoginProps {
   onLogin: () => void;
 }
@@ -14,28 +44,48 @@ export function Login({ onLogin }: LoginProps) {
   const [submitting, setSubmitting] = useState(false);
   const { signIn, signUp } = useAuth();
 
+  const validate = (): string | null => {
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return 'Введите корректный email';
+    }
+    if (!password || password.length < 6) {
+      return 'Пароль должен быть не короче 6 символов';
+    }
+    return null;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const v = validate();
+    if (v) {
+      setError(v);
+      return;
+    }
     setError(null);
     setSubmitting(true);
     try {
       await signIn(email, password);
       onLogin();
     } catch (err: any) {
-      setError(err?.message || 'Ошибка входа');
+      setError(formatAuthError(err, 'входа'));
     } finally {
       setSubmitting(false);
     }
   };
 
   const handleSignup = async () => {
+    const v = validate();
+    if (v) {
+      setError(v);
+      return;
+    }
     setError(null);
     setSubmitting(true);
     try {
       await signUp(email, password);
       onLogin();
     } catch (err: any) {
-      setError(err?.message || 'Ошибка регистрации');
+      setError(formatAuthError(err, 'регистрации'));
     } finally {
       setSubmitting(false);
     }
