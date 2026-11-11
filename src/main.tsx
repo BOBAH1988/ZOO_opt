@@ -4,6 +4,7 @@ import { HashRouter } from 'react-router-dom';
 import App from './App';
 import './index.css';
 import { initFirebase } from './firebase';
+import { AuthProvider } from './context/AuthContext';
 
 // Инициализация Firebase (если сконфигурирован).
 initFirebase();
@@ -11,7 +12,9 @@ initFirebase();
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <HashRouter>
-      <App />
+      <AuthProvider>
+        <App />
+      </AuthProvider>
     </HashRouter>
   </React.StrictMode>,
 );

@@ -1,6 +1,6 @@
 {
-  "name": "ЗОО Opt — управление автоматизацией почты",
-  "short_name": "ЗОО Opt",
+  "name": "ЗоКонтроль — клиенты, отчёты, KPI, автоматизация",
+  "short_name": "ЗоКонтроль",
   "start_url": "/ZOO_opt/",
   "scope": "/ZOO_opt/",
   "display": "standalone",

@@ -6,6 +6,7 @@ import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { ReportsPage } from '@/pages/ReportsPage';
 import { RunProcessesPage } from '@/pages/RunProcessesPage';
 import { ClientsPage } from '@/pages/ClientsPage';
+import { Footer } from '@/components/Footer';
 
 export default function App() {
   const { initialized, loading, user } = useAuth();
@@ -18,22 +19,25 @@ export default function App() {
     );
   }
 
-  if (!user) {
-    return <Login onLogin={() => {}} />;
-  }
-
   return (
-    <Routes>
-      <Route path="/login" element={<Login onLogin={() => {}} />} />
-      <Route path="/" element={<Navigate to="/reports" replace />} />
-      <Route element={<ProtectedRoute />}>
-        <Route element={<Layout />}>
-          <Route path="reports" element={<ReportsPage />} />
-          <Route path="run" element={<RunProcessesPage />} />
-          <Route path="clients" element={<ClientsPage />} />
-        </Route>
-      </Route>
-      <Route path="*" element={<Navigate to="/reports" replace />} />
-    </Routes>
+    <div className="app">
+      {user ? (
+        <Routes>
+          <Route path="/login" element={<Login onLogin={() => {}} />} />
+          <Route path="/" element={<Navigate to="/reports" replace />} />
+          <Route element={<ProtectedRoute />}>
+            <Route element={<Layout />}>
+              <Route path="reports" element={<ReportsPage />} />
+              <Route path="run" element={<RunProcessesPage />} />
+              <Route path="clients" element={<ClientsPage />} />
+            </Route>
+          </Route>
+          <Route path="*" element={<Navigate to="/reports" replace />} />
+        </Routes>
+      ) : (
+        <Login onLogin={() => {}} />
+      )}
+      <Footer />
+    </div>
   );
 }

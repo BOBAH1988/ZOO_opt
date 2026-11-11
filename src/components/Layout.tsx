@@ -13,9 +13,9 @@ export function Layout() {
   const active = location.pathname;
 
   return (
-    <div className="app">
+    <>
       <header className="header">
-        <div className="brand">ЗОО Opt</div>
+        <div className="brand">ЗоКонтроль</div>
         <nav className="nav">
           {NAV_ITEMS.map((item) => (
             <a key={item.to} href={item.to} className={active === item.to ? 'active' : ''}>
@@ -33,6 +33,6 @@ export function Layout() {
       <main className="main">
         <Outlet />
       </main>
-    </div>
+    </>
   );
 }
