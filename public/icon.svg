@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <title>ЗооКонтроль</title>
+  <desc>Иконка приложения ЗооКонтроль: белая лапа в щите, восходящий график KPI.</desc>
+  <rect x="0" y="0" width="1024" height="1024" rx="192" ry="192" fill="#0F2A43"/>
+  <!-- Контур щита -->
+  <polygon points="512,140 730,235 730,440 512,740 294,440 294,235"
+           fill="none" stroke="#2E7D5B" stroke-width="12" stroke-linejoin="round"/>
+  <!-- Белая лапа -->
+  <ellipse cx="512" cy="570" rx="125" ry="90" fill="#FFFFFF"/>
+  <circle cx="412" cy="420" r="46" fill="#FFFFFF"/>
+  <circle cx="502" cy="375" r="50" fill="#FFFFFF"/>
+  <circle cx="522" cy="375" r="50" fill="#FFFFFF"/>
+  <circle cx="612" cy="420" r="46" fill="#FFFFFF"/>
+  <!-- Восходящий график -->
+  <polyline points="690,700 760,620 820,550"
+            fill="none" stroke="#4ADE80" stroke-width="16"
+            stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="820" cy="550" r="18" fill="#FF7A00"/>
+</svg>

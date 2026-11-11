@@ -1,27 +1,69 @@
 {
-  "name": "ЗооКонтроль",
-  "short_name": "ЗооКонтроль",
+  "name": "ЗоКонтроль",
+  "short_name": "ЗоКонтроль",
+  "description": "Клиенты • Отчёты • KPI • Автоматизация",
   "start_url": "/ZOO_opt/",
   "scope": "/ZOO_opt/",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#ffffff",
-  "theme_color": "#1a5f7a",
-  "description": "Ручное управление проектами автоматизации почты: запуск процессов, база клиентов, отчёты.",
+  "background_color": "#0F2A43",
+  "theme_color": "#0F2A43",
   "lang": "ru",
   "categories": ["business", "productivity"],
   "icons": [
     {
-      "src": "/ZOO_opt/icons/icon-192.svg",
-      "sizes": "192x192",
+      "src": "/ZOO_opt/favicon.svg",
+      "sizes": "any",
       "type": "image/svg+xml",
-      "purpose": "any maskable"
+      "purpose": "any"
     },
     {
-      "src": "/ZOO_opt/icons/icon-512.svg",
-      "sizes": "512x512",
+      "src": "/ZOO_opt/favicon-32.png",
+      "sizes": "32x32",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/ZOO_opt/favicon-48.png",
+      "sizes": "48x48",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/ZOO_opt/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/ZOO_opt/icon.svg",
+      "sizes": "any",
       "type": "image/svg+xml",
-      "purpose": "any maskable"
+      "purpose": "any"
+    },
+    {
+      "src": "/ZOO_opt/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/ZOO_opt/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/ZOO_opt/maskable-icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/ZOO_opt/maskable-icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     }
   ]
 }

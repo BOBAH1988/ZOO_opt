@@ -8,13 +8,20 @@
  *  - Персональные данные клиентов, токены и результаты авторизованных запросов — НЕ кэшируются.
  */
 
-const CACHE_NAME = 'zoo-opt-shell-v1';
+const CACHE_NAME = 'zoo-control-shell-v1';
 const SHELL_URLS = [
   '/ZOO_opt/',
   '/ZOO_opt/index.html',
-  '/ZOO_opt/icons/icon-192.svg',
-  '/ZOO_opt/icons/icon-512.svg',
   '/ZOO_opt/manifest.json',
+  '/ZOO_opt/favicon.svg',
+  '/ZOO_opt/favicon-32.png',
+  '/ZOO_opt/favicon-48.png',
+  '/ZOO_opt/apple-touch-icon.png',
+  '/ZOO_opt/icon.svg',
+  '/ZOO_opt/icon-192.png',
+  '/ZOO_opt/icon-512.png',
+  '/ZOO_opt/maskable-icon-192.png',
+  '/ZOO_opt/maskable-icon-512.png',
 ];
 
 // Firebase и GitHub API — никогда не кэшируем.
