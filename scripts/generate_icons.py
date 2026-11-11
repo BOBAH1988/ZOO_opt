@@ -5,8 +5,6 @@ from PIL import Image, ImageDraw
 BG = "#0F2A43"
 SHIELD = "#2E7D5B"
 PAW = "#FFFFFF"
-GRAPH = "#4ADE80"
-DOT = "#FF7A00"
 
 
 def rounded_square(size, radius, fill):
@@ -17,36 +15,35 @@ def rounded_square(size, radius, fill):
 
 
 def draw_paw(draw, cx, cy, scale=1.0):
-    r = int(90 * scale)
+    r = int(120 * scale)
     draw.ellipse((cx - r, cy - r, cx + r, cy + r), fill=PAW)
-    toe_r = int(28 * scale)
-    for dx in (-100, -10, 10, 100):
+    toe_r = int(22 * scale)
+    for dx in (-104, -16, 16, 104):
         tx = cx + int(dx * scale)
-        ty = cy - int(150 * scale)
+        ty = cy - int(140 * scale)
         draw.ellipse((tx - toe_r, ty - toe_r, tx + toe_r, ty + toe_r), fill=PAW)
 
 
 def draw_shield(draw, cx, cy, scale=1.0):
-    w = int(215 * scale)
-    h = int(300 * scale)
-    pts = [
-        (cx, cy - h),
-        (cx + w, cy - h * 0.5),
-        (cx + w, cy + h * 0.2),
-        (cx, cy + h),
-        (cx - w, cy + h * 0.2),
-        (cx - w, cy - h * 0.5),
+    """Большой щит с двойным контуром."""
+    outer = [
+        (cx, cy - int(390 * scale)),
+        (cx + int(258 * scale), cy - int(130 * scale)),
+        (cx + int(258 * scale), cy + int(150 * scale)),
+        (cx, cy + int(260 * scale)),
+        (cx - int(258 * scale), cy + int(150 * scale)),
+        (cx - int(258 * scale), cy - int(130 * scale)),
     ]
-    draw.line(pts + [pts[0]], fill=SHIELD, width=int(6 * scale), joint="curve")
-
-
-def draw_graph(draw, cx, cy, scale=1.0):
-    x1, y1 = cx + int(178 * scale), cy + int(130 * scale)
-    x2, y2 = cx + int(70 * scale), cy + int(80 * scale)
-    x3, y3 = cx + int(60 * scale), cy + int(10 * scale)
-    draw.line([(x1, y1), (x2, y2), (x3, y3)], fill=GRAPH, width=int(10 * scale), joint="curve")
-    draw.ellipse((x3 - int(12 * scale), y3 - int(12 * scale),
-                  x3 + int(12 * scale), y3 + int(12 * scale)), fill=DOT)
+    inner = [
+        (cx, cy - int(342 * scale)),
+        (cx + int(238 * scale), cy - int(120 * scale)),
+        (cx + int(238 * scale), cy + int(140 * scale)),
+        (cx, cy + int(240 * scale)),
+        (cx - int(238 * scale), cy + int(140 * scale)),
+        (cx - int(238 * scale), cy - int(120 * scale)),
+    ]
+    draw.line(outer + [outer[0]], fill=SHIELD, width=int(28 * scale), joint="curve")
+    draw.line(inner + [inner[0]], fill=SHIELD, width=int(8 * scale), joint="curve")
 
 
 def draw_full(size):
@@ -57,7 +54,6 @@ def draw_full(size):
     scale = size / 1024.0
     draw_shield(draw, cx, cy, scale)
     draw_paw(draw, cx, cy, scale)
-    draw_graph(draw, cx, cy, scale)
     return img
 
 
@@ -79,7 +75,6 @@ def draw_maskable(size):
     scale = size / 1024.0
     draw_shield(draw, cx, cy, scale * 0.85)
     draw_paw(draw, cx, cy, scale * 0.85)
-    draw_graph(draw, cx, cy, scale * 0.85)
     return img
 
 
