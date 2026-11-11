@@ -8,7 +8,7 @@
  *  - Персональные данные клиентов, токены и результаты авторизованных запросов — НЕ кэшируются.
  */
 
-const CACHE_NAME = 'zoo-control-shell-v1';
+const CACHE_NAME = 'zoo-control-shell-v2';
 const SHELL_URLS = [
   '/ZOO_opt/',
   '/ZOO_opt/index.html',
@@ -24,27 +24,30 @@ const SHELL_URLS = [
   '/ZOO_opt/maskable-icon-512.png',
 ];
 
-// Firebase и GitHub API — никогда не кэшируем.
+// Firebase, API и внешние сервисы — никогда не кэшируем.
 const UNCACHEABLE_PATTERNS = [
   'firebaseio.com',
   'firestore.googleapis.com',
   'identitytoolkit.googleapis.com',
   'securetoken.googleapis.com',
+  'googleapis.com',
   'api.github.com',
   'github.com',
+  '/run',
 ];
 
-function isUncacheable(url: string): boolean {
+function isUncacheable(url) {
   return UNCACHEABLE_PATTERNS.some((p) => url.includes(p));
 }
 
-self.addEventListener('install', (event: ExtendableEvent) => {
+self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => cache.addAll(SHELL_URLS)),
   );
+  self.skipWaiting();
 });
 
-self.addEventListener('activate', (event: ExtendableEvent) => {
+self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((keys) =>
       Promise.all(
@@ -52,28 +55,45 @@ self.addEventListener('activate', (event: ExtendableEvent) => {
       ),
     ),
   );
+  self.clients.claim();
 });
 
-self.addEventListener('fetch', (event: FetchEvent) => {
+self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = request.url;
 
-  // Никогда не кэшируем запросы к Firebase / GitHub API.
+  if (request.method !== 'GET') {
+    return;
+  }
+
+  // Никогда не кэшируем запросы к Firebase / API.
   if (isUncacheable(url)) {
+    event.respondWith(fetch(request));
+    return;
+  }
+
+  // Навигация — network-first с fallback на оболочку.
+  if (request.mode === 'navigate') {
+    event.respondWith(
+      fetch(request)
+        .then((response) => {
+          const clone = response.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put('/ZOO_opt/index.html', clone));
+          return response;
+        })
+        .catch(() => caches.match('/ZOO_opt/index.html')),
+    );
     return;
   }
 
   // Статические ассеты — cache-first.
   event.respondWith(
     caches.match(request).then((cached) => {
-      if (cached) {
-        return cached;
-      }
+      if (cached) return cached;
       return fetch(request).then((response) => {
-        // Кэшируем только успешные GET-запросы к нашему origins (статика).
         if (
+          response &&
           response.status === 200 &&
-          request.method === 'GET' &&
           new URL(url).origin === self.location.origin
         ) {
           const responseClone = response.clone();
@@ -84,5 +104,3 @@ self.addEventListener('fetch', (event: FetchEvent) => {
     }),
   );
 });
-
-export {};

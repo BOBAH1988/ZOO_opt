@@ -2,50 +2,75 @@ import { useState, useEffect } from 'react';
 import {
   collection,
   query,
+  where,
   orderBy,
   onSnapshot,
   addDoc,
   updateDoc,
   deleteDoc,
   doc,
+  serverTimestamp,
   type DocumentData,
   type QueryDocumentSnapshot,
 } from 'firebase/firestore';
 import { db } from '@/firebase';
 import { isFirebaseConfigured } from '@/firebase.config';
+import { useAuth } from '@/context/AuthContext';
 import { EmptyState } from '@/components/EmptyState';
 import type { Client, NewClientInput } from '@/types';
 
 interface ClientDoc extends DocumentData {
-  name: string;
-  email: string;
-  phone?: string;
-  company?: string;
-  notes?: string;
-  createdAt: any;
-  updatedAt: any;
-  ownerUid: string;
+  name?: unknown;
+  email?: unknown;
+  phone?: unknown;
+  company?: unknown;
+  notes?: unknown;
+  createdAt?: unknown;
+  updatedAt?: unknown;
+  ownerUid?: unknown;
 }
 
-function docToClient(snap: QueryDocumentSnapshot<DocumentData>): Client {
+function toIsoString(value: unknown): string {
+  if (!value) return '';
+  if (value instanceof Date) return value.toISOString();
+  if (typeof value === 'string') {
+    const d = new Date(value);
+    return Number.isNaN(d.getTime()) ? value : d.toISOString();
+  }
+  if (typeof value === 'object' && 'toDate' in value && typeof (value as { toDate?: () => Date }).toDate === 'function') {
+    try {
+      return (value as { toDate: () => Date }).toDate().toISOString();
+    } catch {
+      return '';
+    }
+  }
+  return '';
+}
+
+function docToClient(snap: QueryDocumentSnapshot<DocumentData>): Client | null {
   const data = snap.data() as ClientDoc;
+  if (typeof data.name !== 'string' || !data.name.trim()) return null;
+  if (typeof data.email !== 'string' || !data.email.trim()) return null;
+  if (typeof data.ownerUid !== 'string' || !data.ownerUid) return null;
   return {
     id: snap.id,
-    name: data.name || '',
-    email: data.email || '',
-    phone: data.phone || undefined,
-    company: data.company || undefined,
-    notes: data.notes || undefined,
-    createdAt: data.createdAt?.toString?.() || '',
-    updatedAt: data.updatedAt?.toString?.() || '',
-    ownerUid: data.ownerUid || '',
+    name: data.name.trim(),
+    email: data.email.trim(),
+    phone: typeof data.phone === 'string' && data.phone.trim() ? data.phone.trim() : undefined,
+    company: typeof data.company === 'string' && data.company.trim() ? data.company.trim() : undefined,
+    notes: typeof data.notes === 'string' && data.notes.trim() ? data.notes.trim() : undefined,
+    createdAt: toIsoString(data.createdAt),
+    updatedAt: toIsoString(data.updatedAt),
+    ownerUid: data.ownerUid,
   };
 }
 
 export function ClientsPage() {
+  const { user } = useAuth();
   const [clients, setClients] = useState<Client[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [skippedCount, setSkippedCount] = useState(0);
   const [search, setSearch] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
@@ -58,12 +83,18 @@ export function ClientsPage() {
       setLoading(false);
       return;
     }
+    if (!user) {
+      setClients([]);
+      setLoading(false);
+      return;
+    }
 
     setLoading(true);
     setError(null);
 
     const q = query(
       collection(db, 'clients'),
+      where('ownerUid', '==', user.uid),
       orderBy('updatedAt', 'desc')
     );
 
@@ -71,14 +102,14 @@ export function ClientsPage() {
       q,
       (snapshot) => {
         const list: Client[] = [];
+        let skipped = 0;
         snapshot.forEach((snap: QueryDocumentSnapshot<DocumentData>) => {
-          try {
-            list.push(docToClient(snap));
-          } catch {
-            // Пропускаем документы с некорректной структурой
-          }
+          const parsed = docToClient(snap);
+          if (parsed) list.push(parsed);
+          else skipped += 1;
         });
         setClients(list);
+        setSkippedCount(skipped);
         setLoading(false);
       },
       (err) => {
@@ -88,7 +119,7 @@ export function ClientsPage() {
     );
 
     return () => unsub();
-  }, [db]);
+  }, [user]);
 
   const filtered = clients.filter((c) =>
     c.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -96,20 +127,31 @@ export function ClientsPage() {
     (c.company && c.company.toLowerCase().includes(search.toLowerCase()))
   );
 
+  const resetForm = () => {
+    setForm({ name: '', email: '', phone: undefined, company: undefined, notes: undefined });
+  };
+
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!db) return;
+    if (!db || !user) return;
     setSaving(true);
+    setError(null);
     try {
       await addDoc(collection(db, 'clients'), {
-        ...form,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        ownerUid: 'current-user',
+        name: form.name.trim(),
+        email: form.email.trim(),
+        phone: form.phone?.trim() || null,
+        company: form.company?.trim() || null,
+        notes: form.notes?.trim() || null,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+        ownerUid: user.uid,
       });
-      setForm({ name: '', email: '' });
-    } catch (err: any) {
-      setError(err?.message || 'Ошибка создания клиента');
+      resetForm();
+      setEditingId(null);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Ошибка создания клиента';
+      setError(message);
     } finally {
       setSaving(false);
     }
@@ -117,17 +159,23 @@ export function ClientsPage() {
 
   const handleUpdate = async (id: string, e: React.FormEvent) => {
     e.preventDefault();
-    if (!db) return;
+    if (!db || !user) return;
     setSaving(true);
+    setError(null);
     try {
       await updateDoc(doc(db, 'clients', id), {
-        ...form,
-        updatedAt: new Date(),
+        name: form.name.trim(),
+        email: form.email.trim(),
+        phone: form.phone?.trim() || null,
+        company: form.company?.trim() || null,
+        notes: form.notes?.trim() || null,
+        updatedAt: serverTimestamp(),
       });
       setEditingId(null);
-      setForm({ name: '', email: '' });
-    } catch (err: any) {
-      setError(err?.message || 'Ошибка обновления клиента');
+      resetForm();
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Ошибка обновления клиента';
+      setError(message);
     } finally {
       setSaving(false);
     }
@@ -140,11 +188,13 @@ export function ClientsPage() {
   const handleDelete = async () => {
     if (!deleteTarget || !db) return;
     setSaving(true);
+    setError(null);
     try {
       await deleteDoc(doc(db, 'clients', deleteTarget.id));
       setDeleteTarget(null);
-    } catch (err: any) {
-      setError(err?.message || 'Ошибка удаления клиента');
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Ошибка удаления клиента';
+      setError(message);
     } finally {
       setSaving(false);
     }
@@ -175,12 +225,17 @@ export function ClientsPage() {
           onChange={(e) => setSearch(e.target.value)}
           style={{ flex: 1, minWidth: 200 }}
         />
-        <button className="btn btn-primary" onClick={() => setEditingId('new')}>
+        <button className="btn btn-primary" onClick={() => { resetForm(); setEditingId('new'); }} disabled={!user}>
           + Добавить клиента
         </button>
       </div>
 
       {error && <div className="alert alert-danger">{error}</div>}
+      {skippedCount > 0 && (
+        <div className="alert alert-warning">
+          Пропущено записей с некорректной структурой: {skippedCount}. Проверьте данные в Firestore.
+        </div>
+      )}
 
       {loading ? (
         <div className="card">
@@ -248,7 +303,7 @@ export function ClientsPage() {
       )}
 
       {editingId && (
-        <div className="dialog-overlay" onClick={() => setEditingId(null)}>
+        <div className="dialog-overlay" onClick={() => { setEditingId(null); resetForm(); }}>
           <div className="dialog" onClick={(e) => e.stopPropagation()}>
             <div className="dialog-title">
               {editingId === 'new' ? 'Новый клиент' : 'Редактирование клиента'}
@@ -284,7 +339,7 @@ export function ClientsPage() {
                   value={form.notes || ''} onChange={(e) => setForm({ ...form, notes: e.target.value || undefined })} />
               </div>
               <div className="dialog-actions">
-                <button className="btn btn-outline" type="button" onClick={() => setEditingId(null)}>
+                <button className="btn btn-outline" type="button" onClick={() => { setEditingId(null); resetForm(); }}>
                   Отмена
                 </button>
                 <button className="btn btn-primary" type="submit" disabled={saving}>

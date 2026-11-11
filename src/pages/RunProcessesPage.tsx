@@ -1,5 +1,12 @@
 import { useState } from 'react';
+import {
+  collection,
+  addDoc,
+  serverTimestamp,
+} from 'firebase/firestore';
 import { runWorkflow, isApiConfigured } from '@/api';
+import { db } from '@/firebase';
+import { useAuth } from '@/context/AuthContext';
 import type { WorkflowScenario, WorkflowInput } from '@/types';
 
 const SCENARIOS: WorkflowScenario[] = [
@@ -78,12 +85,51 @@ const SCENARIOS: WorkflowScenario[] = [
   },
 ];
 
+type InputValues = Record<string, Record<string, boolean | string>>;
+
+function defaultInputs(scenario: WorkflowScenario): Record<string, boolean | string> {
+  const out: Record<string, boolean | string> = {};
+  for (const input of scenario.inputs) out[input.key] = input.defaultValue;
+  return out;
+}
+
 export function RunProcessesPage() {
+  const { user } = useAuth();
   const [running, setRunning] = useState<string | null>(null);
   const [result, setResult] = useState<{ message: string; runUrl?: string | null; status: 'accepted' | 'error' } | null>(null);
   const [confirmOpen, setConfirmOpen] = useState<{ id: string; name: string } | null>(null);
+  const [inputValues, setInputValues] = useState<InputValues>(() => {
+    const init: InputValues = {};
+    for (const s of SCENARIOS) init[s.id] = defaultInputs(s);
+    return init;
+  });
 
   const apiConfigured = isApiConfigured();
+
+  const setInput = (scenarioId: string, key: string, value: boolean | string) => {
+    setInputValues((prev) => ({ ...prev, [scenarioId]: { ...prev[scenarioId], [key]: value } }));
+  };
+
+  const writeLog = async (payload: {
+    workflowId: string;
+    workflowName: string;
+    status: 'accepted' | 'error';
+    message: string;
+    runUrl?: string | null;
+    inputs: Record<string, boolean | string>;
+  }) => {
+    if (!db || !user) return;
+    try {
+      await addDoc(collection(db, 'runLogs'), {
+        ...payload,
+        requestedBy: user.uid,
+        requestedByEmail: user.email || null,
+        createdAt: serverTimestamp(),
+      });
+    } catch {
+      // журнал не должен блокировать UX запуска
+    }
+  };
 
   const handleRunClick = (scenario: WorkflowScenario) => {
     setResult(null);
@@ -91,134 +137,140 @@ export function RunProcessesPage() {
       setConfirmOpen({ id: scenario.id, name: scenario.name });
       return;
     }
-    executeRun(scenario);
+    void executeRun(scenario);
   };
 
   const handleConfirm = () => {
     if (!confirmOpen) return;
-    const scenario = SCENARIOS.find((s) => s.id === confirmOpen!.id);
+    const scenario = SCENARIOS.find((s) => s.id === confirmOpen.id);
     if (scenario) {
       setConfirmOpen(null);
-      executeRun(scenario);
+      void executeRun(scenario);
     }
   };
 
-  const handleCancel = () => {
-    setConfirmOpen(null);
-  };
-
   const executeRun = async (scenario: WorkflowScenario) => {
+    const inputs = inputValues[scenario.id] || {};
     setRunning(scenario.id);
     setResult(null);
 
     if (!apiConfigured) {
-      setResult({
-        message: 'Запуск процессов не настроен: отсутствует серверный API.',
-        status: 'error',
-      });
+      const message = 'Запуск не настроен: отсутствует серверный API.';
+      setResult({ message, status: 'error' });
+      await writeLog({ workflowId: scenario.id, workflowName: scenario.name, status: 'error', message, inputs });
       setRunning(null);
       return;
     }
 
-    const builtInputs: Record<string, boolean | string> = {};
-    for (const input of scenario.inputs) {
-      builtInputs[input.key] = input.defaultValue;
-    }
-
     try {
-      const response = await runWorkflow({ workflowId: scenario.id, inputs: builtInputs });
-      setResult({
+      const response = await runWorkflow({ workflowId: scenario.id, inputs });
+      setResult({ message: response.message, runUrl: response.runUrl ?? null, status: 'accepted' });
+      await writeLog({
+        workflowId: scenario.id,
+        workflowName: scenario.name,
+        status: 'accepted',
         message: response.message,
         runUrl: response.runUrl ?? null,
-        status: 'accepted',
+        inputs,
       });
-    } catch (err: any) {
-      if (err?.isNotConfigured) {
-        setResult({ message: err.message, status: 'error' });
-      } else {
-        setResult({ message: err?.message || 'Неизвестная ошибка при запуске', status: 'error' });
-      }
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Неизвестная ошибка при запуске';
+      setResult({ message, status: 'error' });
+      await writeLog({ workflowId: scenario.id, workflowName: scenario.name, status: 'error', message, inputs });
     } finally {
       setRunning(null);
     }
   };
 
-  if (!apiConfigured) {
-    return (
-      <div className="card">
-        <h2 className="card-title">Запуск процессов</h2>
-        <div className="alert alert-warning">
-          <strong>Запуск процессов не настроен:</strong> отсутствует серверный API.
-          Настройте серверный посредник (Firebase Cloud Functions или Cloudflare Worker),
-          который вызывает GitHub Actions workflow_dispatch, и укажите адрес в переменной
-          окружения VITE_API_BASE_URL. Список разрешённых запусков задаётся только на сервере.
-        </div>
-        <p style={{ fontSize: 13, color: '#6b7280' }}>
-          Доступные сценарии (будут показаны после настройки API):{' '}
-          {SCENARIOS.map((s) => s.name).join(', ')}.
-        </p>
-      </div>
-    );
-  }
-
   return (
     <div>
-      <h2 className="page-title">Запуск процессов</h2>
+      <h2 className="page-title">Запуск</h2>
+      {!apiConfigured && (
+        <div className="alert alert-warning" style={{ marginBottom: 16 }}>
+          <strong>Запуск не настроен:</strong> отсутствует серверный API (VITE_API_BASE_URL).
+          Сервер должен проверять Firebase ID token, валидировать workflow и параметры по белому списку и вести журнал запусков.
+        </div>
+      )}
       <p style={{ fontSize: 13, color: '#6b7280', marginBottom: 20 }}>
-        Запускает разрешённые GitHub Actions workflows через защищённый серверный API.
-        GitHub-токены не хранятся в браузере.
+        Запускает разрешённые GitHub Actions workflows через защищённый серверный API. GitHub-токены не хранятся в браузере.
       </p>
 
       <div style={{ display: 'grid', gap: 12, gridTemplateColumns: '1fr' }}>
-        {SCENARIOS.map((scenario) => (
-          <div key={scenario.id} className="card">
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flexStart', gap: 12 }}>
-              <div>
-                <h3 style={{ margin: 0, fontSize: 16, fontWeight: 600 }}>{scenario.name}</h3>
-                <p style={{ margin: '4px 0 0', fontSize: 13, color: '#6b7280' }}>{scenario.description}</p>
+        {SCENARIOS.map((scenario) => {
+          const values = inputValues[scenario.id] || {};
+          return (
+            <div key={scenario.id} className="card">
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
+                <div>
+                  <h3 style={{ margin: 0, fontSize: 16, fontWeight: 600 }}>{scenario.name}</h3>
+                  <p style={{ margin: '4px 0 0', fontSize: 13, color: '#6b7280' }}>{scenario.description}</p>
+                </div>
+                <button className="btn btn-primary" onClick={() => handleRunClick(scenario)} disabled={running === scenario.id}>
+                  {running === scenario.id ? 'Запуск…' : 'Запустить'}
+                </button>
               </div>
-              <button
-                className="btn btn-primary"
-                onClick={() => handleRunClick(scenario)}
-                disabled={running === scenario.id}
-              >
-                {running === scenario.id ? 'Запуск…' : 'Запустить'}
-              </button>
+
+              {scenario.warning && (
+                <div style={{ marginTop: 10, padding: 8, background: '#fbf4e3', borderRadius: 6, fontSize: 12, color: '#92400e' }}>
+                  ⚠️ {scenario.warning}
+                </div>
+              )}
+
+              {scenario.inputs.length > 0 && (
+                <div style={{ marginTop: 12, display: 'grid', gap: 10 }}>
+                  {scenario.inputs.map((input: WorkflowInput) => (
+                    <div key={input.key} className="form-group" style={{ marginBottom: 0 }}>
+                      <label className="form-label" style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                        {input.type === 'boolean' ? (
+                          <>
+                            <input
+                              type="checkbox"
+                              checked={Boolean(values[input.key])}
+                              onChange={(e) => setInput(scenario.id, input.key, e.target.checked)}
+                            />
+                            <span>{input.label}</span>
+                          </>
+                        ) : (
+                          <span>{input.label}</span>
+                        )}
+                      </label>
+                      {input.type === 'string' && (
+                        <input
+                          className="form-input"
+                          value={String(values[input.key] ?? '')}
+                          onChange={(e) => setInput(scenario.id, input.key, e.target.value)}
+                          placeholder={input.description}
+                        />
+                      )}
+                      <div style={{ fontSize: 12, color: '#6b7280', marginTop: 4 }}>{input.description}</div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
-            {scenario.warning && (
-              <div style={{ marginTop: 10, padding: 8, background: '#fbf4e3', borderRadius: 6, fontSize: 12, color: '#92400e' }}>
-                ⚠️ {scenario.warning}
-              </div>
-            )}
-            {scenario.inputs.length > 0 && (
-              <div style={{ marginTop: 10, fontSize: 12, color: '#6b7280' }}>
-                Параметры: {scenario.inputs.map((i: WorkflowInput) => i.label).join(', ')}.
-              </div>
-            )}
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       {result && (
-        <div className={`alert ${result.status === 'accepted' ? 'alert-info' : 'alert-danger'}`}>
+        <div className={`alert ${result.status === 'accepted' ? 'alert-info' : 'alert-danger'}`} style={{ marginTop: 16 }}>
           <strong style={{ textTransform: 'uppercase', fontSize: 11, letterSpacing: '0.4px' }}>
             {result.status === 'accepted' ? 'Запрос принят' : 'Ошибка'}
           </strong>
           <p style={{ margin: '6px 0 0', fontSize: 13 }}>{result.message}</p>
           {result.runUrl && (
-            <a href={result.runUrl} target="_blank" rel="noopener noreferrer" style={{ marginTop: 8, fontSize: 13, fontWeight: 500 }}>
+            <a href={result.runUrl} target="_blank" rel="noopener noreferrer" style={{ marginTop: 8, display: 'inline-block', fontSize: 13, fontWeight: 500 }}>
               Открыть запуск в GitHub Actions
             </a>
           )}
           <p style={{ marginTop: 8, fontSize: 12, color: '#6b7280' }}>
-            Статус «запрос принят» не означает завершение workflow. Отслеживайте ход выполнения
-            по ссылке в GitHub Actions.
+            Статус «запрос принят» не означает завершение workflow. История запросов сохраняется в разделе «Отчёты» (при настроенном Firestore).
           </p>
         </div>
       )}
 
       {confirmOpen && (
-        <div className="dialog-overlay" onClick={handleCancel}>
+        <div className="dialog-overlay" onClick={() => setConfirmOpen(null)}>
           <div className="dialog" onClick={(e) => e.stopPropagation()}>
             <div className="dialog-title">Подтверждение запуска</div>
             <div className="dialog-body">
@@ -228,10 +280,8 @@ export function RunProcessesPage() {
               <strong>Письма могут уйти реальным получателям.</strong> Продолжить?
             </div>
             <div className="dialog-actions">
-              <button className="btn btn-outline" onClick={handleCancel}>Отмена</button>
-              <button className="btn btn-danger" onClick={handleConfirm}>
-                Да, запустить
-              </button>
+              <button className="btn btn-outline" onClick={() => setConfirmOpen(null)}>Отмена</button>
+              <button className="btn btn-danger" onClick={handleConfirm}>Да, запустить</button>
             </div>
           </div>
         </div>

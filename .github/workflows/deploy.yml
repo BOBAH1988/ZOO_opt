@@ -32,6 +32,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Lint (typecheck)
+        run: npm run lint
+
       - name: Load and validate Firebase configuration
         env:
           ZOO_CONFIG: ${{ secrets.ZOO }}
@@ -81,6 +84,12 @@ jobs:
           NODE
 
       - name: Build PWA
+        env:
+          VITE_API_BASE_URL: ${{ secrets.VITE_API_BASE_URL }}
+          VITE_DISABLE_SIGNUP: ${{ secrets.VITE_DISABLE_SIGNUP }}
+          VITE_ALLOWED_EMAILS: ${{ secrets.VITE_ALLOWED_EMAILS }}
+          VITE_ALLOWED_EMAIL_DOMAINS: ${{ secrets.VITE_ALLOWED_EMAIL_DOMAINS }}
+          VITE_REGISTRATION_INVITE_CODE: ${{ secrets.VITE_REGISTRATION_INVITE_CODE }}
         run: npm run build
 
       - name: Upload GitHub Pages artifact

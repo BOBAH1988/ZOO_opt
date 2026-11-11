@@ -43,3 +43,16 @@ export interface WorkflowInput {
   description: string;
   required: boolean;
 }
+
+export interface RunLog {
+  id: string;
+  workflowId: string;
+  workflowName: string;
+  status: 'accepted' | 'error';
+  message: string;
+  runUrl?: string | null;
+  requestedBy: string;
+  requestedByEmail?: string | null;
+  inputs: Record<string, boolean | string>;
+  createdAt: string;
+}

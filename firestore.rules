@@ -1,0 +1,45 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(uid) {
+      return isSignedIn() && request.auth.uid == uid;
+    }
+
+    function validClient(data) {
+      return data.name is string && data.name.size() > 0 && data.name.size() <= 200
+        && data.email is string && data.email.size() > 0 && data.email.size() <= 320
+        && data.ownerUid is string && data.ownerUid == request.auth.uid
+        && (!('phone' in data) || data.phone == null || (data.phone is string && data.phone.size() <= 50))
+        && (!('company' in data) || data.company == null || (data.company is string && data.company.size() <= 200))
+        && (!('notes' in data) || data.notes == null || (data.notes is string && data.notes.size() <= 2000));
+    }
+
+    match /clients/{clientId} {
+      allow read: if isSignedIn() && resource.data.ownerUid == request.auth.uid;
+      allow create: if isSignedIn() && validClient(request.resource.data);
+      allow update: if isSignedIn()
+        && resource.data.ownerUid == request.auth.uid
+        && validClient(request.resource.data)
+        && request.resource.data.ownerUid == resource.data.ownerUid;
+      allow delete: if isSignedIn() && resource.data.ownerUid == request.auth.uid;
+    }
+
+    match /runLogs/{logId} {
+      allow read: if isSignedIn() && resource.data.requestedBy == request.auth.uid;
+      allow create: if isSignedIn()
+        && request.resource.data.requestedBy == request.auth.uid
+        && request.resource.data.workflowId is string
+        && request.resource.data.status is string;
+      allow update, delete: if false;
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

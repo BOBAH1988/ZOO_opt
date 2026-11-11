@@ -20,6 +20,8 @@ import {
   updateDoc,
   deleteDoc,
   doc,
+  serverTimestamp,
+  Timestamp,
   DocumentData,
   QueryDocumentSnapshot,
 } from 'firebase/firestore';
@@ -62,5 +64,7 @@ export {
   updateDoc,
   deleteDoc,
   doc,
+  serverTimestamp,
+  Timestamp,
 };
 export type { User, DocumentData, QueryDocumentSnapshot, Firestore, Auth };

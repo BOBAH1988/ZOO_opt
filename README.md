@@ -1,420 +1,83 @@
 # ЗооКонтроль — клиенты, отчёты, KPI, автоматизация
 
-MVP-приложение для управления почтовыми автоматизациями из репозитория [BOBAH1988/mail-automation](https://github.com/BOBAH1988/mail-automation) (приватное). Приложение размещается на GitHub Pages, использует Firebase Authentication и Firestore, а запуск GitHub Actions workflows выполняется через защищённый серверный API-посредник.
+MVP-приложение для управления почтовыми автоматизациями из репозитория [BOBAH1988/mail-automation](https://github.com/BOBAH1988/mail-automation). Приложение размещается на GitHub Pages, использует Firebase Authentication и Firestore, а запуск GitHub Actions workflows выполняется через защищённый серверный API-посредник.
 
----
+## Статус и реализованные доработки
 
-## 1. Назначение и статус проекта
+- **Клиенты:** чтение/запись только по `ownerUid` текущего пользователя (`where('ownerUid','==',uid)`), запись реального UID из Firebase Auth, валидация структуры документов, безопасное преобразование `Timestamp/Date/string` в ISO, понятные ошибки, пропуск некорректных записей с предупреждением. См. `src/pages/ClientsPage.tsx`.
+- **Firestore Rules:** строгие правила владельца для `clients` и `runLogs`, запрет остального. См. `firestore.rules` (требует публикации в Firebase Console). Для запросов с `where + orderBy` могут потребоваться составные индексы Firestore.
+- **Запуск процессов:** клиент отправляет `Authorization: Bearer <Firebase ID token>`, параметры workflow редактируемы в UI, перед запуском подтверждение для сценариев с риском реальной рассылки, журнал запросов пишется в `runLogs`. См. `src/pages/RunProcessesPage.tsx`, `src/api.ts`.
+- **Сервер запуска (пример):** добавлен `/server` — проверка Firebase ID token, белый список workflow/inputs, серверные ограничения и журналирование, вызов GitHub `workflow_dispatch` с секретным токеном. Требует развёртывания и `VITE_API_BASE_URL`. См. `server/README.md`, `server/index.js`.
+- **Навигация:** внутренняя навигация через `Link`/роутер (HashRouter, base `/ZOO_opt/`), без обычных ссылок на внутренние маршруты вне роутера.
+- **Регистрация/доступ:** вход, сброс пароля, опциональные ограничения регистрации (`VITE_DISABLE_SIGNUP`, `VITE_ALLOWED_EMAILS`, `VITE_ALLOWED_EMAIL_DOMAINS`, `VITE_REGISTRATION_INVITE_CODE`), попытка отправки письма подтверждения email после регистрации. Для внутренней системы рекомендуется отключить/ограничить регистрацию и управлять пользователями в Firebase.
+- **Отчёты:** история запусков из `runLogs` (статус, сообщение, ошибка, ссылка на GitHub Actions, дата, параметры). Статус «принят» не означает завершение workflow.
+- **PWA:** `public/sw.js` — чистый JS, кэш только статической оболочки, network-only для Firebase/API/авторизованных данных, `src/main.tsx` регистрирует SW.
+- **CI/проверки:** `npm run lint` и `npm run test` = `tsc --noEmit`, `npm run build` = `tsc -b && vite build`; deploy workflow выполняет lint, загружает/валидирует Firebase-конфиг из секрета `ZOO` и собирает проект. Рекомендуется дополнить тестами Firestore Rules в Emulator и сценариями auth/API.
 
-### Назначение
-Приложение предназначено для ручного запуска существующих почтовых автоматизаций (рассылка прайсов, счетов, KPI-отчётов и др.) и управления базой клиентов. Целевая аудитория — сотрудники, отвечающие за почтовые рассылки компании «ЗОО Логистик».
-
-### Фактический статус (MVP)
-| Компонент | Статус | Комментарий |
-|-----------|--------|-------------|
-| Frontend (React + TypeScript + Vite) | Реализован | Сборка проходит, типы проверяются |
-| GitHub Pages деплой | Настроен в workflow | Нужно вручную включить Pages в настройках репозитория |
-| Firebase Authentication (email + пароль) | Код реализован | Требуется настройка проекта в Firebase Console и переменные окружения |
-| Firestore (база клиентов) | Код реализован | Требуется настройка коллекции и правил безопасности |
-| Серверный API для запуска workflows | **Не реализован** | Есть только клиентский контракт `POST /run`. Нужен отдельный сервер (Cloud Functions / Cloudflare Worker / свой API) |
-| Тесты | **Не настроены** | В `package.json` нет скрипта `test` |
----
-## 2. Функциональность
-
-### Страница «Отчёты» (`/#/reports`)
-- Главная страница приложения.
-- Пустое состояние: «Отчётов пока нет».
-- Вымышленные отчёты не создаются и не отображаются.
-- Дополнительный функционал отчётов в MVP не планируется.
-
-### Страница «Запуск процессов» (`/#/run`)
-- Кнопки ручного запуска существующих GitHub Actions workflows из репозитория `mail-automation`.
-- Для каждого сценария отображается русское название, краткое описание и кнопка запуска.
-- Клиент не может передавать произвольное имя workflow, команду или скрипт — список разрешённых запусков задан в коде клиента (`src/api.ts`, `ALLOWED_WORKFLOWS`) и должен быть продублирован в «белом списке» на сервере.
-- Перед запуском сценариев, которые могут отправлять реальные письма клиентам, показывается диалог подтверждения с предупреждением.
-- Тестовый режим (`test_mode`) выбран по умолчанию там, где workflow его поддерживает.
-- Отображаются состояния загрузки, ошибок и результат: «Запрос принят» / «Ошибка». При наличии `runUrl` показывается ссылка на запуск в GitHub Actions.
-- Статус «запрос принят» не означает завершение workflow — нужно отслеживать выполнение по ссылке в GitHub Actions.
-- Если серверный API не настроен (`VITE_API_BASE_URL` пуст), страница показывает сообщение: «Запуск процессов не настроен: отсутствует серверный API». Запуск не имитируется.
-
-### Страница «База клиентов» (`/#/clients`)
-- Список клиентов с поиском по имени, email и компании.
-- Просмотр карточки клиента в таблице.
-- Создание, редактирование и удаление клиентов.
-- Перед удалением запрашивается подтверждение.
-- Ошибки чтения и сохранения обрабатываются явно; фиктивный успех не показывается.
-- Доступ только после авторизации.
-- Чтение и запись выполняются от имени авторизованного пользователя через Firestore с проверкой поля `ownerUid`.
----
-## 3. Архитектура
+## Конфигурация (`.env`, не коммитить)
 
 ```
-Пользователь → PWA (React, GitHub Pages) → Firebase Auth → Firestore (клиенты)
-                                    → Серверный API (POST /run) → GitHub Actions workflow_dispatch
+VITE_FIREBASE_API_KEY=
+VITE_FIREBASE_AUTH_DOMAIN=
+VITE_FIREBASE_PROJECT_ID=
+VITE_FIREBASE_STORAGE_BUCKET=
+VITE_FIREBASE_MESSAGING_SENDER_ID=
+VITE_FIREBASE_APP_ID=
+
+# Защищённый серверный API для POST /run
+VITE_API_BASE_URL=
+
+# Ограничения регистрации (для внутренней системы)
+VITE_DISABLE_SIGNUP=false
+VITE_ALLOWED_EMAILS=
+VITE_ALLOWED_EMAIL_DOMAINS=
+VITE_REGISTRATION_INVITE_CODE=
 ```
 
-### Реализовано
-- **Frontend:** статическая PWA на React 18 + TypeScript + Vite, хостинг на GitHub Pages.
-- **Маршрутизация:** `react-router-dom` с `HashRouter` (надёжно работает на GitHub Pages без перенастройки сервера).
-- **Базовый путь:** `/ZOO_opt/` (имя репозитория).
-- **Авторизация:** Firebase Authentication (email + пароль). Все разделы защищены `ProtectedRoute`.
-- **База клиентов:** Firebase Firestore, коллекция `clients`.
-- **PWA:** `manifest.json`, `service worker` (`public/sw.js`), иконки: SVG (`icon.svg`, `favicon.svg`), PNG (`icon-192.png`, `icon-512.png`, `maskable-icon-192.png`, `maskable-icon-512.png`, `apple-touch-icon.png`), favicon (`favicon-32.png`, `favicon-48.png`). Service Worker кэширует только статическую оболочку; не кэширует данные клиентов, токены или результаты авторизованных запросов.
-- **Клиентский API-контракт:** модуль `src/api.ts` с функцией `runWorkflow()` и списком `ALLOWED_WORKFLOWS`.
+## GitHub Secrets (deploy)
 
-### План / не реализовано
-- **Серверный API-посредник:** не создан. Требуется отдельный сервер (Firebase Cloud Functions, Cloudflare Worker или свой API), который:
-  - хранит GitHub-токен только в серверных секретах;
-  - проверяет `workflowId` по белому списку;
-  - валидирует параметры `inputs`;
-  - вызывает GitHub API `workflow_dispatch`.
-- **GitHub Actions в целевом репозитории:** workflows уже существуют в `BOBAH1988/mail-automation`, но серверная сторона для их запуска из PWA не реализована.
+Для публикации через GitHub Actions создайте repository secret `ZOO` (Settings → Secrets and variables → Actions) со значениями веб-конфигурации Firebase из Firebase Console. Значение может быть строками `.env` (`ИМЯ=значение`, по одной на строку) или JSON-объектом с теми же ключами. Workflow записывает содержимое `ZOO` во временный `.env`, проверяет обязательные параметры входа (`VITE_FIREBASE_API_KEY`, `VITE_FIREBASE_AUTH_DOMAIN`, `VITE_FIREBASE_PROJECT_ID`, `VITE_FIREBASE_APP_ID`) и формат Firebase Web API key, затем собирает сайт.
 
----
+Дополнительно (при необходимости) задайте секреты: `VITE_API_BASE_URL`, `VITE_DISABLE_SIGNUP`, `VITE_ALLOWED_EMAILS`, `VITE_ALLOWED_EMAIL_DOMAINS`, `VITE_REGISTRATION_INVITE_CODE`.
 
-## 4. Технологии и структура репозитория
+**Не храните реальные секреты/GitHub-токены в клиенте, `.env` в репозитории или README.**
 
-### Стек
-- React 18, TypeScript, Vite
-- Firebase JS SDK (Auth, Firestore)
-- react-router-dom
-- CSS (собственные стили в `src/index.css`)
+## Firebase
 
-### Структура репозитория
-```
-/Users/vladimir/Documents/GitHub/ZOO_opt/
-├── README.md                 # эта документация
-├── index.html                # точка входа HTML (база /ZOO_opt/)
-├── package.json              # зависимости и скрипты
-├── tsconfig.json             # настройки TypeScript
-├── vite.config.ts            # настройки Vite (база /ZOO_opt/, выход dist/)
-├── .gitignore                # исключает node_modules, dist, .env и др.
-├── .env.example              # пример переменных окружения (реальные ключи не коммитить)
-├── .env                      # реальные переменные окружения (локально, не в репозитории)
-├── public/                   # статические файлы (копируются в dist)
-│   ├── manifest.json         # веб-манифест PWA
-│   ├── sw.js                 # service worker (кэш только статической оболочки)
-│   ├── 404.html              # fallback для HashRouter на GitHub Pages
-│   ├── icon.svg              # SVG-иконка (полная: лапа, щит, график)
-│   ├── favicon.svg            # SVG favicon (только лапа)
-│   ├── icon-192.png          # PNG 192×192
-│   ├── icon-512.png          # PNG 512×512
-│   ├── maskable-icon-192.png # PNG 192×192 для Android (maskable)
-│   ├── maskable-icon-512.png # PNG 512×512 для Android (maskable)
-│   ├── apple-touch-icon.png  # PNG 180×180 для iOS
-│   ├── favicon-32.png        # PNG 32×32
-│   └── favicon-48.png        # PNG 48×48
-├── scripts/
-│   └── generate_icons.py     # генератор PNG-иконок (PIL)
-├── src/
-│   ├── main.tsx              # точка входа React (HashRouter, инициализация Firebase)
-│   ├── App.tsx               # корневой компонент с маршрутизацией
-│   ├── index.css             # общие стили
-│   ├── vite-env.d.ts         # типы ImportMetaEnv
-│   ├── types/
-│   │   └── firebase.d.ts     # объявления типов для Firebase SDK
-│   ├── firebase.config.ts    # публичная конфигурация Firebase (из env)
-│   ├── firebase.ts           # инициализация Firebase app/auth/db
-│   ├── api.ts                # клиентский контракт с серверным API (runWorkflow)
-│   ├── types.ts              # общие типы (Client, WorkflowScenario и др.)
-│   ├── version.ts            # версия приложения (0.0.5)
-│   ├── context/
-│   │   └── AuthContext.tsx   # контекст авторизации (user, signIn, signUp, signOut)
-│   ├── components/
-│   │   ├── Layout.tsx        # общая раскладка (header, навигация, выход)
-│   │   ├── Login.tsx         # форма входа / регистрации
-│   │   ├── ProtectedRoute.tsx# защита маршрутов (только для авторизованных)
-│   │   ├── Footer.tsx        # футер с версией
-│   │   └── EmptyState.tsx    # компонент пустого состояния
-│   └── pages/
-│       ├── ReportsPage.tsx   # страница «Отчёты»
-│       ├── RunProcessesPage.tsx # страница «Запуск процессов»
-│       └── ClientsPage.tsx   # страница «База клиентов»
-├── .github/
-│   └── workflows/
-│       └── deploy.yml        # CI/CD: сборка и деплой на GitHub Pages
-└── dist/                     # результат сборки (не в репозитории)
-```
----
-## 5. Настройка для разработки
+- **Auth:** Email/Password. Включите провайдер в Firebase Console; настройте подтверждение email/сброс пароля и домены при необходимости.
+- **Firestore:** коллекции `clients` (поля: `name`, `email`, `phone?`, `company?`, `notes?`, `createdAt`, `updatedAt`, `ownerUid`) и `runLogs`. Опубликуйте `firestore.rules`.
+- Правило вида `allow create: if request.auth != null` для клиентов **не используется** — доступ ограничен владельцем и валидацией.
 
-### Требования
-- Node.js (проверено на v26.7.0)
-- npm (проверено на 11.19.0)
+## Запуск GitHub Actions (сервер)
 
-### Установка
+Клиент: `POST ${VITE_API_BASE_URL}/run` с JSON `{ workflowId, inputs }` и Firebase ID token. Сервер обязан:
+- проверять токен и права пользователя;
+- разрешать только workflow/параметры из серверного белого списка;
+- валидировать входные данные и усиливать ограничения для реальных рассылок (`test_mode`, allowlist/роль, журнал);
+- хранить GitHub token/credentials только на сервере.
+
+Пример реализации: `server/README.md`. Без настроенного API запуск не выполняется.
+
+## Разработка и публикация
+
 ```bash
-cd /Users/vladimir/Documents/GitHub/ZOO_opt
 npm install
-```
-
-### Локальный запуск
-```bash
-npm run dev
-```
-Приложение доступно по адресу `http://localhost:5173/ZOO_opt/` (база `/ZOO_opt/` задаётся в `vite.config.ts`).
-
-### Сборка
-```bash
+npm run dev      # http://localhost:5173/ZOO_opt/
+npm run lint     # tsc --noEmit
+npm run test     # tsc --noEmit (базовая автоматическая проверка)
 npm run build
 ```
-Результат в папке `dist/`. Сборка включает проверку типов TypeScript (`tsc -b`) и Vite build.
 
-### Проверка типов (линтер)
-```bash
-npx tsc --noEmit
-```
-В проекте нет отдельного скрипта `lint` и нет настроенного ESLint. Проверка типов через `tsc` является основной статической проверкой.
+GitHub Pages: base `/ZOO_opt/`, HashRouter, workflow `.github/workflows/deploy.yml`. Включите Pages (GitHub Actions) и задайте секреты.
 
-### Тесты
-Тестовый фреймворк не настроен. В `package.json` нет скрипта `test`.
+## PWA
 
-### Иконки PWA
-Иконки лежат в `public/`. Пути в `manifest.json` и `index.html` начинаются с `/ZOO_opt/` — базы, заданной в `vite.config.ts`, чтобы при публикации на GitHub Pages (`https://BOBAH1988.github.io/ZOO_opt/`) иконки загружались корректно.
+- Манифест/иконки в `public/`, SW кэширует только статическую оболочку, не кэширует Firebase/персональные/авторизованные данные и `/run`.
+- Проверяйте установку и обновление после деплоя.
 
-| Файл | Размер | Назначение |
-|------|--------|-----------|
-| `icon.svg` | 1024×1024 | Основная SVG-иконка (лапа, щит, график) |
-| `favicon.svg` | 1024×1024 | SVG favicon для вкладки браузера (только лапа) |
-| `icon-192.png` | 192×192 | PNG для Android/Chrome |
-| `icon-512.png` | 512×512 | PNG для iOS/Chrome |
-| `maskable-icon-192.png` | 192×192 | PNG с безопасной зоной (Android adaptive icon) |
-| `maskable-icon-512.png` | 512×512 | PNG с безопасной зоной (Android adaptive icon) |
-| `apple-touch-icon.png` | 180×180 | PNG для iOS |
-| `favicon-32.png` | 32×32 | favicon для браузеров |
-| `favicon-48.png` | 48×48 | favicon для браузеров |
+## Ограничения / дальнейшие шаги
 
-Дизайн: тёмно-синий фон `#0F2A43`, белая лапа, контур щита `#2E7D5B`, восходящий график `#4ADE80`, KPI-точка `#FF7A00`. Для maskable-иконок элементы уменьшены до 85%, оставляя ≥15% свободы по краям.
-
-**Регенерация PNG:** `python3 scripts/generate_icons.py` (требуется Pillow). SVG-файлы править вручную.
-
----
-
-## 6. Конфигурация и секреты
-
-### Переменные окружения (`.env`, не коммитится)
-Создайте файл `.env` в корне проекта. Пример в `.env.example`:
-
-```
-VITE_FIREBASE_API_KEY=your_api_key
-VITE_FIREBASE_AUTH_DOMAIN=your_project.firebaseapp.com
-VITE_FIREBASE_PROJECT_ID=your_project
-VITE_FIREBASE_STORAGE_BUCKET=your_project.firebasestorage.app
-VITE_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
-VITE_FIREBASE_APP_ID=your_app_id
-VITE_API_BASE_URL=  # опционально, серверный API для запуска workflows
-```
-
-### GitHub Secrets (для workflow деплоя)
-Для публикации через GitHub Actions создайте один repository secret с именем `ZOO` в **Settings → Secrets and variables → Actions** репозитория `ZOO_opt`. Его значение может быть строками `.env` вида `ИМЯ=значение` (по одной переменной на строку) или JSON-объектом с теми же именами переменных. Используйте значения из настроек веб-приложения Firebase; `VITE_API_BASE_URL` можно добавить, если настроен серверный API.
-
-Workflow записывает содержимое `ZOO` во временный `.env` (этот файл игнорируется Git), проверяет наличие параметров, необходимых для входа (`VITE_FIREBASE_API_KEY`, `VITE_FIREBASE_AUTH_DOMAIN`, `VITE_FIREBASE_PROJECT_ID`, `VITE_FIREBASE_APP_ID`), и формат Firebase Web API key, и только затем собирает сайт. Не оставляйте примерные значения вместо данных из Firebase Console. После изменения секрета повторно запустите публикацию.
-
-**Никогда не записывайте реальные ключи, пароли, токены или персональные данные в README, коммиты или клиентский код.**
-
----
-
-## 7. Firebase
-
-### Используемые сервисы
-- **Firebase Authentication** — вход по email и паролю. Анонимный вход и публичная регистрация не включены автоматически.
-- **Firebase Firestore** — база клиентов, коллекция `clients`.
-
-### Схема коллекции `clients` (подтверждённая)
-| Поле | Тип | Обязательное | Комментарий |
-|------|-----|--------------|-------------|
-| `id` | строка | да (авто) | Идентификатор документа Firestore |
-| `name` | строка | да | Имя / организация клиента |
-| `email` | строка | да | Email клиента |
-| `phone` | строка | нет | Телефон |
-| `company` | строка | нет | Компания |
-| `notes` | строка | нет | Примечания |
-| `createdAt` | timestamp | да | Время создания |
-| `updatedAt` | timestamp | да | Время последнего обновления |
-| `ownerUid` | строка | да | UID владельца (из Firebase Auth) |
-
-Неизвестные поля (например, требуются ли дополнительные обязательные поля) — требуют уточнения у заказчика.
-
-### Правила доступа Firestore (пример, требует настройки в консоли)
-```
-rules_version = '2';
-service cloud.firestore {
-  match /databases/{database}/documents {
-    match /clients/{documentId} {
-      allow read, write: if request.auth != null && request.auth.uid == resource.data.ownerUid;
-      allow create: if request.auth != null;
-    }
-  }
-}
-```
-
-### Порядок подключения окружения
-1. Создайте веб-приложение в консоли Firebase (проект `zoo-opt`).
-2. Скопируйте значения конфигурации (apiKey, authDomain, projectId и др.) в `.env`.
-3. Включите метод входа Email/Password в Firebase Authentication.
-4. Настройте правила безопасности Firestore (см. выше).
-5. Пересоберите проект: `npm run build`.
----
-## 8. Запуск GitHub Actions
-
-### Доступные workflows (из репозитория `mail-automation`)
-Сценарии и их параметры берутся из реальных файлов workflows:
-
-| ID в клиенте | Workflow файл | Описание | Параметры `workflow_dispatch` |
-|-------------|---------------|----------|-------------------------------|
-| `tests` | `tests.yml` | Тесты (стенд), без реальных писем | нет |
-| `kpi_sales` | `kpi_sales.yml` | KPI Продажи (ручной запуск) | нет |
-| `weekly_fri` | `weekly_fri.yml` | Почта пятница | `test_mode` (bool), `only` (строка), `ignore_window` (bool) |
-| `weekly_mon_tue` | `weekly_mon_tue.yml` | Почта пн-вт | `test_mode`, `only`, `ignore_window` |
-| `weekly_wed` | `weekly_wed.yml` | Почта среда | `test_mode`, `only`, `ignore_window` |
-| `weekly_residues` | `weekly_residues.yml` | Рекомендации к заказу (пн) | `test_mode` (bool) |
-| `weekly_sety_price` | `weekly_sety_price.yml` | Прайсы понедельника (сети + ИП Мамедов) | `test_mode` (bool), `skip_if_sent` (bool) |
-
-### Ожидаемый API-контракт (серверная сторона не реализована)
-Клиент ожидает `POST` на `VITE_API_BASE_URL/run`:
-
-**Запрос:**
-```json
-{
-  "workflowId": "weekly_fri",
-  "inputs": { "test_mode": true }
-}
-```
-
-**Ответ:**
-```json
-{
-  "accepted": true,
-  "message": "Запуск принят",
-  "runUrl": "https://github.com/.../actions/runs/12345678",
-  "runId": "12345678"
-}
-```
-
-### Необходимые серверные секреты (на стороне сервера, не в клиенте)
-- GitHub Personal Access Token или GitHub App credentials для вызова `workflow_dispatch` в репозитории `BOBAH1988/mail-automation`.
-- Токен хранится только на сервере. Клиент не имеет к нему доступа.
-
-### Проверка статуса
-После принятого запроса (`accepted: true`) статус «запрос принят» не означает завершение workflow. Нужно перейти по `runUrl` и отслеживать выполнение в интерфейсе GitHub Actions.
-
-### Что нужно сделать для интеграции
-1. Реализовать серверный API (Firebase Cloud Functions, Cloudflare Worker или другой HTTPS-предостовитель).
-2. Задать `VITE_API_BASE_URL` в `.env` и в GitHub Secrets.
-3. Убедиться, что сервер проверяет `workflowId` по белому списку и не позволяет произвольный запуск.
-
----
-
-## 9. Публикация PWA (GitHub Pages)
-
-### Настройки
-- Репозиторий: `BOBAH1988/ZOO_opt`
-- Базовый путь приложения: `/ZOO_opt/` (задаётся в `vite.config.ts` через `base`)
-- Сайт после публикации: `https://BOBAH1988.github.io/ZOO_opt/`
-
-### Шаги публикации
-1. Включите GitHub Pages в настройках репозитория (Settings → Pages → Source: GitHub Actions).
-2. При пуше в ветку `main` сработает workflow `.github/workflows/deploy.yml`:
-   - установит зависимости (`npm ci`);
-   - выполнит сборку (`npm run build`) с переменными окружения из Secrets;
-   - загрузит артефакт `dist/`;
-   - задеплоит на GitHub Pages (`actions/deploy-pages`).
-3. Приложение доступно по адресу `https://BOBAH1988.github.io/ZOO_opt/`.
-
-### Ограничения кэширования
-- Service Worker кэширует только статическую оболочку: `index.html`, манифест, иконки.
-- Данные клиентов, токены авторизации и результаты запросов к серверному API **не кэшируются**.
-- Firebase и GitHub API запросы не попадают в кэш Service Worker.
-
-### Что пока нужно настроить вручную
-- Включить GitHub Pages в настройках репозитория.
-- Добавить Firebase Secrets в репозиторий GitHub.
-- (Опционально) Реализовать и настроить серверный API для запуска workflows.
-
----
-
-## 10. Безопасность и ограничения
-
-### Хранение секретов
-- GitHub-токены и учётные данные GitHub App **не хранятся** в клиентском коде, в переменных сборки Vite, в Firebase Web config и не передаются из браузера.
-- Firebase-конфигурация (apiKey, authDomain и др.) — публичные параметры веб-приложения, допустимы в клиентском коде, но не содержат секретов доступа.
-- Серверный API (когда будет реализован) должен хранить GitHub-токен только в серверных секретах.
-
-### Права пользователя
-- Все разделы приложения (Отчёты, Запуск процессов, Клиенты) доступны только после авторизации через Firebase Authentication.
-- Доступ к клиентам в Firestore ограничен полем `ownerUid` — пользователь видит и редактирует только свои документы.
-- Анонимный вход не включен. Публичная регистрация не включена автоматически (код поддерживает `signUp`, но её использование определяется настройками Firebase).
-
-### Действия, требующие подтверждения
-- Удаление клиента — диалог подтверждения перед удалением.
-- Запуск сценариев, которые могут отправлять реальные письма клиентам — диалог подтверждения с предупреждением.
-
-### Риски, которые ещё не закрыты
-- Серверный API для запуска workflows не реализован — функция «Запуск процессов» показывает сообщение об отсутствии API и не выполняет запуск.
-- Нет настроенного ESLint и тестов.
-- Нет автоматической проверки отсутствия секресов в собранном бандле (проверялось вручную).
-- Firebase проект `zoo-opt` создан, но Authentication и Firestore требуют донастройки в консоли.
----
-## 11. Проверки и диагностика
-
-### Запущенные проверки
-| Проверка | Команда | Результат |
-|----------|---------|-----------|
-| Проверка типов TypeScript | `npx tsc --noEmit` | Пройдено (ошибок нет) |
-| Сборка проекта | `npm run build` | Пройдена (бандл ~643 KB) |
-| Проверка бандла на секреты | `grep` по `ghp_`, `AIza`, `github_token` в `dist/assets/*.js` | Нет совпадений (чисто) |
-
-### Как проверить основные сценарии
-1. **Вход:** собрать проект, открыть в браузере, ввести email и пароль (пользователь должен быть создан в Firebase Authentication).
-2. **Отчёты:** после входа открыть `/#/reports` — должно отображаться пустое состояние.
-3. **Клиенты:** открыть `/#/clients` — должна быть загрузка, затем пустой список или список из Firestore. Попробовать создать клиента через форму.
-4. **Запуск процессов:** открыть `/#/run` — если `VITE_API_BASE_URL` не задан, должно отображаться сообщение «Запуск процессов не настроен: отсутствует серверный API».
-
-### Известные проблемы
-- При отсутствии Firebase-конфигурации приложение отображает предупреждение на страницах, но не блокирует навигацию полностью (вход недоступен).
-- Серверный API не реализован — запуск workflows невозможен.
-- Нет Unit-тестов и интеграционных тестов.
-
----
-
-## 12. План дальнейшей работы
-
-### Обязательные шаги для запуска
-1. Настроить Firebase Console: включить Authentication (Email/Password), создать базу Firestore, задать правила безопасности.
-2. Добавить Firebase-переменные в `.env` локально и в GitHub Secrets для CI/CD.
-3. Включить GitHub Pages в настройках репозитория.
-4. Реализовать серверный API (Cloud Functions / Cloudflare Worker / свой API) по контракту `POST /run` с белым списком workflow.
-5. Задать `VITE_API_BASE_URL` и проверить сквозной запуск workflow.
-
-### Улучшения на будущее (не в MVP)
-- Настроить ESLint и Prettier.
-- Добавить Unit-тесты (Vitest / Jest) и интеграционные тесты.
-- Добавить дополнительные роли и права доступа.
-- Экспорт/импорт клиентов.
-- Уведомления о статусе запусков workflows.
-- Обработка входящих писем.
-
----
-
-## 13. Инструкции следующему ИИ-агенту
-
-### Правила работы с проектом
-
-1. **Сначала читайте документацию.** Перед любыми изменениями внимательно прочтите этот README, `vite.config.ts`, `tsconfig.json`, `package.json` и ключевые файлы в `src/`.
-2. **Проверяйте текущую реализацию.** Не предполагайте, что функция работает — откройте соответствующий файл в `src/` и убедитесь в её наличии. Особенно это относится к серверному API, Firebase-конфигурации и тестам.
-3. **Не раскрывайте и не добавляйте секреты.** Никогда не записывайте реальные API-ключи, пароли, GitHub-токены или персональные данные в код, коммиты, `.env` (которое не коммитится), README или комментарии. Используйте только заглушки в `.env.example`.
-4. **Не меняйте существующие данные и бизнес-логику без необходимости.** Python-скрипты в репозитории `mail-automation` не должны изменяться. В данном проекте не изменяйте логику существующих страниц без согласования.
-5. **Обновляйте README при изменениях.** Если меняется архитектура, добавляются новые переменные окружения, меняется API-контракт или настройка деплоя — обновите соответствующие разделы этого README.
-6. **Разделяйте реализованное и планируемое.** Не утверждайте, что функция работает, если она не проверена. Серверный API для запуска workflows в настоящее время не реализован — это ограничение, а не функция.
-7. **Команды проекта:** `npm install`, `npm run dev`, `npm run build`, `npx tsc --noEmit`. Тестового скрипта нет.
-8. **Путь приложения:** `/ZOO_opt/` — не предполагайте, что приложение размещается в корне домена.
-9. **Безопасность PWA:** не добавляйте кэширование персональных данных или секретов в Service Worker.
-
-### Точки входа для изменений
-- Страницы: `src/pages/`
-- Компоненты: `src/components/`
-- Контекст авторизации: `src/context/AuthContext.tsx`
-- API-контракт: `src/api.ts`
-- Конфигурация Firebase: `src/firebase.config.ts`, `src/firebase.ts`
-- Типы: `src/types.ts`, `src/types/firebase.d.ts`
-- Деплой: `.github/workflows/deploy.yml`
+- Развернуть и защитить сервер `/run`, перенести доверительную запись `runLogs` на сервер (Admin SDK) при необходимости.
+- Добавить Firebase Emulator тесты для правил/сценариев, e2e/smoke проверки.
+- Создать необходимые индексы Firestore по подсказкам консоли.
+- Усилить контроль рассылок реальным адресатам (роли, подтверждения, аудит на сервере).

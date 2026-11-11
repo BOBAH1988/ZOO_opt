@@ -5,6 +5,7 @@ import { Login } from '@/components/Login';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { ReportsPage } from '@/pages/ReportsPage';
 import { RunProcessesPage } from '@/pages/RunProcessesPage';
+import { KpiPage } from '@/pages/KpiPage';
 import { ClientsPage } from '@/pages/ClientsPage';
 
 export default function App() {
@@ -28,6 +29,7 @@ export default function App() {
             <Route element={<Layout />}>
               <Route path="reports" element={<ReportsPage />} />
               <Route path="run" element={<RunProcessesPage />} />
+              <Route path="kpi" element={<KpiPage />} />
               <Route path="clients" element={<ClientsPage />} />
             </Route>
           </Route>

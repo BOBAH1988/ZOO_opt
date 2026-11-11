@@ -1,46 +1,45 @@
 declare module 'firebase/app' {
   export interface FirebaseApp {}
   export function getApps(): FirebaseApp[];
-  export function initializeApp(options: { apiKey: string; [key: string]: any }): FirebaseApp;
+  export function initializeApp(options: { apiKey: string; [key: string]: unknown }): FirebaseApp;
 }
 
 declare module 'firebase/auth' {
   export interface User {
     uid: string;
     email: string | null;
-    [key: string]: any;
+    getIdToken(forceRefresh?: boolean): Promise<string>;
   }
-  export interface Auth {}
-  export function getAuth(app?: FirebaseApp): Auth;
-  export function signInWithEmailAndPassword(auth: Auth, email: string, password: string): Promise<any>;
-  export function createUserWithEmailAndPassword(auth: Auth, email: string, password: string): Promise<any>;
+  export interface Auth {
+    currentUser: User | null;
+  }
+  export function getAuth(app?: import('firebase/app').FirebaseApp): Auth;
+  export function signInWithEmailAndPassword(auth: Auth, email: string, password: string): Promise<{ user: User }>;
+  export function createUserWithEmailAndPassword(auth: Auth, email: string, password: string): Promise<{ user: User }>;
+  export function sendPasswordResetEmail(auth: Auth, email: string): Promise<void>;
+  export function sendEmailVerification(user: User): Promise<void>;
   export function signOut(auth: Auth): Promise<void>;
   export function onAuthStateChanged(auth: Auth, callback: (user: User | null) => void): () => void;
 }
 
 declare module 'firebase/firestore' {
   export interface Firestore {}
-  export function getFirestore(app?: FirebaseApp): Firestore;
-  export function collection(db: Firestore, path: string): any;
-  export function query(...args: any[]): any;
-  export function where(field: string, op: string, value: any): any;
-  export function orderBy(field: string, direction?: string): any;
-  export function onSnapshot(query: any, next: (snap: any) => void, error?: (err: any) => void): () => void;
-  export function addDoc(ref: any, data: any): Promise<any>;
-  export function updateDoc(ref: any, data: any): Promise<void>;
-  export function deleteDoc(ref: any): Promise<void>;
-  export function doc(db: Firestore, path: string, id?: string): any;
-  export type DocumentData = any;
-  export type QueryDocumentSnapshot<T = DocumentData> = T & { id: string };
-}
-
-declare module 'firebase/config' {
-  export interface FirebaseOptions {
-    apiKey: string;
-    authDomain: string;
-    projectId: string;
-    storageBucket?: string;
-    messagingSenderId?: string;
-    appId: string;
+  export interface Timestamp {
+    toDate(): Date;
   }
+  export const Timestamp: { now(): Timestamp; fromDate(date: Date): Timestamp };
+  export function serverTimestamp(): unknown;
+  export function getFirestore(app?: import('firebase/app').FirebaseApp): Firestore;
+  export function collection(db: Firestore, path: string): unknown;
+  export function query(...args: unknown[]): unknown;
+  export function where(field: string, op: string, value: unknown): unknown;
+  export function orderBy(field: string, direction?: string): unknown;
+  export interface QuerySnapshot<T = DocumentData> { forEach(cb: (doc: QueryDocumentSnapshot<T>) => void): void; }
+  export function onSnapshot(query: unknown, next: (snap: QuerySnapshot) => void, error?: (err: Error) => void): () => void;
+  export function addDoc(ref: unknown, data: unknown): Promise<{ id: string }>;
+  export function updateDoc(ref: unknown, data: unknown): Promise<void>;
+  export function deleteDoc(ref: unknown): Promise<void>;
+  export function doc(db: Firestore, path: string, id?: string): unknown;
+  export type DocumentData = Record<string, unknown>;
+  export interface QueryDocumentSnapshot<T = DocumentData> { id: string; data(): T; }
 }
