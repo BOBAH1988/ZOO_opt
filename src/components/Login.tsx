@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { isFirebaseConfigured } from '@/firebase.config';
+import { Footer } from '@/components/Footer';
 
 interface LoginProps {
   onLogin: () => void;
@@ -89,6 +90,7 @@ export function Login({ onLogin }: LoginProps) {
           Доступ возможен только после авторизации.
         </p>
       </div>
+      <Footer />
     </div>
   );
 }
