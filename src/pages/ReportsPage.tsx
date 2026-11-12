@@ -56,12 +56,11 @@ export function ReportsPage() {
     const raf = requestAnimationFrame(() => {
       const rect = el.getBoundingClientRect();
       let right = tooltip.right;
-      let top = tooltip.top;
       if (rect.width > right) right = rect.width;
-      if (right > window.innerWidth) right = window.innerWidth;
+      let top = tooltip.top;
       if (top + rect.height > window.innerHeight) top = window.innerHeight - rect.height;
       if (top < 0) top = 0;
-      el.style.right = `${window.innerWidth - right}px`;
+      el.style.right = `${right}px`;
       el.style.top = `${top}px`;
     });
     return () => cancelAnimationFrame(raf);
@@ -155,8 +154,8 @@ export function ReportsPage() {
                         const badge = e.currentTarget as HTMLElement;
                         const rect = badge.getBoundingClientRect();
                         setTooltip({
-                          right: window.innerWidth - rect.right,
-                          top: rect.bottom + 4,
+                          right: window.innerWidth - rect.left,
+                          top: rect.top,
                           message: log.message,
                         });
                       }}
