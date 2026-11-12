@@ -420,6 +420,23 @@ export function RunProcessesPage() {
           }}
           onClick={(e) => e.stopPropagation()}
         >
+          <button
+            onClick={() => setHelpMenuOpen(false)}
+            style={{
+              position: 'absolute',
+              top: 8,
+              right: 8,
+              background: 'transparent',
+              border: 'none',
+              fontSize: 20,
+              color: '#94a3b8',
+              cursor: 'pointer',
+              padding: 0,
+              lineHeight: 1,
+            }}
+          >
+            ×
+          </button>
           <div style={{ fontSize: 13, fontWeight: 600, color: '#0f172a', marginBottom: 8, borderBottom: '1px solid #f1f5f9', paddingBottom: 6 }}>
             Сценарии запуска
           </div>
