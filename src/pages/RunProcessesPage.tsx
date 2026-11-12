@@ -297,7 +297,7 @@ export function RunProcessesPage() {
           onClick={() => setHelpMenuOpen((prev) => !prev)}
           style={{
             background: 'transparent',
-            border: '1px solid #4f46e5',
+            border: '1px solid #94a3b8',
             borderRadius: 6,
             width: 36,
             height: 36,
@@ -307,11 +307,11 @@ export function RunProcessesPage() {
             cursor: 'pointer',
             fontSize: 22,
             fontWeight: 700,
-            color: '#4f46e5',
+            color: '#64748b',
             lineHeight: 1,
           }}
-          onMouseEnter={(e) => { e.currentTarget.style.background = '#eef2ff'; e.currentTarget.style.color = '#3730a3'; }}
-          onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#4f46e5'; }}
+          onMouseEnter={(e) => { e.currentTarget.style.background = '#f1f5f9'; e.currentTarget.style.color = '#334155'; }}
+          onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#64748b'; }}
         >
           ❓
         </button>
