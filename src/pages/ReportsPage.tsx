@@ -128,7 +128,7 @@ export function ReportsPage() {
             onClick={() => alert('Маршрут: заглушка. Реализация посещения точек будет позже.')}
           >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-              <path d="M5 19l14-14M19 5l-7 7 7 7" />
+              <path d="M12 19V5M12 5l-7 7M12 5l7 7" />
             </svg>
           </button>
           <button className="btn btn-outline btn-sm" onClick={prevPage} disabled={page === 0}>←</button>
