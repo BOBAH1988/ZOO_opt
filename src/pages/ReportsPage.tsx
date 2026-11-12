@@ -41,6 +41,13 @@ export function ReportsPage() {
   const [logs, setLogs] = useState<RunLog[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [tooltip, setTooltip] = useState<{ x: number; y: number; message: string } | null>(null);
+
+  useEffect(() => {
+    const onDocClick = () => setTooltip(null);
+    document.addEventListener('mousedown', onDocClick);
+    return () => document.removeEventListener('mousedown', onDocClick);
+  }, []);
 
   useEffect(() => {
     if (!isFirebaseConfigured() || !db || !user) {
@@ -103,7 +110,6 @@ export function ReportsPage() {
                 <th>Дата</th>
                 <th>Процесс</th>
                 <th>Статус</th>
-                <th>Сообщение</th>
               </tr>
             </thead>
             <tbody>
@@ -123,17 +129,47 @@ export function ReportsPage() {
                   </td>
                   <td>{log.workflowName}</td>
                   <td>
-                    <span className={`badge ${log.status === 'accepted' ? 'bg-test' : 'bg-real'}`}>
+                    <span
+                      className={`badge ${log.status === 'accepted' ? 'bg-test' : 'bg-real'}`}
+                      style={{ cursor: 'pointer', userSelect: 'none' }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setTooltip({ x: e.clientX, y: e.clientY, message: log.message });
+                      }}
+                    >
                       {log.status === 'accepted' ? 'Ок' : 'Сбой'}
                     </span>
                   </td>
-                  <td style={{ fontSize: 13 }}>{log.message}</td>
                 </tr>
               ))}
             </tbody>
           </table>
+          {tooltip && (
+            <div
+              onClick={(e) => e.stopPropagation()}
+              style={{
+                position: 'fixed',
+                zIndex: 50,
+                background: '#111',
+                color: '#fff',
+                padding: '8px 10px',
+                borderRadius: 6,
+                fontSize: 12,
+                lineHeight: 1.4,
+                maxWidth: 300,
+                whiteSpace: 'pre-wrap',
+                pointerEvents: 'auto',
+                left: Math.min(Math.max(8, tooltip.x), window.innerWidth - 8),
+                top: Math.min(Math.max(8, tooltip.y), window.innerHeight - 8),
+                transform: 'translate(0, 0)',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
+              }}
+            >
+              {tooltip.message}
+            </div>
+          )}
           <p style={{ marginTop: 12, fontSize: 12, color: '#6b7280' }}>
-            Статус «принят» означает, что сервер принял запрос. Фактическое выполнение и итог смотрите в GitHub Actions.
+            Статус «Ок» означает, что сервер принял запрос. Фактическое выполнение и итог смотрите в GitHub Actions.
           </p>
         </div>
       )}
