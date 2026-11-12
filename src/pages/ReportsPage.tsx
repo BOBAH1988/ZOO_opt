@@ -208,9 +208,6 @@ export function ReportsPage() {
               {tooltip.message}
             </div>
           )}
-          <p style={{ marginTop: 12, fontSize: 12, color: '#6b7280' }}>
-            Статус «Ок» означает, что сервер принял запрос. Фактическое выполнение и итог смотрите в GitHub Actions.
-          </p>
         </div>
       )}
     </div>
