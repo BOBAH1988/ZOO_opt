@@ -4,7 +4,7 @@ import { db } from '@/firebase';
 import { isFirebaseConfigured } from '@/firebase.config';
 import { useAuth } from '@/context/AuthContext';
 import { EmptyState } from '@/components/EmptyState';
-import type { RunLog } from '@/types';
+import type { Client, RunLog } from '@/types';
 
 function toIso(value: unknown): string {
   if (value && typeof value === 'object' && 'toDate' in value && typeof (value as { toDate?: unknown }).toDate === 'function') {
@@ -41,6 +41,8 @@ export function ReportsPage() {
   const [logs, setLogs] = useState<RunLog[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [clients, setClients] = useState<Client[]>([]);
+  const [clientsLoading, setClientsLoading] = useState(true);
   const [tooltip, setTooltip] = useState<{ left: number; top: number; message: string } | null>(null);
   const [page, setPage] = useState(0);
   const tipRef = useRef<HTMLDivElement>(null);
@@ -108,6 +110,48 @@ export function ReportsPage() {
     return () => unsub();
   }, [user]);
 
+  useEffect(() => {
+    if (!isFirebaseConfigured() || !db || !user) {
+      setClientsLoading(false);
+      return;
+    }
+    setClientsLoading(true);
+    const q = query(
+      collection(db, 'clients'),
+      where('ownerUid', '==', user.uid),
+      orderBy('updatedAt', 'desc'),
+    );
+    const unsub = onSnapshot(
+      q,
+      (snapshot) => {
+        const list: Client[] = [];
+        snapshot.forEach((snap) => {
+          const data = snap.data() as unknown as Client & { ownerUid?: unknown };
+          if (typeof data.name !== 'string' || !data.name.trim()) return;
+          if (typeof data.email !== 'string' || !data.email.trim()) return;
+          if (typeof data.ownerUid !== 'string' || !data.ownerUid) return;
+          list.push({
+            id: snap.id,
+            name: data.name.trim(),
+            email: data.email.trim(),
+            phone: typeof data.phone === 'string' && data.phone.trim() ? data.phone.trim() : undefined,
+            company: typeof data.company === 'string' && data.company.trim() ? data.company.trim() : undefined,
+            notes: typeof data.notes === 'string' && data.notes.trim() ? data.notes.trim() : undefined,
+            createdAt: typeof data.createdAt === 'string' ? data.createdAt : '',
+            updatedAt: typeof data.updatedAt === 'string' ? data.updatedAt : '',
+            ownerUid: data.ownerUid,
+          });
+        });
+        setClients(list);
+        setClientsLoading(false);
+      },
+      (_err) => {
+        setClientsLoading(false);
+      },
+    );
+    return () => unsub();
+  }, [user]);
+
   if (!isFirebaseConfigured() || !db) {
     return (
       <div className="card">
@@ -136,6 +180,33 @@ export function ReportsPage() {
         </div>
       </h2>
       {error && <div className="alert alert-danger">{error}</div>}
+      {!clientsLoading && (
+        <div className="card" style={{ marginBottom: 12, padding: 16 }}>
+          <h3 style={{ margin: '0 0 12 0', fontSize: 16, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>АКБ</h3>
+          <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
+            <div style={{ flex: 1, minWidth: 140, padding: 12, background: '#f3f4f6', borderRadius: 8, textAlign: 'center' }}>
+              <div style={{ fontSize: 11, color: '#6b7280', textTransform: 'uppercase', marginBottom: 4 }}>Всего клиентов</div>
+              <div style={{ fontSize: 24, fontWeight: 700, color: '#111827' }}>{clients.length}</div>
+            </div>
+            <div style={{ flex: 1, minWidth: 140, padding: 12, background: '#f3f4f6', borderRadius: 8, textAlign: 'center' }}>
+              <div style={{ fontSize: 11, color: '#6b7280', textTransform: 'uppercase', marginBottom: 4 }}>Активных клиентов</div>
+              <div style={{ fontSize: 24, fontWeight: 700, color: '#15803d' }}>{clients.length}</div>
+            </div>
+            <div style={{ flex: 1, minWidth: 140, padding: 12, background: '#f3f4f6', borderRadius: 8, textAlign: 'center' }}>
+              <div style={{ fontSize: 11, color: '#6b7280', textTransform: 'uppercase', marginBottom: 4 }}>Вывод в %</div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, justifyContent: 'center' }}>
+                <div style={{ width: 60, height: 60, borderRadius: 50, border: '4px solid #e5e7eb', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
+                  <svg width="52" height="52" viewBox="0 0 24 24" style={{ transform: 'rotate(-90deg)' }}>
+                    <circle cx="12" cy="12" r="10" stroke="#e5e7eb" strokeWidth="4" fill="none" />
+                    <circle cx="12" cy="12" r="10" stroke="#2563eb" strokeWidth="4" fill="none" strokeDasharray="62.8" strokeDashoffset="0" />
+                  </svg>
+                  <div style={{ position: 'absolute', fontSize: 16, fontWeight: 700, color: '#111827' }}>{clients.length > 0 ? 100 : 0}%</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
       {loading ? (
         <div className="card"><p style={{ textAlign: 'center', color: '#6b7280', padding: 24 }}>Загрузка истории…</p></div>
       ) : pagedLogs.length === 0 ? (
