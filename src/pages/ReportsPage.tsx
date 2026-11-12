@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { collection, onSnapshot, orderBy, query, where, type DocumentData, type QueryDocumentSnapshot } from 'firebase/firestore';
 import { db } from '@/firebase';
 import { isFirebaseConfigured } from '@/firebase.config';
@@ -42,12 +42,26 @@ export function ReportsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [tooltip, setTooltip] = useState<{ x: number; y: number; message: string } | null>(null);
+  const tipRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const onDocClick = () => setTooltip(null);
     document.addEventListener('mousedown', onDocClick);
     return () => document.removeEventListener('mousedown', onDocClick);
   }, []);
+
+  useEffect(() => {
+    if (!tooltip || !tipRef.current) return;
+    const rect = tipRef.current.getBoundingClientRect();
+    let left = tooltip.x;
+    let top = tooltip.y;
+    if (left + rect.width > window.innerWidth - 8) left = window.innerWidth - rect.width - 8;
+    if (left < 8) left = 8;
+    if (top + rect.height > window.innerHeight - 8) top = window.innerHeight - rect.height - 8;
+    if (top < 8) top = 8;
+    tipRef.current.style.left = `${left}px`;
+    tipRef.current.style.top = `${top}px`;
+  }, [tooltip]);
 
   useEffect(() => {
     if (!isFirebaseConfigured() || !db || !user) {
@@ -146,6 +160,7 @@ export function ReportsPage() {
           </table>
           {tooltip && (
             <div
+              ref={tipRef}
               onClick={(e) => e.stopPropagation()}
               style={{
                 position: 'fixed',
@@ -161,7 +176,6 @@ export function ReportsPage() {
                 pointerEvents: 'auto',
                 left: Math.min(Math.max(8, tooltip.x), window.innerWidth - 8),
                 top: Math.min(Math.max(8, tooltip.y), window.innerHeight - 8),
-                transform: 'translate(0, 0)',
                 boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
               }}
             >
