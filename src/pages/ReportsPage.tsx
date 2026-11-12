@@ -166,16 +166,16 @@ export function ReportsPage() {
       {error && <div className="alert alert-danger">{error}</div>}
       {!clientsLoading && (
         <>
-          {/* Блок АКБ */}
-          <div style={{ fontSize: 16, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px', color: 'var(--color-text)', marginBottom: 8 }}>АКБ</div>
+          {/* Блок KPI */}
+          <div style={{ fontSize: 16, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px', color: 'var(--color-text)', marginBottom: 8 }}>KPI</div>
           <div className="card" style={{ marginTop: 12, marginBottom: 12, padding: 12 }}>
             <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
             <div style={{ flex: 1, minWidth: 140, padding: 12, background: 'var(--color-bg)', borderRadius: 8, textAlign: 'center' }}>
-              <div style={{ fontSize: 11, color: 'var(--color-text-secondary)', textTransform: 'uppercase', marginBottom: 4 }}>Всего клиентов</div>
+              <div style={{ fontSize: 11, color: 'var(--color-text-secondary)', textTransform: 'uppercase', marginBottom: 4 }}>План</div>
               <div style={{ fontSize: 24, fontWeight: 700, color: 'var(--color-text)' }}>{clients.length}</div>
             </div>
             <div style={{ flex: 1, minWidth: 140, padding: 12, background: 'var(--color-bg)', borderRadius: 8, textAlign: 'center' }}>
-              <div style={{ fontSize: 11, color: 'var(--color-text-secondary)', textTransform: 'uppercase', marginBottom: 4 }}>Активных клиентов</div>
+              <div style={{ fontSize: 11, color: 'var(--color-text-secondary)', textTransform: 'uppercase', marginBottom: 4 }}>Факт</div>
               <div style={{ fontSize: 24, fontWeight: 700, color: 'var(--color-success)' }}>{clients.length}</div>
             </div>
             <div style={{ flex: 1, minWidth: 140, padding: 12, background: 'var(--color-bg)', borderRadius: 8, textAlign: 'center' }}>
@@ -191,16 +191,16 @@ export function ReportsPage() {
             </div>
           </div>
           </div>
-          {/* Блок KPI */}
-          <div style={{ fontSize: 16, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px', color: 'var(--color-text)', marginBottom: 8 }}>KPI</div>
+          {/* Блок АКБ */}
+          <div style={{ fontSize: 16, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px', color: 'var(--color-text)', marginBottom: 8 }}>АКБ</div>
           <div className="card" style={{ marginTop: 12, marginBottom: 12, padding: 12 }}>
             <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
             <div style={{ flex: 1, minWidth: 140, padding: 12, background: 'var(--color-bg)', borderRadius: 8, textAlign: 'center' }}>
-              <div style={{ fontSize: 11, color: 'var(--color-text-secondary)', textTransform: 'uppercase', marginBottom: 4 }}>План</div>
+              <div style={{ fontSize: 11, color: 'var(--color-text-secondary)', textTransform: 'uppercase', marginBottom: 4 }}>Всего клиентов</div>
               <div style={{ fontSize: 24, fontWeight: 700, color: 'var(--color-text)' }}>{clients.length}</div>
             </div>
             <div style={{ flex: 1, minWidth: 140, padding: 12, background: 'var(--color-bg)', borderRadius: 8, textAlign: 'center' }}>
-              <div style={{ fontSize: 11, color: 'var(--color-text-secondary)', textTransform: 'uppercase', marginBottom: 4 }}>Факт</div>
+              <div style={{ fontSize: 11, color: 'var(--color-text-secondary)', textTransform: 'uppercase', marginBottom: 4 }}>Активных клиентов</div>
               <div style={{ fontSize: 24, fontWeight: 700, color: 'var(--color-success)' }}>{clients.length}</div>
             </div>
             <div style={{ flex: 1, minWidth: 140, padding: 12, background: 'var(--color-bg)', borderRadius: 8, textAlign: 'center' }}>
