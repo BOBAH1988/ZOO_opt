@@ -45,9 +45,9 @@ button:disabled { opacity: 0.6; cursor: not-allowed; }
   padding: 0 20px; height: 56px; display: flex; align-items: center;
   justify-content: space-between; position: sticky; top: 0; z-index: 100;
 }
-.brand { font-weight: 700; font-size: 18px; color: var(--color-primary); letter-spacing: 0.2px; display: flex; align-items: center; gap: 8px; }
+.brand { font-weight: 700; font-size: 18px; color: var(--color-primary); letter-spacing: 0.2px; display: flex; align-items: center; gap: 8px; white-space: nowrap; flex-shrink: 0; }
 .brand-icon { width: 36px; height: 36px; border-radius: 8px; }
-.header-right { display: flex; align-items: center; gap: 8px; margin-left: auto; }
+.header-right { display: flex; align-items: center; gap: 8px; margin-left: auto; flex-shrink: 0; }
 .btn-signout { background: transparent; color: var(--color-danger); padding: 4px 10px; }
 .btn-signout:hover { background: rgba(185, 28, 28, 0.12); }
 
