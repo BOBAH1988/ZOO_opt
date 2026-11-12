@@ -310,8 +310,6 @@ export function RunProcessesPage() {
             color: '#64748b',
             lineHeight: 1,
           }}
-          onMouseEnter={(e) => { e.currentTarget.style.background = '#f1f5f9'; e.currentTarget.style.color = '#334155'; }}
-          onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#64748b'; }}
         >
           ❓
         </button>
