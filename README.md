@@ -10,7 +10,7 @@ MVP-приложение для управления почтовыми авто
 - **Сервер запуска:** `/server` содержит пример Express API, а `server/cloudflare` — Cloudflare Worker для бесплатного размещения с проверкой Firebase ID token, allowlist пользователя, валидацией workflow/inputs и серверным GitHub token. Требует развёртывания и настройки `VITE_API_BASE_URL`. См. `server/README.md` и `server/cloudflare/README.md`.
 - **Навигация:** внутренняя навигация через `Link`/роутер (HashRouter, base `/ZOO_opt/`), без обычных ссылок на внутренние маршруты вне роутера.
 - **Регистрация/доступ:** вход, сброс пароля, опциональные ограничения регистрации (`VITE_DISABLE_SIGNUP`, `VITE_ALLOWED_EMAILS`, `VITE_ALLOWED_EMAIL_DOMAINS`, `VITE_REGISTRATION_INVITE_CODE`), попытка отправки письма подтверждения email после регистрации. Для внутренней системы рекомендуется отключить/ограничить регистрацию и управлять пользователями в Firebase.
-- **Отчёты:** история запусков из `runLogs` (статус, сообщение, ошибка, ссылка на GitHub Actions, дата, параметры). Статус «принят» не означает завершение workflow.
+- **Отчёты:** история запусков из `runLogs` (статус, сообщение, ошибка, дата, параметры). Столбец «Результат» (ссылка на GitHub Actions) скрыт и не используется. Статус «Ок» не означает завершение workflow.
 - **PWA:** `public/sw.js` — чистый JS, кэш только статической оболочки, network-only для Firebase/API/авторизованных данных, `src/main.tsx` регистрирует SW.
 - **CI/проверки:** `npm run lint` и `npm run test` = `tsc --noEmit`, `npm run build` = `tsc -b && vite build`; deploy workflow выполняет lint, загружает/валидирует Firebase-конфиг из секрета `ZOO` и собирает проект. Правила и индексы Firestore публикуются отдельно через Firebase CLI.
 

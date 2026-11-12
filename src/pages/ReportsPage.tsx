@@ -104,7 +104,6 @@ export function ReportsPage() {
                 <th>Процесс</th>
                 <th>Статус</th>
                 <th>Сообщение</th>
-                <th>Результат</th>
               </tr>
             </thead>
             <tbody>
@@ -129,11 +128,6 @@ export function ReportsPage() {
                     </span>
                   </td>
                   <td style={{ fontSize: 13 }}>{log.message}</td>
-                  <td>
-                    {log.runUrl ? (
-                      <a href={log.runUrl} target="_blank" rel="noopener noreferrer">GitHub Actions</a>
-                    ) : '—'}
-                  </td>
                 </tr>
               ))}
             </tbody>
