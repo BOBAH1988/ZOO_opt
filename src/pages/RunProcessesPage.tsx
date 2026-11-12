@@ -308,6 +308,14 @@ export function RunProcessesPage() {
                 onClick={() => setSettingsOpen(scenario)}
                 title="Настройка"
                 style={{
+                  width: 32,
+                  height: 32,
+                  padding: 0,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: 16,
+                  lineHeight: 1,
                   ...(hasChanges(scenario.id) && {
                     outline: '1px solid #ef4444',
                     outlineOffset: '1px',
