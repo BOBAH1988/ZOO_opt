@@ -291,25 +291,27 @@ export function RunProcessesPage() {
 
   return (
     <div style={{ position: 'relative' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
         <h2 className="page-title" style={{ margin: 0 }}>{'Запуск'}</h2>
         <button
           onClick={() => setHelpMenuOpen((prev) => !prev)}
           style={{
             background: 'transparent',
-            border: '1px solid #cbd5e1',
+            border: '1px solid #4f46e5',
             borderRadius: 6,
-            width: 32,
-            height: 32,
+            width: 36,
+            height: 36,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             cursor: 'pointer',
-            fontSize: 18,
-            color: '#64748b',
+            fontSize: 22,
+            fontWeight: 700,
+            color: '#4f46e5',
+            lineHeight: 1,
           }}
-          onMouseEnter={(e) => { e.currentTarget.style.color = '#334155'; }}
-          onMouseLeave={(e) => { e.currentTarget.style.color = '#64748b'; }}
+          onMouseEnter={(e) => { e.currentTarget.style.background = '#eef2ff'; e.currentTarget.style.color = '#3730a3'; }}
+          onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#4f46e5'; }}
         >
           ❓
         </button>
