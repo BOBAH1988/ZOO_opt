@@ -405,16 +405,16 @@ export function RunProcessesPage() {
       {helpMenuOpen && (
         <div className="help-menu"
           style={{
-            position: 'absolute',
-            top: 70,
+            position: 'fixed',
+            top: 80,
             right: 16,
-            background: '#ffffff',
-            border: '1px solid #e2e8f0',
+            background: 'var(--color-surface)',
+            border: '1px solid var(--color-border)',
             borderRadius: 8,
-            boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)',
+            boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.15), 0 8px 10px -6px rgba(0, 0, 0, 0.1)',
             padding: 12,
             minWidth: 420,
-            maxHeight: 700,
+            maxHeight: '75vh',
             overflowY: 'auto',
             zIndex: 50,
           }}
@@ -429,7 +429,7 @@ export function RunProcessesPage() {
               background: 'transparent',
               border: 'none',
               fontSize: 20,
-              color: '#94a3b8',
+              color: 'var(--color-text-secondary)',
               cursor: 'pointer',
               padding: 0,
               lineHeight: 1,
@@ -437,7 +437,7 @@ export function RunProcessesPage() {
           >
             ×
           </button>
-          <div style={{ fontSize: 13, fontWeight: 600, color: '#0f172a', marginBottom: 8, borderBottom: '1px solid #f1f5f9', paddingBottom: 6 }}>
+          <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-text)', marginBottom: 8, borderBottom: '1px solid var(--color-border)', paddingBottom: 6 }}>
             Сценарии запуска
           </div>
           {SCENARIOS.map((scenario) => (
@@ -445,22 +445,22 @@ export function RunProcessesPage() {
               key={scenario.id}
               style={{
                 padding: '8px 10px',
-                borderBottom: '1px solid #f1f5f9',
+                borderBottom: '1px solid var(--color-border)',
                 cursor: 'default',
                 fontSize: 12.5,
-                color: '#334155',
+                color: 'var(--color-text)',
               }}
             >
-              <div style={{ fontWeight: 600, color: '#0f172a', marginBottom: 2 }}>{scenario.name}</div>
-              <div style={{ color: '#64748b', fontSize: 11.5, overflowWrap: 'anywhere' }}>{scenario.description}</div>
-              <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 4, display: 'flex', gap: 6, alignItems: 'center' }}>
-                <span style={{ fontFamily: 'monospace' }}>Код скрипта: {scenario.id}</span>
-                <span>·</span>
+              <div style={{ fontWeight: 600, color: 'var(--color-text)', marginBottom: 2 }}>{scenario.name}</div>
+              <div style={{ color: 'var(--color-text-secondary)', fontSize: 11.5, overflowWrap: 'anywhere' }}>{scenario.description}</div>
+              <div style={{ fontSize: 11, color: 'var(--color-text-secondary)', marginTop: 4, display: 'flex', gap: 6, alignItems: 'center' }}>
+                <span style={{ fontFamily: 'monospace', color: 'var(--color-text-secondary)' }}>Код скрипта: {scenario.id}</span>
+                <span style={{ color: 'var(--color-text-secondary)' }}>·</span>
                 <span>{scenario.day}{scenario.time ? ` в ${scenario.time}` : ''}</span>
               </div>
             </div>
           ))}
-          <div style={{ fontSize: 13, fontWeight: 600, color: '#0f172a', marginTop: 14, marginBottom: 8, borderBottom: '1px solid #f1f5f9', paddingBottom: 6 }}>
+          <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-text)', marginTop: 14, marginBottom: 8, borderBottom: '1px solid var(--color-border)', paddingBottom: 6 }}>
             Все скрипты
           </div>
           {ALL_SCRIPTS.map((script) => (
@@ -468,17 +468,17 @@ export function RunProcessesPage() {
               key={script.id}
               style={{
                 padding: '8px 10px',
-                borderBottom: '1px solid #f1f5f9',
+                borderBottom: '1px solid var(--color-border)',
                 cursor: 'default',
                 fontSize: 12.5,
-                color: '#334155',
+                color: 'var(--color-text)',
               }}
             >
-              <div style={{ fontWeight: 600, color: '#0f172a', marginBottom: 2 }}>{script.name}</div>
-              <div style={{ color: '#64748b', fontSize: 11.5, overflowWrap: 'anywhere' }}>{script.description}</div>
-              <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 4, display: 'flex', gap: 6, alignItems: 'center' }}>
-                <span style={{ fontFamily: 'monospace' }}>Код скрипта: {script.id}</span>
-                <span>·</span>
+              <div style={{ fontWeight: 600, color: 'var(--color-text)', marginBottom: 2 }}>{script.name}</div>
+              <div style={{ color: 'var(--color-text-secondary)', fontSize: 11.5, overflowWrap: 'anywhere' }}>{script.description}</div>
+              <div style={{ fontSize: 11, color: 'var(--color-text-secondary)', marginTop: 4, display: 'flex', gap: 6, alignItems: 'center' }}>
+                <span style={{ fontFamily: 'monospace', color: 'var(--color-text-secondary)' }}>Код скрипта: {script.id}</span>
+                <span style={{ color: 'var(--color-text-secondary)' }}>·</span>
                 <span>{script.schedule}</span>
               </div>
             </div>
