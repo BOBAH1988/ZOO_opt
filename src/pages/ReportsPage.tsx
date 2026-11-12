@@ -167,25 +167,25 @@ export function ReportsPage() {
       {!clientsLoading && (
         <>
           <div style={{ fontSize: 16, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px', color: 'var(--color-text)', marginBottom: 8 }}>АКБ</div>
-          <div className="card" style={{ marginBottom: 12, paddingTop: 0, paddingBottom: 12, paddingLeft: 16, paddingRight: 16 }}>
+          <div className="card" style={{ marginTop: 8, marginBottom: 12, paddingTop: 0, paddingBottom: 12, paddingLeft: 16, paddingRight: 16 }}>
             <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
-            <div style={{ flex: 1, minWidth: 140, padding: 12, background: '#f3f4f6', borderRadius: 8, textAlign: 'center' }}>
-              <div style={{ fontSize: 11, color: '#6b7280', textTransform: 'uppercase', marginBottom: 4 }}>Всего клиентов</div>
-              <div style={{ fontSize: 24, fontWeight: 700, color: '#111827' }}>{clients.length}</div>
+            <div style={{ flex: 1, minWidth: 140, padding: 12, background: 'var(--color-bg)', borderRadius: 8, textAlign: 'center' }}>
+              <div style={{ fontSize: 11, color: 'var(--color-text-secondary)', textTransform: 'uppercase', marginBottom: 4 }}>Всего клиентов</div>
+              <div style={{ fontSize: 24, fontWeight: 700, color: 'var(--color-text)' }}>{clients.length}</div>
             </div>
-            <div style={{ flex: 1, minWidth: 140, padding: 12, background: '#f3f4f6', borderRadius: 8, textAlign: 'center' }}>
-              <div style={{ fontSize: 11, color: '#6b7280', textTransform: 'uppercase', marginBottom: 4 }}>Активных клиентов</div>
-              <div style={{ fontSize: 24, fontWeight: 700, color: '#15803d' }}>{clients.length}</div>
+            <div style={{ flex: 1, minWidth: 140, padding: 12, background: 'var(--color-bg)', borderRadius: 8, textAlign: 'center' }}>
+              <div style={{ fontSize: 11, color: 'var(--color-text-secondary)', textTransform: 'uppercase', marginBottom: 4 }}>Активных клиентов</div>
+              <div style={{ fontSize: 24, fontWeight: 700, color: 'var(--color-success)' }}>{clients.length}</div>
             </div>
-            <div style={{ flex: 1, minWidth: 140, padding: 12, background: '#f3f4f6', borderRadius: 8, textAlign: 'center' }}>
-              <div style={{ fontSize: 11, color: '#6b7280', textTransform: 'uppercase', marginBottom: 4 }}>Вывод в %</div>
+            <div style={{ flex: 1, minWidth: 140, padding: 12, background: 'var(--color-bg)', borderRadius: 8, textAlign: 'center' }}>
+              <div style={{ fontSize: 11, color: 'var(--color-text-secondary)', textTransform: 'uppercase', marginBottom: 4 }}>Вывод в %</div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, justifyContent: 'center' }}>
-                <div style={{ width: 60, height: 60, borderRadius: 50, border: '4px solid #e5e7eb', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
+                <div style={{ width: 60, height: 60, borderRadius: 50, border: '4px solid var(--color-border)', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
                   <svg width="52" height="52" viewBox="0 0 24 24" style={{ transform: 'rotate(-90deg)' }}>
-                    <circle cx="12" cy="12" r="10" stroke="#e5e7eb" strokeWidth="4" fill="none" />
+                    <circle cx="12" cy="12" r="10" stroke="var(--color-border)" strokeWidth="4" fill="none" />
                     <circle cx="12" cy="12" r="10" stroke="#2563eb" strokeWidth="4" fill="none" strokeDasharray="62.8" strokeDashoffset="0" />
                   </svg>
-                  <div style={{ position: 'absolute', fontSize: 16, fontWeight: 700, color: '#111827' }}>{clients.length > 0 ? 100 : 0}%</div>
+                  <div style={{ position: 'absolute', fontSize: 16, fontWeight: 700, color: 'var(--color-text)' }}>{clients.length > 0 ? 100 : 0}%</div>
                 </div>
               </div>
             </div>
