@@ -42,13 +42,23 @@ export function ReportsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [tooltip, setTooltip] = useState<{ left: number; top: number; message: string } | null>(null);
+  const [page, setPage] = useState(0);
   const tipRef = useRef<HTMLDivElement>(null);
+  const PAGE_SIZE = 3;
+  const prevPage = () => setPage((p) => Math.max(0, p - 1));
+  const nextPage = () => setPage((p) => Math.min(Math.ceil(logs.length / PAGE_SIZE) - 1, p + 1));
+
+  const pagedLogs = logs.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
 
   useEffect(() => {
     const onDocClick = () => setTooltip(null);
     document.addEventListener('mousedown', onDocClick);
     return () => document.removeEventListener('mousedown', onDocClick);
   }, []);
+
+  useEffect(() => {
+    setPage(0);
+  }, [logs.length]);
 
   useEffect(() => {
     if (!tooltip || !tipRef.current) return;
@@ -109,11 +119,17 @@ export function ReportsPage() {
 
   return (
     <div>
-      <h2 className="page-title">Отчёты и история запусков</h2>
+      <h2 className="page-title" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        Отчёты и история запусков
+        <div style={{ display: 'flex', gap: 6 }}>
+          <button className="btn btn-outline btn-sm" onClick={prevPage} disabled={page === 0}>←</button>
+          <button className="btn btn-outline btn-sm" onClick={nextPage} disabled={(page + 1) * PAGE_SIZE >= logs.length}>→</button>
+        </div>
+      </h2>
       {error && <div className="alert alert-danger">{error}</div>}
       {loading ? (
         <div className="card"><p style={{ textAlign: 'center', color: '#6b7280', padding: 24 }}>Загрузка истории…</p></div>
-      ) : logs.length === 0 ? (
+      ) : pagedLogs.length === 0 ? (
         <div className="card">
           <EmptyState
             title="Запусков пока нет"
@@ -131,7 +147,7 @@ export function ReportsPage() {
               </tr>
             </thead>
             <tbody>
-              {logs.map((log) => (
+              {pagedLogs.map((log) => (
                 <tr key={log.id}>
                   <td style={{ fontSize: 12, lineHeight: 1 }}>
                     {log.createdAt ? (
