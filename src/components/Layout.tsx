@@ -5,6 +5,7 @@ import { Footer } from '@/components/Footer';
 
 const NAV_ITEMS = [
   { to: '/reports', label: 'Отчёты' },
+  { to: '/route', label: 'Маршрут' },
   { to: '/run', label: 'Запуск' },
   { to: '/kpi', label: 'KPI' },
   { to: '/clients', label: 'Клиенты' },
