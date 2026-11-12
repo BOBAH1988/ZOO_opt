@@ -30,6 +30,7 @@ export interface WorkflowScenario {
   id: string;
   name: string;
   day: string;
+  time?: string;
   description: string;
   warning: string | null;
   testModeDefault: boolean;

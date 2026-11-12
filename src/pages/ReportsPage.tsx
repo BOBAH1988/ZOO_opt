@@ -110,8 +110,17 @@ export function ReportsPage() {
             <tbody>
               {logs.map((log) => (
                 <tr key={log.id}>
-                  <td style={{ whiteSpace: 'nowrap', fontSize: 12 }}>
-                    {log.createdAt ? new Date(log.createdAt).toLocaleString('ru-RU') : '—'}
+                  <td style={{ fontSize: 12, lineHeight: 1 }}>
+                    {log.createdAt ? (
+                      <>
+                        <div style={{ fontWeight: 600 }}>
+                          {new Date(log.createdAt).toLocaleDateString('ru-RU')}
+                        </div>
+                        <div style={{ color: '#6b7280', fontSize: 11 }}>
+                          {new Date(log.createdAt).toLocaleTimeString('ru-RU')}
+                        </div>
+                      </>
+                    ) : '—'}
                   </td>
                   <td>{log.workflowName}</td>
                   <td>

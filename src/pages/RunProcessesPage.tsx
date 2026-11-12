@@ -26,7 +26,8 @@ const SCENARIOS: WorkflowScenario[] = [
   {
     id: 'weekly_mon_tue',
     name: 'Прайс Ухта, Лемур, Дебеторка, счет Вета',
-    day: 'пн-вт',
+    day: 'пн',
+    time: '9:00',
     description: 'Диспетчер проектов группы понедельник-вторник (заказ, Ухта, ВЕТА, дебиторка, счета, платёжки, прайс Лемур).',
     warning: null,
     testModeDefault: true,
@@ -37,9 +38,22 @@ const SCENARIOS: WorkflowScenario[] = [
     ],
   },
   {
+    id: 'weekly_residues',
+    name: 'Рекомендации к заказу по остаткам',
+    day: 'пн',
+    time: '10:00',
+    description: 'Отчёт «Рекомендации к заказу» на основе остатков и продаж.',
+    warning: null,
+    testModeDefault: true,
+    inputs: [
+      { key: 'test_mode', label: 'Тестовый режим (только вам)', type: 'boolean', defaultValue: false, description: '', required: false },
+    ],
+  },
+  {
     id: 'weekly_sety_price',
     name: 'Прайсы Сети + ИП Мамедов',
     day: 'пн',
+    time: '9:00',
     description: 'Рассылка прайса сети магазинов и ИП Мамедов. Внимание: по умолчанию рассылка идёт реальным получателям.',
     warning: null,
     testModeDefault: true,
@@ -49,20 +63,24 @@ const SCENARIOS: WorkflowScenario[] = [
     ],
   },
   {
-    id: 'weekly_residues',
-    name: 'Рекомендации к заказу по остаткам',
-    day: 'пн',
-    description: 'Отчёт «Рекомендации к заказу» на основе остатков и продаж.',
+    id: 'weekly_tue',
+    name: 'Прайс Ухта, счета, платежки',
+    day: 'вт',
+    time: '9:00',
+    description: 'Диспетчер проектов группы вторник (прайс Ухта, счета, платёжки).',
     warning: null,
     testModeDefault: true,
     inputs: [
-      { key: 'test_mode', label: 'Тестовый режим (только вам)', type: 'boolean', defaultValue: false, description: '', required: false },
+      { key: 'test_mode', label: 'Тестовый режим (только вам, не клиентам)', type: 'boolean', defaultValue: false, description: '', required: false },
+      { key: 'only', label: 'Проекты для запуска', type: 'multiselect', defaultValue: [], description: 'Пусто = вся группа', required: false, options: PROJECT_OPTIONS },
+      { key: 'ignore_window', label: 'Игнорировать время и день недели', type: 'boolean', defaultValue: true, description: '', required: false },
     ],
   },
   {
     id: 'weekly_wed',
     name: 'Счета Велес и Прусакова',
     day: 'ср',
+    time: '14:00',
     description: 'Диспетчер проектов группы среда (счёт Прусакова клиенту, счета в Велес).',
     warning: null,
     testModeDefault: true,
@@ -79,6 +97,7 @@ const SCENARIOS: WorkflowScenario[] = [
     id: 'weekly_fri',
     name: 'Прайс Лемур, отчет по дебеторке',
     day: 'пт',
+    time: '9:00',
     description: 'Диспетчер проектов группы пятница (прайс Лемур, ответ по дебиторке и др.).',
     warning: null,
     testModeDefault: true,
@@ -93,15 +112,6 @@ const SCENARIOS: WorkflowScenario[] = [
     name: 'KPI Продажи',
     day: '',
     description: 'Личный отчёт выполнения KPI «Продажи». Письмо уходит только владельцу на NOTIFY_EMAIL.',
-    warning: null,
-    testModeDefault: true,
-    inputs: [],
-  },
-  {
-    id: 'tests',
-    name: 'Тесты стенд',
-    day: '',
-    description: 'Прогон автоматических тестов без отправки реальных писем. Безопасен для частого запуска.',
     warning: null,
     testModeDefault: true,
     inputs: [],
@@ -231,24 +241,20 @@ export function RunProcessesPage() {
       <div style={{ display: 'grid', gap: 6, gridTemplateColumns: '1fr' }}>
         {SCENARIOS.map((scenario) => {
           return (
-            <div key={scenario.id} className="card">
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 8 }}>
-                  <h3 style={{ margin: 0, fontSize: 15, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0, flex: 1, flexShrink: 1 }}>{scenario.name}</h3>
-                  {scenario.day && <span style={{ fontSize: 15, color: '#94a3b8', flexShrink: 0 }}>{scenario.day}</span>}
-                </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 6, alignItems: 'flex-start' }}>
-                  <button className="btn btn-primary" style={{ width: '100%' }} onClick={() => handleRunClick(scenario)} disabled={running === scenario.id}>
-                    {running === scenario.id ? 'Запуск…' : 'Запустить'}
-                  </button>
-                  <button className="btn btn-outline" style={{ width: '100%' }} onClick={() => setSettingsOpen(scenario)} title="Настройка">
-                    ⚙️
-                  </button>
-                </div>
-              </div>
+            <div key={scenario.id} className="card" style={{ display: 'grid', gridTemplateColumns: 'auto 1fr auto auto', gap: 8, alignItems: 'center' }}>
+              <span style={{ fontSize: 15, color: '#94a3b8', whiteSpace: 'nowrap' }}>
+                {scenario.day}{scenario.time ? ` ${scenario.time}` : ''}
+              </span>
+              <h3 style={{ margin: 0, fontSize: 15, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0 }}>{scenario.name}</h3>
+              <button className="btn btn-primary" onClick={() => handleRunClick(scenario)} disabled={running === scenario.id}>
+                {running === scenario.id ? 'Запуск…' : 'Запустить'}
+              </button>
+              <button className="btn btn-outline" onClick={() => setSettingsOpen(scenario)} title="Настройка">
+                ⚙️
+              </button>
 
               {scenario.warning && (
-                <div style={{ marginTop: 4, padding: 4, background: '#fbf4e3', borderRadius: 6, fontSize: 11, color: '#92400e', overflowWrap: 'anywhere', wordBreak: 'break-word' }}>
+                <div style={{ gridColumn: '1 / -1', padding: 4, background: '#fbf4e3', borderRadius: 6, fontSize: 11, color: '#92400e', overflowWrap: 'anywhere', wordBreak: 'break-word' }}>
                   ⚠️ {scenario.warning}
                 </div>
               )}
