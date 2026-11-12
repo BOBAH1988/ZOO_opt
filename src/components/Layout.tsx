@@ -5,7 +5,7 @@ import { Footer } from '@/components/Footer';
 
 const NAV_ITEMS = [
   { to: '/reports', label: 'Отчёты' },
-  { to: '/route', label: 'Маршрут' },
+  { to: '/route', label: null, icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg> },
   { to: '/run', label: 'Запуск' },
   { to: '/kpi', label: 'KPI' },
   { to: '/clients', label: 'Клиенты' },
@@ -100,7 +100,7 @@ export function Layout() {
                     to={item.to}
                     className={`menu-item${location.pathname === item.to ? ' active' : ''}`}
                   >
-                    {item.label}
+                    {item.label ?? <span className="menu-item-icon">{item.icon}</span>}
                   </Link>
                 ))}
                 <button type="button" className="menu-item menu-theme-toggle" onClick={toggleTheme}>
