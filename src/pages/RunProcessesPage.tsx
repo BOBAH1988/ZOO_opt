@@ -391,6 +391,8 @@ export function RunProcessesPage() {
             color: '#64748b',
             lineHeight: 1,
           }}
+          onMouseEnter={(e) => { e.currentTarget.style.background = '#f8fafc'; e.currentTarget.style.color = '#475569'; }}
+          onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#64748b'; }}
         >
           ❓
         </button>
