@@ -232,17 +232,15 @@ export function RunProcessesPage() {
         {SCENARIOS.map((scenario) => {
           return (
             <div key={scenario.id} className="card">
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 8 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <h3 style={{ margin: 0, fontSize: 15, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0, flex: 1, flexShrink: 1 }}>{scenario.name}</h3>
-                {scenario.day && <span style={{ fontSize: 15, color: '#94a3b8', flexShrink: 0 }}>{scenario.day}</span>}
-              </div>
-              <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
-                <button className="btn btn-primary" style={{ flex: 1 }} onClick={() => handleRunClick(scenario)} disabled={running === scenario.id}>
+                <button className="btn btn-primary" style={{ flexShrink: 0 }} onClick={() => handleRunClick(scenario)} disabled={running === scenario.id}>
                   {running === scenario.id ? 'Запуск…' : 'Запустить'}
                 </button>
                 <button className="btn btn-outline" style={{ flexShrink: 0 }} onClick={() => setSettingsOpen(scenario)} title="Настройка">
                   ⚙️
                 </button>
+                {scenario.day && <span style={{ fontSize: 15, color: '#94a3b8', flexShrink: 0, marginLeft: 'auto' }}>{scenario.day}</span>}
               </div>
 
               {scenario.warning && (
