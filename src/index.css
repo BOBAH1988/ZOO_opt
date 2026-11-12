@@ -39,7 +39,7 @@ a:hover { text-decoration: underline; }
 button { font-family: inherit; font-size: 14px; cursor: pointer; border: none; border-radius: var(--radius); }
 button:disabled { opacity: 0.6; cursor: not-allowed; }
 
-.app { min-height: 100vh; display: flex; flex-direction: column; max-width: 1000px; margin: 0 auto; }
+.app { min-height: 100vh; display: flex; flex-direction: column; max-width: 1000px; margin: 0 auto; padding-bottom: 110px; }
 .header {
   background: var(--color-surface); border-bottom: 1px solid var(--color-border);
   padding: 0 20px; height: 56px; display: flex; align-items: center;
@@ -83,7 +83,7 @@ button:disabled { opacity: 0.6; cursor: not-allowed; }
 }
 .menu-signout { width: 100%; text-align: left; padding: 8px 10px; border-radius: var(--radius); }
 
-.main { flex: 1; padding: 12px 12px 90px 12px; max-width: 1000px; width: 100%; margin: 0 auto; }
+.main { flex: 1; padding: 12px 12px 110px 12px; max-width: 1000px; width: 100%; margin: 0 auto; }
 .page-title { font-size: 18px; font-weight: 600; margin: 0 0 8px 0; color: var(--color-text); }
 
 .btn {
@@ -223,7 +223,8 @@ button:disabled { opacity: 0.6; cursor: not-allowed; }
 .footer-text { margin: 0; }
 
 @media (max-width: 640px) {
-  .main { padding: 12px; padding-bottom: 80px; }
+  .main { padding: 12px; padding-bottom: 110px; }
+  .app { padding-bottom: 110px; }
   .header { padding: 0 16px; height: 48px; }
   .brand { font-size: 16px; }
   .menu-dropdown { min-width: 180px; }
