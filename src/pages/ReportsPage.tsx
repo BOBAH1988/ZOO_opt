@@ -155,7 +155,7 @@ export function ReportsPage() {
   if (!isFirebaseConfigured() || !db) {
     return (
       <div className="card">
-        <h2 className="card-title">Отчёты</h2>
+        <h2 className="card-title">Главная</h2>
         <div className="alert alert-warning">Firebase не сконфигурирован. История запусков будет доступна после настройки Firestore.</div>
       </div>
     );

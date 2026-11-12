@@ -6,7 +6,7 @@ import { Footer } from '@/components/Footer';
 type NavItem = { to: string; label: string; icon?: any };
 
 const NAV_ITEMS: NavItem[] = [
-  { to: '/reports', label: 'Отчёты' },
+  { to: '/reports', label: 'Главная' },
   { to: '/route', label: 'Маршрут' },
   { to: '/run', label: 'Запуск' },
   { to: '/kpi', label: 'KPI' },
