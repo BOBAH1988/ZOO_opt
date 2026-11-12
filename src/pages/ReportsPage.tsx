@@ -162,7 +162,7 @@ export function ReportsPage() {
   }
 
   return (
-    <div style={{ marginTop: -12 }}>
+    <div style={{ marginTop: -24 }}>
       {error && <div className="alert alert-danger">{error}</div>}
       {!clientsLoading && (
         <>
