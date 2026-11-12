@@ -155,7 +155,7 @@ export function ReportsPage() {
                         <div style={{ fontWeight: 600 }}>
                           {new Date(log.createdAt).toLocaleDateString('ru-RU')}
                         </div>
-                        <div style={{ color: '#6b7280', fontSize: 11 }}>
+                        <div style={{ color: '#6b7280', fontSize: 11, marginTop: 2 }}>
                           {new Date(log.createdAt).toLocaleTimeString('ru-RU')}
                         </div>
                       </>
