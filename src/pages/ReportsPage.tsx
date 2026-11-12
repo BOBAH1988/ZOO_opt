@@ -166,8 +166,8 @@ export function ReportsPage() {
       {error && <div className="alert alert-danger">{error}</div>}
       {!clientsLoading && (
         <>
-          <h3 style={{ margin: '-4px 0 8 0', fontSize: 16, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>АКБ</h3>
-          <div className="card" style={{ marginBottom: 12, padding: 16 }}>
+          <h3 style={{ margin: '-8px 0 6 0', fontSize: 16, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>АКБ</h3>
+          <div className="card" style={{ marginBottom: 12, paddingTop: 8, paddingBottom: 16, paddingLeft: 16, paddingRight: 16 }}>
             <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
             <div style={{ flex: 1, minWidth: 140, padding: 12, background: '#f3f4f6', borderRadius: 8, textAlign: 'center' }}>
               <div style={{ fontSize: 11, color: '#6b7280', textTransform: 'uppercase', marginBottom: 4 }}>Всего клиентов</div>
