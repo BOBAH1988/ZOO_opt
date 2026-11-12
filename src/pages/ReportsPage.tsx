@@ -41,7 +41,7 @@ export function ReportsPage() {
   const [logs, setLogs] = useState<RunLog[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [tooltip, setTooltip] = useState<{ right: number; top: number; message: string } | null>(null);
+  const [tooltip, setTooltip] = useState<{ left: number; top: number; message: string } | null>(null);
   const tipRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -55,12 +55,13 @@ export function ReportsPage() {
     const el = tipRef.current;
     const raf = requestAnimationFrame(() => {
       const rect = el.getBoundingClientRect();
-      let right = tooltip.right;
-      if (rect.width > right) right = rect.width;
+      let left = tooltip.left;
       let top = tooltip.top;
+      if (left + rect.width > window.innerWidth) left = window.innerWidth - rect.width;
+      if (left < 0) left = 0;
       if (top + rect.height > window.innerHeight) top = window.innerHeight - rect.height;
       if (top < 0) top = 0;
-      el.style.right = `${right}px`;
+      el.style.left = `${left}px`;
       el.style.top = `${top}px`;
     });
     return () => cancelAnimationFrame(raf);
@@ -151,10 +152,11 @@ export function ReportsPage() {
                       style={{ cursor: 'pointer', userSelect: 'none' }}
                       onClick={(e) => {
                         e.stopPropagation();
-                        const badge = e.currentTarget as HTMLElement;
-                        const rect = badge.getBoundingClientRect();
+                        const row = (e.target as HTMLElement).closest('tr');
+                        if (!row) return;
+                        const rect = row.getBoundingClientRect();
                         setTooltip({
-                          right: window.innerWidth - rect.left,
+                          left: rect.left,
                           top: rect.top,
                           message: log.message,
                         });
@@ -183,8 +185,8 @@ export function ReportsPage() {
                 maxWidth: 300,
                 whiteSpace: 'pre-wrap',
                 pointerEvents: 'auto',
-                right: Math.min(Math.max(0, tooltip.right), window.innerWidth),
-                top: Math.min(Math.max(0, tooltip.top), window.innerHeight),
+                left: tooltip.left,
+                top: tooltip.top,
                 boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
               }}
             >
