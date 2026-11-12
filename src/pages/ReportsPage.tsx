@@ -162,11 +162,11 @@ export function ReportsPage() {
   }
 
   return (
-    <div>
+    <div style={{ marginTop: -12 }}>
       {error && <div className="alert alert-danger">{error}</div>}
       {!clientsLoading && (
         <>
-          <div style={{ fontSize: 16, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px', color: '#374151', marginBottom: 6 }}>АКБ</div>
+          <div style={{ fontSize: 16, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px', color: '#374151', marginBottom: 4 }}>АКБ</div>
           <div className="card" style={{ marginBottom: 12, paddingTop: 0, paddingBottom: 12, paddingLeft: 16, paddingRight: 16 }}>
             <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
             <div style={{ flex: 1, minWidth: 140, padding: 12, background: '#f3f4f6', borderRadius: 8, textAlign: 'center' }}>
