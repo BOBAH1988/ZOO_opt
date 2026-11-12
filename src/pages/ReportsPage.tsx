@@ -41,7 +41,7 @@ export function ReportsPage() {
   const [logs, setLogs] = useState<RunLog[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [tooltip, setTooltip] = useState<{ x: number; y: number; message: string } | null>(null);
+  const [tooltip, setTooltip] = useState<{ right: number; top: number; message: string } | null>(null);
   const tipRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -55,13 +55,13 @@ export function ReportsPage() {
     const el = tipRef.current;
     const raf = requestAnimationFrame(() => {
       const rect = el.getBoundingClientRect();
-      let left = tooltip.x;
-      let top = tooltip.y;
-      if (left + rect.width > window.innerWidth) left = window.innerWidth - rect.width;
-      if (left < 0) left = 0;
+      let right = tooltip.right;
+      let top = tooltip.top;
+      if (rect.width > right) right = rect.width;
+      if (right > window.innerWidth) right = window.innerWidth;
       if (top + rect.height > window.innerHeight) top = window.innerHeight - rect.height;
       if (top < 0) top = 0;
-      el.style.left = `${left}px`;
+      el.style.right = `${window.innerWidth - right}px`;
       el.style.top = `${top}px`;
     });
     return () => cancelAnimationFrame(raf);
@@ -152,7 +152,13 @@ export function ReportsPage() {
                       style={{ cursor: 'pointer', userSelect: 'none' }}
                       onClick={(e) => {
                         e.stopPropagation();
-                        setTooltip({ x: e.clientX, y: e.clientY, message: log.message });
+                        const badge = e.currentTarget as HTMLElement;
+                        const rect = badge.getBoundingClientRect();
+                        setTooltip({
+                          right: window.innerWidth - rect.right,
+                          top: rect.bottom + 4,
+                          message: log.message,
+                        });
                       }}
                     >
                       {log.status === 'accepted' ? 'Ок' : 'Сбой'}
@@ -178,8 +184,8 @@ export function ReportsPage() {
                 maxWidth: 300,
                 whiteSpace: 'pre-wrap',
                 pointerEvents: 'auto',
-                left: Math.min(Math.max(8, tooltip.x), window.innerWidth - 8),
-                top: Math.min(Math.max(8, tooltip.y), window.innerHeight - 8),
+                right: Math.min(Math.max(0, tooltip.right), window.innerWidth),
+                top: Math.min(Math.max(0, tooltip.top), window.innerHeight),
                 boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
               }}
             >
