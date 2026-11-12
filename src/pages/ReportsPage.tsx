@@ -52,15 +52,19 @@ export function ReportsPage() {
 
   useEffect(() => {
     if (!tooltip || !tipRef.current) return;
-    const rect = tipRef.current.getBoundingClientRect();
-    let left = tooltip.x;
-    let top = tooltip.y;
-    if (left + rect.width > window.innerWidth - 8) left = window.innerWidth - rect.width - 8;
-    if (left < 8) left = 8;
-    if (top + rect.height > window.innerHeight - 8) top = window.innerHeight - rect.height - 8;
-    if (top < 8) top = 8;
-    tipRef.current.style.left = `${left}px`;
-    tipRef.current.style.top = `${top}px`;
+    const el = tipRef.current;
+    const raf = requestAnimationFrame(() => {
+      const rect = el.getBoundingClientRect();
+      let left = tooltip.x;
+      let top = tooltip.y;
+      if (left + rect.width > window.innerWidth) left = window.innerWidth - rect.width;
+      if (left < 0) left = 0;
+      if (top + rect.height > window.innerHeight) top = window.innerHeight - rect.height;
+      if (top < 0) top = 0;
+      el.style.left = `${left}px`;
+      el.style.top = `${top}px`;
+    });
+    return () => cancelAnimationFrame(raf);
   }, [tooltip]);
 
   useEffect(() => {
