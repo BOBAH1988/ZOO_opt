@@ -133,6 +133,7 @@ export function RunProcessesPage() {
   const [confirmOpen, setConfirmOpen] = useState<{ id: string; name: string } | null>(null);
   const [settingsOpen, setSettingsOpen] = useState<WorkflowScenario | null>(null);
   const [openMultiselect, setOpenMultiselect] = useState<Record<string, boolean>>({});
+  const [runStatus, setRunStatus] = useState<Record<string, 'ok' | 'error'>>({});
   const [inputValues, setInputValues] = useState<InputValues>(() => {
     const init: InputValues = {};
     for (const s of SCENARIOS) init[s.id] = defaultInputs(s);
@@ -212,6 +213,7 @@ export function RunProcessesPage() {
     try {
       const response = await runWorkflow({ workflowId: scenario.id, inputs });
       setResult({ message: response.message, runUrl: response.runUrl ?? null, status: 'accepted' });
+      setRunStatus((prev) => ({ ...prev, [scenario.id]: 'ok' }));
       await writeLog({
         workflowId: scenario.id,
         workflowName: scenario.name,
@@ -223,6 +225,7 @@ export function RunProcessesPage() {
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Неизвестная ошибка при запуске';
       setResult({ message, status: 'error' });
+      setRunStatus((prev) => ({ ...prev, [scenario.id]: 'error' }));
       await writeLog({ workflowId: scenario.id, workflowName: scenario.name, status: 'error', message, inputs });
     } finally {
       setRunning(null);
@@ -246,9 +249,15 @@ export function RunProcessesPage() {
                 {scenario.day}{scenario.time ? ` ${scenario.time}` : ''}
               </span>
               <h3 style={{ margin: 0, fontSize: 15, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0 }}>{scenario.name}</h3>
-              <button className="btn btn-primary" onClick={() => handleRunClick(scenario)} disabled={running === scenario.id}>
-                {running === scenario.id ? 'Запуск…' : 'Запустить'}
-              </button>
+              {runStatus[scenario.id] === 'ok' ? (
+                <span className="btn btn-success" style={{ width: '100%', padding: '6px 10px', fontSize: 13, textAlign: 'center', display: 'block' }}>Ок</span>
+              ) : runStatus[scenario.id] === 'error' ? (
+                <span className="btn btn-danger" style={{ width: '100%', padding: '6px 10px', fontSize: 13, textAlign: 'center', display: 'block' }}>Сбой</span>
+              ) : (
+                <button className="btn btn-primary" onClick={() => handleRunClick(scenario)} disabled={running === scenario.id}>
+                  {running === scenario.id ? 'Запуск…' : 'Запустить'}
+                </button>
+              )}
               <button className="btn btn-outline" onClick={() => setSettingsOpen(scenario)} title="Настройка">
                 ⚙️
               </button>
