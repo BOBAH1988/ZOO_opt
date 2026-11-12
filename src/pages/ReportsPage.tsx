@@ -163,13 +163,6 @@ export function ReportsPage() {
 
   return (
     <div>
-      <h2 className="page-title" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        Отчёты и история запусков
-        <div style={{ display: 'flex', gap: 6 }}>
-          <button className="btn btn-outline btn-sm" onClick={prevPage} disabled={page === 0}>←</button>
-          <button className="btn btn-outline btn-sm" onClick={nextPage} disabled={(page + 1) * PAGE_SIZE >= logs.length}>→</button>
-        </div>
-      </h2>
       {error && <div className="alert alert-danger">{error}</div>}
       {!clientsLoading && (
         <div className="card" style={{ marginBottom: 12, padding: 16 }}>
@@ -209,6 +202,13 @@ export function ReportsPage() {
         </div>
       ) : (
         <div className="card">
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12, padding: '0 16px' }}>
+            <h2 style={{ margin: 0, fontSize: 18, fontWeight: 600 }}>Отчёты и история запусков</h2>
+            <div style={{ display: 'flex', gap: 6 }}>
+              <button className="btn btn-outline btn-sm" onClick={prevPage} disabled={page === 0}>←</button>
+              <button className="btn btn-outline btn-sm" onClick={nextPage} disabled={(page + 1) * PAGE_SIZE >= logs.length}>→</button>
+            </div>
+          </div>
           <table className="table">
             <thead>
               <tr>
