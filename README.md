@@ -7,7 +7,7 @@ MVP-приложение для управления почтовыми авто
 - **Клиенты:** чтение/запись только по `ownerUid` текущего пользователя (`where('ownerUid','==',uid)`), запись реального UID из Firebase Auth, валидация структуры документов, безопасное преобразование `Timestamp/Date/string` в ISO, понятные ошибки, пропуск некорректных записей с предупреждением. См. `src/pages/ClientsPage.tsx`.
 - **Firestore Rules:** строгие правила владельца для `clients` и `runLogs`, запрет остального. Источник правил — `firestore.rules`; настройки Firebase CLI — `firebase.json`.
 - **Запуск процессов:** клиент отправляет `Authorization: Bearer <Firebase ID token>`, параметры workflow редактируемы в UI, перед запуском подтверждение для сценариев с риском реальной рассылки, журнал запросов пишется в `runLogs`. См. `src/pages/RunProcessesPage.tsx`, `src/api.ts`.
-- **Сервер запуска (пример):** добавлен `/server` — проверка Firebase ID token, белый список workflow/inputs, серверные ограничения и журналирование, вызов GitHub `workflow_dispatch` с секретным токеном. Требует развёртывания и `VITE_API_BASE_URL`. См. `server/README.md`, `server/index.js`.
+- **Сервер запуска:** `/server` содержит пример Express API, а `server/cloudflare` — Cloudflare Worker для бесплатного размещения с проверкой Firebase ID token, allowlist пользователя, валидацией workflow/inputs и серверным GitHub token. Требует развёртывания и настройки `VITE_API_BASE_URL`. См. `server/README.md` и `server/cloudflare/README.md`.
 - **Навигация:** внутренняя навигация через `Link`/роутер (HashRouter, base `/ZOO_opt/`), без обычных ссылок на внутренние маршруты вне роутера.
 - **Регистрация/доступ:** вход, сброс пароля, опциональные ограничения регистрации (`VITE_DISABLE_SIGNUP`, `VITE_ALLOWED_EMAILS`, `VITE_ALLOWED_EMAIL_DOMAINS`, `VITE_REGISTRATION_INVITE_CODE`), попытка отправки письма подтверждения email после регистрации. Для внутренней системы рекомендуется отключить/ограничить регистрацию и управлять пользователями в Firebase.
 - **Отчёты:** история запусков из `runLogs` (статус, сообщение, ошибка, ссылка на GitHub Actions, дата, параметры). Статус «принят» не означает завершение workflow.
@@ -58,6 +58,7 @@ VITE_REGISTRATION_INVITE_CODE=
 - хранить GitHub token/credentials только на сервере.
 
 Пример реализации: `server/README.md`. Без настроенного API запуск не выполняется.
+Бесплатный вариант размещения — Cloudflare Workers; пошаговая настройка находится в `server/cloudflare/README.md`. Для работы нужны GitHub token в секрете Worker и URL Worker в GitHub Secret `VITE_API_BASE_URL`.
 
 ## Разработка и публикация
 
@@ -78,6 +79,6 @@ GitHub Pages: base `/ZOO_opt/`, HashRouter, workflow `.github/workflows/deploy.y
 
 ## Ограничения / дальнейшие шаги
 
-- Развернуть и защитить сервер `/run`, перенести доверительную запись `runLogs` на сервер (Admin SDK) при необходимости.
+- Развернуть сервер `/run` (например, Cloudflare Workers) и перенести доверительную запись `runLogs` на сервер (Admin SDK) при необходимости.
 - Добавить Firebase Emulator тесты для правил/сценариев, e2e/smoke проверки.
 - Усилить контроль рассылок реальным адресатам (роли, подтверждения, аудит на сервере).

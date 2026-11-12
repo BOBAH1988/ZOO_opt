@@ -1,0 +1,9 @@
+name = "zoo-opt-run-api"
+main = "src/index.js"
+compatibility_date = "2026-11-12"
+
+[vars]
+APP_ORIGIN = "https://bobah1988.github.io"
+FIREBASE_PROJECT_ID = "zoo-opt"
+GITHUB_OWNER = "BOBAH1988"
+GITHUB_REPO = "mail-automation"
