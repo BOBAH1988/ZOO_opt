@@ -354,7 +354,24 @@ export function RunProcessesPage() {
 
       {settingsOpen && (
         <div className="dialog-overlay" onClick={() => setSettingsOpen(null)}>
-          <div className="dialog" onClick={(e) => e.stopPropagation()}>
+          <div className="dialog" onClick={(e) => e.stopPropagation()} style={{ position: 'relative' }}>
+            <button
+              onClick={() => setSettingsOpen(null)}
+              style={{
+                position: 'absolute',
+                top: 8,
+                right: 8,
+                background: 'transparent',
+                border: 'none',
+                fontSize: 20,
+                color: '#ef4444',
+                cursor: 'pointer',
+                padding: 0,
+                lineHeight: 1,
+              }}
+            >
+              ×
+            </button>
             <div className="dialog-title">Настройка</div>
             <div className="dialog-body">
               <p style={{ fontSize: 13, color: '#6b7280', marginBottom: 16 }}>{settingsOpen.description}</p>
