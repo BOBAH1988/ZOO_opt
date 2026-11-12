@@ -5,7 +5,7 @@ import { Footer } from '@/components/Footer';
 
 const NAV_ITEMS = [
   { to: '/reports', label: 'Отчёты' },
-  { to: '/route', label: null, icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 2C8.13 2 5 5.13 5 9c0 3.29 3.85 7.72 5.83 9.48A10 10 0 0 0 12 21a10 10 0 0 0 1.17-.52C16.15 16.72 20 12.29 20 9c0-3.87-3.13-7-7-7Z"/><path d="M12 9V5M12 9l3 3M12 9l-3 3"/></svg> },
+  { to: '/route', label: null, icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg> },
   { to: '/run', label: 'Запуск' },
   { to: '/kpi', label: 'KPI' },
   { to: '/clients', label: 'Клиенты' },
