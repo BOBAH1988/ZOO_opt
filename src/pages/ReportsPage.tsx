@@ -167,7 +167,7 @@ export function ReportsPage() {
       {!clientsLoading && (
         <>
           <div style={{ fontSize: 16, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px', color: 'var(--color-text)', marginBottom: 8 }}>АКБ</div>
-          <div className="card" style={{ marginTop: 12, marginBottom: 12, paddingTop: 0, paddingBottom: 12, paddingLeft: 16, paddingRight: 16 }}>
+          <div className="card" style={{ marginTop: 12, marginBottom: 12, padding: 12 }}>
             <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
             <div style={{ flex: 1, minWidth: 140, padding: 12, background: 'var(--color-bg)', borderRadius: 8, textAlign: 'center' }}>
               <div style={{ fontSize: 11, color: 'var(--color-text-secondary)', textTransform: 'uppercase', marginBottom: 4 }}>Всего клиентов</div>
