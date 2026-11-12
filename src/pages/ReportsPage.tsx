@@ -165,9 +165,10 @@ export function ReportsPage() {
     <div>
       {error && <div className="alert alert-danger">{error}</div>}
       {!clientsLoading && (
-        <div className="card" style={{ marginBottom: 12, padding: 16 }}>
-          <h3 style={{ margin: '0 0 12 0', fontSize: 16, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>АКБ</h3>
-          <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
+        <>
+          <h3 style={{ margin: '0 0 8 0', fontSize: 16, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>АКБ</h3>
+          <div className="card" style={{ marginBottom: 12, padding: 16 }}>
+            <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
             <div style={{ flex: 1, minWidth: 140, padding: 12, background: '#f3f4f6', borderRadius: 8, textAlign: 'center' }}>
               <div style={{ fontSize: 11, color: '#6b7280', textTransform: 'uppercase', marginBottom: 4 }}>Всего клиентов</div>
               <div style={{ fontSize: 24, fontWeight: 700, color: '#111827' }}>{clients.length}</div>
@@ -190,6 +191,7 @@ export function ReportsPage() {
             </div>
           </div>
         </div>
+        </>
       )}
       {loading ? (
         <div className="card"><p style={{ textAlign: 'center', color: '#6b7280', padding: 24 }}>Загрузка истории…</p></div>
@@ -201,15 +203,14 @@ export function ReportsPage() {
           />
         </div>
       ) : (
-        <div className="card">
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12, padding: '0 16px' }}>
-            <h2 style={{ margin: 0, fontSize: 18, fontWeight: 600 }}>Отчёты и история запусков</h2>
-            <div style={{ display: 'flex', gap: 6 }}>
-              <button className="btn btn-outline btn-sm" onClick={prevPage} disabled={page === 0}>←</button>
-              <button className="btn btn-outline btn-sm" onClick={nextPage} disabled={(page + 1) * PAGE_SIZE >= logs.length}>→</button>
-            </div>
+        <>
+          <h2 style={{ margin: '0 0 8 0', fontSize: 18, fontWeight: 600 }}>Отчёты и история запусков</h2>
+          <div style={{ display: 'flex', gap: 6 }}>
+            <button className="btn btn-outline btn-sm" onClick={prevPage} disabled={page === 0}>←</button>
+            <button className="btn btn-outline btn-sm" onClick={nextPage} disabled={(page + 1) * PAGE_SIZE >= logs.length}>→</button>
           </div>
-          <table className="table">
+          <div className="card">
+            <table className="table">
             <thead>
               <tr>
                 <th>Дата</th>
@@ -280,6 +281,7 @@ export function ReportsPage() {
             </div>
           )}
         </div>
+        </>
       )}
     </div>
   );
