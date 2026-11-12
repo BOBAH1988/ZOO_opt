@@ -125,7 +125,7 @@ export function ReportsPage() {
                   <td>{log.workflowName}</td>
                   <td>
                     <span className={`badge ${log.status === 'accepted' ? 'bg-test' : 'bg-real'}`}>
-                      {log.status === 'accepted' ? 'принят' : 'ошибка'}
+                      {log.status === 'accepted' ? 'Ок' : 'Сбой(ошибка)'}
                     </span>
                   </td>
                   <td style={{ fontSize: 13 }}>{log.message}</td>
