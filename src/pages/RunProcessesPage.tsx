@@ -133,6 +133,7 @@ export function RunProcessesPage() {
   const [settingsOpen, setSettingsOpen] = useState<WorkflowScenario | null>(null);
   const [openMultiselect, setOpenMultiselect] = useState<Record<string, boolean>>({});
   const [runStatus, setRunStatus] = useState<Record<string, 'ok' | 'error'>>({});
+  const [helpMenuOpen, setHelpMenuOpen] = useState(false);
   const [inputValues, setInputValues] = useState<InputValues>(() => {
     const init: InputValues = {};
     for (const s of SCENARIOS) init[s.id] = defaultInputs(s);
@@ -162,6 +163,17 @@ export function RunProcessesPage() {
       // игнорируем ошибки записи localStorage
     }
   }, [inputValues]);
+
+  // Закрыть help-меню при клике снаружи
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (helpMenuOpen && !(e.target as Element).closest('.help-menu')) {
+        setHelpMenuOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [helpMenuOpen]);
 
   function inputsEqual(
     a: Record<string, boolean | string | string[]>,
@@ -278,8 +290,71 @@ export function RunProcessesPage() {
   };
 
   return (
-    <div>
-      <h2 className="page-title">Запуск</h2>
+    <div style={{ position: 'relative' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+        <h2 className="page-title" style={{ margin: 0 }}>{'Запуск'}</h2>
+        <button
+          onClick={() => setHelpMenuOpen((prev) => !prev)}
+          style={{
+            background: 'transparent',
+            border: '1px solid #cbd5e1',
+            borderRadius: 6,
+            width: 32,
+            height: 32,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            cursor: 'pointer',
+            fontSize: 18,
+            color: '#64748b',
+          }}
+          onMouseEnter={(e) => { e.currentTarget.style.color = '#334155'; }}
+          onMouseLeave={(e) => { e.currentTarget.style.color = '#64748b'; }}
+        >
+          ❓
+        </button>
+      </div>
+
+      {helpMenuOpen && (
+        <div className="help-menu"
+          style={{
+            position: 'absolute',
+            top: 70,
+            right: 16,
+            background: '#ffffff',
+            border: '1px solid #e2e8f0',
+            borderRadius: 8,
+            boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)',
+            padding: 12,
+            minWidth: 340,
+            zIndex: 50,
+          }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div style={{ fontSize: 13, fontWeight: 600, color: '#0f172a', marginBottom: 10, borderBottom: '1px solid #f1f5f9', paddingBottom: 6 }}>
+            Сценарии запуска
+          </div>
+          {SCENARIOS.map((scenario) => (
+            <div
+              key={scenario.id}
+              style={{
+                padding: '8px 10px',
+                borderBottom: '1px solid #f1f5f9',
+                cursor: 'default',
+                fontSize: 12.5,
+                color: '#334155',
+              }}
+            >
+              <div style={{ fontWeight: 600, color: '#0f172a', marginBottom: 2 }}>{scenario.name}</div>
+              <div style={{ color: '#64748b', fontSize: 11.5, overflowWrap: 'anywhere' }}>{scenario.description}</div>
+              <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 4 }}>
+                {scenario.day}{scenario.time ? ` в ${scenario.time}` : ''}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
       {!apiConfigured && (
         <div className="alert alert-warning" style={{ marginBottom: 8 }}>
           <strong>Запуск не настроен:</strong> отсутствует серверный API (VITE_API_BASE_URL).
