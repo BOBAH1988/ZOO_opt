@@ -29,6 +29,7 @@ export interface UpdateClientInput {
 export interface WorkflowScenario {
   id: string;
   name: string;
+  day: string;
   description: string;
   warning: string | null;
   testModeDefault: boolean;
@@ -38,10 +39,11 @@ export interface WorkflowScenario {
 export interface WorkflowInput {
   key: string;
   label: string;
-  type: 'boolean' | 'string';
-  defaultValue: boolean | string;
+  type: 'boolean' | 'string' | 'multiselect';
+  defaultValue: boolean | string | string[];
   description: string;
   required: boolean;
+  options?: { label: string; value: string }[];
 }
 
 export interface RunLog {

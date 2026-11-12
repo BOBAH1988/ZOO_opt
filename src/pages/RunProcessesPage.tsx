@@ -9,86 +9,109 @@ import { db } from '@/firebase';
 import { useAuth } from '@/context/AuthContext';
 import type { WorkflowScenario, WorkflowInput } from '@/types';
 
+const PROJECT_OPTIONS = [
+  { label: 'order', value: 'order' },
+  { label: 'ukhta', value: 'ukhta' },
+  { label: 'veta', value: 'veta' },
+  { label: 'clients', value: 'clients' },
+  { label: 'payments', value: 'payments' },
+  { label: 'invoice', value: 'invoice' },
+  { label: 'veles', value: 'veles' },
+  { label: 'lemur', value: 'lemur' },
+  { label: 'dz', value: 'dz' },
+  { label: 'sety', value: 'sety' },
+];
+
 const SCENARIOS: WorkflowScenario[] = [
   {
-    id: 'tests',
-    name: 'Тесты (стенд)',
-    description: 'Прогон автоматических тестов без отправки реальных писем. Безопасен для частого запуска.',
+    id: 'weekly_mon_tue',
+    name: 'Прайс Ухта, Лемур, Дебеторка, счет Вета',
+    day: 'пн-вт',
+    description: 'Диспетчер проектов группы понедельник-вторник (заказ, Ухта, ВЕТА, дебиторка, счета, платёжки, прайс Лемур).',
+    warning: null,
+    testModeDefault: true,
+    inputs: [
+      { key: 'test_mode', label: 'Тестовый режим (только вам, не клиентам)', type: 'boolean', defaultValue: false, description: '', required: false },
+      { key: 'only', label: 'Проекты для запуска', type: 'multiselect', defaultValue: [], description: 'Пусто = вся группа', required: false, options: PROJECT_OPTIONS },
+      { key: 'ignore_window', label: 'Игнорировать время и день недели', type: 'boolean', defaultValue: true, description: '', required: false },
+    ],
+  },
+  {
+    id: 'weekly_sety_price',
+    name: 'Прайсы Сети + ИП Мамедов',
+    day: 'пн',
+    description: 'Рассылка прайса сети магазинов и ИП Мамедов. Внимание: по умолчанию рассылка идёт реальным получателям.',
+    warning: null,
+    testModeDefault: true,
+    inputs: [
+      { key: 'test_mode', label: 'Тестовый режим (только вам, не сетям)', type: 'boolean', defaultValue: false, description: '', required: false },
+      { key: 'skip_if_sent', label: 'Не дублировать рассылку', type: 'boolean', defaultValue: true, description: '', required: false },
+    ],
+  },
+  {
+    id: 'weekly_residues',
+    name: 'Рекомендации к заказу по остаткам',
+    day: 'пн',
+    description: 'Отчёт «Рекомендации к заказу» на основе остатков и продаж.',
+    warning: null,
+    testModeDefault: true,
+    inputs: [
+      { key: 'test_mode', label: 'Тестовый режим (только вам)', type: 'boolean', defaultValue: false, description: '', required: false },
+    ],
+  },
+  {
+    id: 'weekly_wed',
+    name: 'Счета Велес и Прусакова',
+    day: 'ср',
+    description: 'Диспетчер проектов группы среда (счёт Прусакова клиенту, счета в Велес).',
+    warning: null,
+    testModeDefault: true,
+    inputs: [
+      { key: 'test_mode', label: 'Тестовый режим (только вам, не клиентам)', type: 'boolean', defaultValue: false, description: '', required: false },
+      { key: 'only', label: 'Проекты для запуска', type: 'multiselect', defaultValue: [], description: 'Пусто = вся группа', required: false, options: [
+        { label: 'счёт Прусакова клиенту', value: 'prusakova' },
+        { label: 'счета в Велес', value: 'veles' },
+      ] },
+      { key: 'ignore_window', label: 'Игнорировать время и день недели', type: 'boolean', defaultValue: true, description: '', required: false },
+    ],
+  },
+  {
+    id: 'weekly_fri',
+    name: 'Прайс Лемур, отчет по дебеторке',
+    day: 'пт',
+    description: 'Диспетчер проектов группы пятница (прайс Лемур, ответ по дебиторке и др.).',
+    warning: null,
+    testModeDefault: true,
+    inputs: [
+      { key: 'test_mode', label: 'Тестовый режим (только вам, не клиентам)', type: 'boolean', defaultValue: false, description: '', required: false },
+      { key: 'only', label: 'Проекты для запуска', type: 'multiselect', defaultValue: [], description: 'Пусто = вся группа', required: false, options: PROJECT_OPTIONS },
+      { key: 'ignore_window', label: 'Игнорировать время и день недели', type: 'boolean', defaultValue: true, description: '', required: false },
+    ],
+  },
+  {
+    id: 'kpi_sales',
+    name: 'KPI Продажи',
+    day: '',
+    description: 'Личный отчёт выполнения KPI «Продажи». Письмо уходит только владельцу на NOTIFY_EMAIL.',
     warning: null,
     testModeDefault: true,
     inputs: [],
   },
   {
-    id: 'kpi_sales',
-    name: 'KPI Продажи (ручной запуск)',
-    description: 'Личный отчёт выполнения KPI «Продажи». Письмо уходит только владельцу на NOTIFY_EMAIL.',
-    warning: 'Это может отправить реальное письмо с личным отчётом на вашу электронную почту.',
+    id: 'tests',
+    name: 'Тесты стенд',
+    day: '',
+    description: 'Прогон автоматических тестов без отправки реальных писем. Безопасен для частого запуска.',
+    warning: null,
     testModeDefault: true,
     inputs: [],
   },
-  {
-    id: 'weekly_fri',
-    name: 'Почта пятница',
-    description: 'Диспетчер проектов группы пятница (прайс Лемур, ответ по дебиторке и др.).',
-    warning: 'В нетестовом режиме рассылка уйдёт реальным клиентам и партнёрам.',
-    testModeDefault: true,
-    inputs: [
-      { key: 'test_mode', label: 'Тестовый режим (только вам, не клиентам)', type: 'boolean', defaultValue: true, description: 'Письма уйдут только на вашу почту, реальные клиенты не получат рассылку', required: false },
-      { key: 'only', label: 'Один проект (ключ)', type: 'string', defaultValue: '', description: 'Например: lemur, dz, order, ukhta, veta, clients, payments, invoice, veles, sety. Пусто = вся группа', required: false },
-      { key: 'ignore_window', label: 'Игнорировать время и день недели', type: 'boolean', defaultValue: true, description: 'Запустить независимо от текущего времени и дня', required: false },
-    ],
-  },
-  {
-    id: 'weekly_mon_tue',
-    name: 'Почта пн-вт',
-    description: 'Диспетчер проектов группы понедельник-вторник (заказ, Ухта, ВЕТА, дебиторка, счета, платёжки, прайс Лемур).',
-    warning: 'В нетестовом режиме рассылка уйдёт реальным клиентам и партнёрам.',
-    testModeDefault: true,
-    inputs: [
-      { key: 'test_mode', label: 'Тестовый режим (только вам, не клиентам)', type: 'boolean', defaultValue: true, description: 'Письма уйдут только на вашу почту, реальные клиенты не получат рассылку', required: false },
-      { key: 'only', label: 'Один проект (ключ)', type: 'string', defaultValue: '', description: 'Например: order, ukhta, veta, clients, payments, invoice, veles, lemur, dz, sety. Пусто = вся группа', required: false },
-      { key: 'ignore_window', label: 'Игнорировать время и день недели', type: 'boolean', defaultValue: true, description: 'Запустить независимо от текущего времени и дня', required: false },
-    ],
-  },
-  {
-    id: 'weekly_wed',
-    name: 'Почта среда',
-    description: 'Диспетчер проектов группы среда (счёт Прусакова клиенту, счета в Велес).',
-    warning: 'В нетестовом режиме рассылка уйдёт реальным клиентам и партнёрам.',
-    testModeDefault: true,
-    inputs: [
-      { key: 'test_mode', label: 'Тестовый режим (только вам, не клиентам)', type: 'boolean', defaultValue: true, description: 'Письма уйдут только на вашу почту, реальные клиенты не получат рассылку', required: false },
-      { key: 'only', label: 'Один проект (ключ)', type: 'string', defaultValue: '', description: 'Например: invoice, veles, order, ukhta, veta, clients, payments, lemur, dz, sety. Пусто = вся группа', required: false },
-      { key: 'ignore_window', label: 'Игнорировать время и день недели', type: 'boolean', defaultValue: true, description: 'Запустить независимо от текущего времени и дня', required: false },
-    ],
-  },
-  {
-    id: 'weekly_residues',
-    name: 'Рекомендации к заказу (пн)',
-    description: 'Отчёт «Рекомендации к заказу» на основе остатков и продаж.',
-    warning: 'В нетестовом режиме отчёт уйдёт на вашу электронную почту.',
-    testModeDefault: true,
-    inputs: [
-      { key: 'test_mode', label: 'Тестовый режим (только вам)', type: 'boolean', defaultValue: true, description: 'Отчёт уйдёт только вам, копия руководителю не добавляется', required: false },
-    ],
-  },
-  {
-    id: 'weekly_sety_price',
-    name: 'Прайсы понедельника (сети + ИП Мамедов)',
-    description: 'Рассылка прайса сети магазинов и ИП Мамедов. Внимание: по умолчанию рассылка идёт реальным получателям.',
-    warning: 'В нетестовом режиме прайс уйдёт реальным сетям и клиентам. Это реальная отправка писем.',
-    testModeDefault: true,
-    inputs: [
-      { key: 'test_mode', label: 'Тестовый режим (только вам, не сетям)', type: 'boolean', defaultValue: true, description: 'Прайс уйдёт только вам, реальным сетям не уйдёт', required: false },
-      { key: 'skip_if_sent', label: 'Не дублировать рассылку', type: 'boolean', defaultValue: true, description: 'Пропустить отправку, если прайс уже уходил сегодня', required: false },
-    ],
-  },
 ];
 
-type InputValues = Record<string, Record<string, boolean | string>>;
+type InputValues = Record<string, Record<string, boolean | string | string[]>>;
 
-function defaultInputs(scenario: WorkflowScenario): Record<string, boolean | string> {
-  const out: Record<string, boolean | string> = {};
+function defaultInputs(scenario: WorkflowScenario): Record<string, boolean | string | string[]> {
+  const out: Record<string, boolean | string | string[]> = {};
   for (const input of scenario.inputs) out[input.key] = input.defaultValue;
   return out;
 }
@@ -98,6 +121,8 @@ export function RunProcessesPage() {
   const [running, setRunning] = useState<string | null>(null);
   const [result, setResult] = useState<{ message: string; runUrl?: string | null; status: 'accepted' | 'error' } | null>(null);
   const [confirmOpen, setConfirmOpen] = useState<{ id: string; name: string } | null>(null);
+  const [settingsOpen, setSettingsOpen] = useState<WorkflowScenario | null>(null);
+  const [openMultiselect, setOpenMultiselect] = useState<Record<string, boolean>>({});
   const [inputValues, setInputValues] = useState<InputValues>(() => {
     const init: InputValues = {};
     for (const s of SCENARIOS) init[s.id] = defaultInputs(s);
@@ -106,8 +131,20 @@ export function RunProcessesPage() {
 
   const apiConfigured = isApiConfigured();
 
-  const setInput = (scenarioId: string, key: string, value: boolean | string) => {
+  const setInput = (scenarioId: string, key: string, value: boolean | string | string[]) => {
     setInputValues((prev) => ({ ...prev, [scenarioId]: { ...prev[scenarioId], [key]: value } }));
+  };
+
+  const toggleMultiselect = (scenarioId: string, key: string, value: string) => {
+    setInputValues((prev) => {
+      const cur = (prev[scenarioId]?.[key] as string[] | undefined) || [];
+      const next = cur.includes(value) ? cur.filter((v) => v !== value) : [...cur, value];
+      return { ...prev, [scenarioId]: { ...prev[scenarioId], [key]: next } };
+    });
+  };
+
+  const toggleMultiselectOpen = (scenarioId: string, key: string) => {
+    setOpenMultiselect((prev) => ({ ...prev, [`${scenarioId}.${key}`]: !prev[`${scenarioId}.${key}`] }));
   };
 
   const writeLog = async (payload: {
@@ -133,11 +170,7 @@ export function RunProcessesPage() {
 
   const handleRunClick = (scenario: WorkflowScenario) => {
     setResult(null);
-    if (scenario.warning) {
-      setConfirmOpen({ id: scenario.id, name: scenario.name });
-      return;
-    }
-    void executeRun(scenario);
+    setConfirmOpen({ id: scenario.id, name: scenario.name });
   };
 
   const handleConfirm = () => {
@@ -150,7 +183,11 @@ export function RunProcessesPage() {
   };
 
   const executeRun = async (scenario: WorkflowScenario) => {
-    const inputs = inputValues[scenario.id] || {};
+    const rawInputs = inputValues[scenario.id] || {};
+    const inputs: Record<string, boolean | string> = {};
+    for (const [k, v] of Object.entries(rawInputs)) {
+      inputs[k] = Array.isArray(v) ? v.join(',') : v;
+    }
     setRunning(scenario.id);
     setResult(null);
 
@@ -186,65 +223,31 @@ export function RunProcessesPage() {
     <div>
       <h2 className="page-title">Запуск</h2>
       {!apiConfigured && (
-        <div className="alert alert-warning" style={{ marginBottom: 16 }}>
+        <div className="alert alert-warning" style={{ marginBottom: 8 }}>
           <strong>Запуск не настроен:</strong> отсутствует серверный API (VITE_API_BASE_URL).
           Сервер должен проверять Firebase ID token, валидировать workflow и параметры по белому списку и вести журнал запусков.
         </div>
       )}
-      <p style={{ fontSize: 13, color: '#6b7280', marginBottom: 20 }}>
-        Запускает разрешённые GitHub Actions workflows через защищённый серверный API. GitHub-токены не хранятся в браузере.
-      </p>
-
-      <div style={{ display: 'grid', gap: 12, gridTemplateColumns: '1fr' }}>
+      <div style={{ display: 'grid', gap: 6, gridTemplateColumns: '1fr' }}>
         {SCENARIOS.map((scenario) => {
-          const values = inputValues[scenario.id] || {};
           return (
             <div key={scenario.id} className="card">
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
-                <div>
-                  <h3 style={{ margin: 0, fontSize: 16, fontWeight: 600 }}>{scenario.name}</h3>
-                  <p style={{ margin: '4px 0 0', fontSize: 13, color: '#6b7280' }}>{scenario.description}</p>
-                </div>
-                <button className="btn btn-primary" onClick={() => handleRunClick(scenario)} disabled={running === scenario.id}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 8 }}>
+                <h3 style={{ margin: 0, fontSize: 15, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0, flex: 1, flexShrink: 1 }}>{scenario.name}</h3>
+                {scenario.day && <span style={{ fontSize: 15, color: '#94a3b8', flexShrink: 0 }}>{scenario.day}</span>}
+              </div>
+              <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
+                <button className="btn btn-primary" style={{ flex: 1 }} onClick={() => handleRunClick(scenario)} disabled={running === scenario.id}>
                   {running === scenario.id ? 'Запуск…' : 'Запустить'}
+                </button>
+                <button className="btn btn-outline" style={{ flexShrink: 0 }} onClick={() => setSettingsOpen(scenario)} title="Настройка">
+                  ⚙️
                 </button>
               </div>
 
               {scenario.warning && (
-                <div style={{ marginTop: 10, padding: 8, background: '#fbf4e3', borderRadius: 6, fontSize: 12, color: '#92400e' }}>
+                <div style={{ marginTop: 4, padding: 4, background: '#fbf4e3', borderRadius: 6, fontSize: 11, color: '#92400e', overflowWrap: 'anywhere', wordBreak: 'break-word' }}>
                   ⚠️ {scenario.warning}
-                </div>
-              )}
-
-              {scenario.inputs.length > 0 && (
-                <div style={{ marginTop: 12, display: 'grid', gap: 10 }}>
-                  {scenario.inputs.map((input: WorkflowInput) => (
-                    <div key={input.key} className="form-group" style={{ marginBottom: 0 }}>
-                      <label className="form-label" style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                        {input.type === 'boolean' ? (
-                          <>
-                            <input
-                              type="checkbox"
-                              checked={Boolean(values[input.key])}
-                              onChange={(e) => setInput(scenario.id, input.key, e.target.checked)}
-                            />
-                            <span>{input.label}</span>
-                          </>
-                        ) : (
-                          <span>{input.label}</span>
-                        )}
-                      </label>
-                      {input.type === 'string' && (
-                        <input
-                          className="form-input"
-                          value={String(values[input.key] ?? '')}
-                          onChange={(e) => setInput(scenario.id, input.key, e.target.value)}
-                          placeholder={input.description}
-                        />
-                      )}
-                      <div style={{ fontSize: 12, color: '#6b7280', marginTop: 4 }}>{input.description}</div>
-                    </div>
-                  ))}
                 </div>
               )}
             </div>
@@ -272,16 +275,98 @@ export function RunProcessesPage() {
       {confirmOpen && (
         <div className="dialog-overlay" onClick={() => setConfirmOpen(null)}>
           <div className="dialog" onClick={(e) => e.stopPropagation()}>
-            <div className="dialog-title">Подтверждение запуска</div>
+            <div className="dialog-title">Точно запустить?</div>
             <div className="dialog-body">
-              Вы собираетесь запустить <strong>{confirmOpen.name}</strong>.<br />
-              {SCENARIOS.find((s) => s.id === confirmOpen.id)?.warning}
-              <br /><br />
-              <strong>Письма могут уйти реальным получателям.</strong> Продолжить?
+              Вы собираетесь запустить <strong>{confirmOpen.name}</strong>.
             </div>
             <div className="dialog-actions">
-              <button className="btn btn-outline" onClick={() => setConfirmOpen(null)}>Отмена</button>
-              <button className="btn btn-danger" onClick={handleConfirm}>Да, запустить</button>
+              <button className="btn" style={{ background: 'rgba(21, 128, 61, 0.75)', color: '#ffffff' }} onClick={handleConfirm}>Да</button>
+              <button className="btn" style={{ background: 'rgba(185, 28, 28, 0.75)', color: '#ffffff' }} onClick={() => setConfirmOpen(null)}>Нет</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {settingsOpen && (
+        <div className="dialog-overlay" onClick={() => setSettingsOpen(null)}>
+          <div className="dialog" onClick={(e) => e.stopPropagation()}>
+            <div className="dialog-title">Настройка</div>
+            <div className="dialog-body">
+              <p style={{ fontSize: 13, color: '#6b7280', marginBottom: 16 }}>{settingsOpen.description}</p>
+              {settingsOpen.inputs.length > 0 ? (
+                <div style={{ display: 'grid', gap: 12 }}>
+                  {settingsOpen.inputs.map((input: WorkflowInput) => {
+                    const val = inputValues[settingsOpen.id]?.[input.key];
+                    return (
+                      <div key={input.key} className="form-group" style={{ marginBottom: 0, display: 'flex', flexDirection: 'column', gap: 4 }}>
+                          {input.type === 'boolean' ? (
+                            <>
+                              <label className="form-label" style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 0 }}>
+                                <input
+                                  type="checkbox"
+                                  checked={Boolean(val)}
+                                  onChange={(e) => setInput(settingsOpen.id, input.key, e.target.checked)}
+                                />
+                                <span style={{ minWidth: 0, overflowWrap: 'anywhere' }}>{input.label}</span>
+                              </label>
+                            </>
+                          ) : input.type === 'multiselect' ? (
+                            <>
+                              <label className="form-label" style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 0, cursor: 'pointer' }} title={input.description || input.label}>
+                                {input.label}
+                              </label>
+                              <div style={{ position: 'relative', display: 'inline-block', width: '100%' }}>
+                                <button
+                                  className="btn btn-outline"
+                                  style={{ width: '100%', padding: '6px 10px', fontSize: 13, textAlign: 'left' }}
+                                  onClick={(e) => { e.stopPropagation(); toggleMultiselectOpen(settingsOpen.id, input.key); }}
+                                  title={input.description || input.label}
+                                >
+                                  {Array.isArray(val) && val.length > 0 ? val.join(', ') : 'Все'}
+                                </button>
+                                {openMultiselect[`${settingsOpen.id}.${input.key}`] && (
+                                  <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 50, marginTop: 4, background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius)', boxShadow: '0 8px 20px rgba(0,0,0,0.15)', padding: '8px', display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '6px' }}>
+                                    {(input.options || []).map((opt) => {
+                                      const cur = (val as string[] | undefined) || [];
+                                      return (
+                                        <label key={opt.value} style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer', fontSize: 13 }}>
+                                          <input
+                                            type="checkbox"
+                                            checked={cur.includes(opt.value)}
+                                            onChange={(e) => { e.stopPropagation(); toggleMultiselect(settingsOpen.id, input.key, opt.value); }}
+                                          />
+                                          {opt.label}
+                                        </label>
+                                      );
+                                    })}
+                                  </div>
+                                )}
+                              </div>
+                            </>
+                          ) : (
+                            <span style={{ minWidth: 0, overflowWrap: 'anywhere' }}>{input.label}</span>
+                          )}
+                          {input.type === 'string' && (
+                            <input
+                              className="form-input"
+                              value={String(val ?? '')}
+                              onChange={(e) => setInput(settingsOpen.id, input.key, e.target.value)}
+                              placeholder={input.description}
+                            />
+                          )}
+                          {input.description && (
+                            <div style={{ fontSize: 12, color: '#6b7280', marginTop: 4, overflowWrap: 'anywhere' }}>{input.description}</div>
+                          )}
+                        </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <p style={{ fontSize: 13, color: '#6b7280' }}>Нет настроек.</p>
+              )}
+            </div>
+            <div className="dialog-actions">
+              <button className="btn btn-outline" onClick={() => setSettingsOpen(null)}>Закрыть</button>
             </div>
           </div>
         </div>
