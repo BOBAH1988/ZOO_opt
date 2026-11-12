@@ -166,15 +166,6 @@ export function ReportsPage() {
       <h2 className="page-title" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         Отчёты и история запусков
         <div style={{ display: 'flex', gap: 6 }}>
-          <button
-            className="btn btn-outline btn-sm"
-            title="Маршрут (заглушка)"
-            onClick={() => alert('Маршрут: заглушка. Реализация посещения точек будет позже.')}
-          >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-              <path d="M12 19V5M12 5l-7 7M12 5l7 7" />
-            </svg>
-          </button>
           <button className="btn btn-outline btn-sm" onClick={prevPage} disabled={page === 0}>←</button>
           <button className="btn btn-outline btn-sm" onClick={nextPage} disabled={(page + 1) * PAGE_SIZE >= logs.length}>→</button>
         </div>
