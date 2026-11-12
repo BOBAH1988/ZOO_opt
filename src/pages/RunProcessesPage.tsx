@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   collection,
   addDoc,
@@ -136,10 +136,61 @@ export function RunProcessesPage() {
   const [inputValues, setInputValues] = useState<InputValues>(() => {
     const init: InputValues = {};
     for (const s of SCENARIOS) init[s.id] = defaultInputs(s);
+    try {
+      const raw = localStorage.getItem('zoo-opt-run-settings');
+      if (raw) {
+        const parsed = JSON.parse(raw) as Partial<InputValues>;
+        for (const s of SCENARIOS) {
+          if (parsed[s.id]) {
+            init[s.id] = { ...init[s.id], ...parsed[s.id] };
+          }
+        }
+      }
+    } catch {
+      // игнорируем ошибки чтения localStorage
+    }
     return init;
   });
 
   const apiConfigured = isApiConfigured();
+
+  // Сохраняем настройки при каждом изменении
+  useEffect(() => {
+    try {
+      localStorage.setItem('zoo-opt-run-settings', JSON.stringify(inputValues));
+    } catch {
+      // игнорируем ошибки записи localStorage
+    }
+  }, [inputValues]);
+
+  function inputsEqual(
+    a: Record<string, boolean | string | string[]>,
+    b: Record<string, boolean | string | string[]>
+  ): boolean {
+    const keysA = Object.keys(a);
+    const keysB = Object.keys(b);
+    if (keysA.length !== keysB.length) return false;
+    for (const key of keysA) {
+      if (!(key in b)) return false;
+      const va = a[key];
+      const vb = b[key];
+      if (Array.isArray(va) && Array.isArray(vb)) {
+        if (va.length !== vb.length) return false;
+        for (let i = 0; i < va.length; i++) if (va[i] !== vb[i]) return false;
+      } else if (va !== vb) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  function hasChanges(scenarioId: string): boolean {
+    const current = inputValues[scenarioId];
+    const scenario = SCENARIOS.find((s) => s.id === scenarioId);
+    if (!scenario || !current) return false;
+    const defaults = defaultInputs(scenario);
+    return !inputsEqual(current, defaults);
+  }
 
   const setInput = (scenarioId: string, key: string, value: boolean | string | string[]) => {
     setInputValues((prev) => ({ ...prev, [scenarioId]: { ...prev[scenarioId], [key]: value } }));
@@ -252,7 +303,17 @@ export function RunProcessesPage() {
                   {running === scenario.id ? 'Запуск…' : 'Запустить'}
                 </button>
               )}
-              <button className="btn btn-outline" onClick={() => setSettingsOpen(scenario)} title="Настройка">
+              <button
+                className="btn btn-outline"
+                onClick={() => setSettingsOpen(scenario)}
+                title="Настройка"
+                style={{
+                  ...(hasChanges(scenario.id) && {
+                    outline: '1px solid #ef4444',
+                    outlineOffset: '1px',
+                  }),
+                }}
+              >
                 ⚙️
               </button>
 
