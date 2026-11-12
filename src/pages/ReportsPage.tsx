@@ -178,7 +178,6 @@ export function ReportsPage() {
               <div style={{ fontSize: 24, fontWeight: 700, color: 'var(--color-success)' }}>{clients.length}</div>
             </div>
             <div style={{ flex: 1, minWidth: 140, padding: 12, background: 'var(--color-bg)', borderRadius: 8, textAlign: 'center' }}>
-              <div style={{ fontSize: 11, color: 'var(--color-text-secondary)', textTransform: 'uppercase', marginBottom: 4 }}>Вывод в %</div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, justifyContent: 'center' }}>
                 <div style={{ width: 60, height: 60, borderRadius: 50, border: '4px solid var(--color-border)', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
                   <svg width="52" height="52" viewBox="0 0 24 24" style={{ transform: 'rotate(-90deg)' }}>
