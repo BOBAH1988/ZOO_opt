@@ -3,9 +3,11 @@ import { Link, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { Footer } from '@/components/Footer';
 
-const NAV_ITEMS = [
+type NavItem = { to: string; label: string; icon?: any };
+
+const NAV_ITEMS: NavItem[] = [
   { to: '/reports', label: 'Отчёты' },
-  { to: '/route', label: null, icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 19V5M12 5l-7 7M12 5l7 7"/></svg> },
+  { to: '/route', label: 'Маршрут' },
   { to: '/run', label: 'Запуск' },
   { to: '/kpi', label: 'KPI' },
   { to: '/clients', label: 'Клиенты' },
