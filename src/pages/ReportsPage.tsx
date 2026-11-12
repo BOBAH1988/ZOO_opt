@@ -190,6 +190,7 @@ export function ReportsPage() {
               </div>
             </div>
           </div>
+          </div>
           {/* Блок KPI */}
           <div style={{ fontSize: 16, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px', color: 'var(--color-text)', marginBottom: 8 }}>KPI</div>
           <div className="card" style={{ marginTop: 12, marginBottom: 12, padding: 12 }}>
@@ -213,6 +214,7 @@ export function ReportsPage() {
                 </div>
               </div>
             </div>
+          </div>
           </div>
         </>
       )}
