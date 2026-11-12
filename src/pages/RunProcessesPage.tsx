@@ -391,7 +391,11 @@ export function RunProcessesPage() {
             color: '#64748b',
             lineHeight: 1,
           }}
-          onMouseEnter={(e) => { e.currentTarget.style.background = '#f8fafc'; e.currentTarget.style.color = '#475569'; }}
+          onMouseEnter={(e) => {
+            const isDark = typeof document !== 'undefined' && document.documentElement.getAttribute('data-theme') === 'dark';
+            e.currentTarget.style.background = isDark ? '#1e3a5f' : '#f8fafc';
+            e.currentTarget.style.color = isDark ? '#ffffff' : '#475569';
+          }}
           onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#64748b'; }}
         >
           ❓
