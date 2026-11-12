@@ -205,7 +205,7 @@ export function ReportsPage() {
       ) : (
         <>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-            <h2 style={{ margin: 0, fontSize: 18, fontWeight: 600 }}>Отчёты и история запусков</h2>
+            <h2 style={{ margin: 0, fontSize: 18, fontWeight: 600 }}>История запусков</h2>
             <div style={{ display: 'flex', gap: 6 }}>
               <button className="btn btn-outline btn-sm" onClick={prevPage} disabled={page === 0}>←</button>
               <button className="btn btn-outline btn-sm" onClick={nextPage} disabled={(page + 1) * PAGE_SIZE >= logs.length}>→</button>
