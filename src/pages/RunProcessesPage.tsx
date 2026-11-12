@@ -118,6 +118,87 @@ const SCENARIOS: WorkflowScenario[] = [
   },
 ];
 
+const ALL_SCRIPTS = [
+  {
+    id: 'lemur',
+    name: 'Лемур — прайс Прусакова',
+    description: 'Проверяет почту zookingdom@mail.ru на письмо с темой "Прайс Прусакова.xls", конвертирует .xls→.xlsx, раскрашивает (новинки — зелёным, акции — жёлтым) и рассылает клиентам. Если письма нет к 9:30 — напоминание поставщику, к 10:00 — уведомление на личный email.',
+    schedule: 'пн, пт — 07:37–10:07 МСК',
+  },
+  {
+    id: 'ukhta',
+    name: 'Ухта — прайс',
+    description: 'Проверяет почту на письмо с темой "прайс Ухта.xls", конвертирует .xls→.xlsx, удаляет строки "Мит Гарден", рассылает клиентам. Получатели в scripts/recipients_ukhta.txt. Есть тестовый режим.',
+    schedule: 'пн, вт — 07:36–10:06 МСК',
+  },
+  {
+    id: 'sety',
+    name: 'Сети Ухта — прайс',
+    description: 'Рассылает готовый файл прайса из репозитория по списку получателей (scripts/recipients_sety_ukhta.txt). Защита от дубля: не отправляет тот же файл повторно в день. Тема: "Здравствуйте, прайс от ООО "ЗОО Логистик"".',
+    schedule: 'пн — в любое время (слот дня)',
+  },
+  {
+    id: 'order',
+    name: 'Заказ Прусакова оператору',
+    description: 'Пересылает заказы клиента zoo2017ukhta@yandex.ru оператору zookingdom@mail.ru. Классифицирует темы: заказ, корректировка, доп.заказ, игнорирует "ЗАКАЗ АММА". Уведомляет о комментариях к заказу.',
+    schedule: 'пн — 07:00–11:30 МСК',
+  },
+  {
+    id: 'invoice',
+    name: 'Счёт Прусакова клиенту',
+    description: 'Ищет письмо от zookingdom@mail.ru с темой "Прусакова", пересылает все Excel-вложения клиенту zoo2017ukhta@yandex.ru. Автоотправка только с 13:00 до 14:30, после — уведомление "отправьте вручную".',
+    schedule: 'ср — 09:05–15:35 МСК',
+  },
+  {
+    id: 'veles',
+    name: 'Счета в Велес',
+    description: 'Пересылает письма от a_tarakashkin@mail.ru с Excel-вложениями получателю iruya@mail.ru с темой "Счет от Зоо Логистик". Письма без вложений пропускаются.',
+    schedule: 'ср — 14:30–16:00 МСК',
+  },
+  {
+    id: 'dz',
+    name: 'Ответ по дебиторке / ДЗ',
+    description: 'Проверяет письмо от yuriy.novikov1980@mail.ru с темой "ДЗ" и Excel-вложением, ищет совпадения по списку клиентов. Отвечает "нет задолженности" или шлёт вам письмо "Разобраться с дебеторкой" с суммами.',
+    schedule: 'пт — 08:00–09:30 МСК',
+  },
+  {
+    id: 'veta',
+    name: 'Счёт ВЕТА ООО клиенту',
+    description: 'Ищет письмо от zookingdom@mail.ru с темой "ВЕТА ООО Ухта Заводская 3.xls", пересылает Excel-вложение получателю popovse1959@mail.ru.',
+    schedule: 'пн — 08:12–11:12 МСК',
+  },
+  {
+    id: 'clients',
+    name: 'Счета клиентам по списку',
+    description: 'Пересылает Excel-вложения из писем от zookingdom@mail.ru получателям по ключам тем (8 клиентов). Уведомляет "Счет отправлен клиенту <Имя>".',
+    schedule: 'пн, вт — 09:24–17:24 МСК',
+  },
+  {
+    id: 'debt_ukhta',
+    name: 'Дебиторка Ухта',
+    description: 'Разбирает файл задолженности от поставщика, присылает отчёт по просроченным накладным (сумма ≥ 1000 — уведомление клиенту, ≤ -100 — уведомление о переплате). Если письма нет к 11:00 — напоминание оператору "Вышлите дебеторку Ухта".',
+    schedule: 'пн — 07:18–11:18 МСК',
+  },
+  {
+    id: 'payments',
+    name: 'Платёжки клиентов оператору',
+    description: 'Пересылает вложения Excel/PDF от 4 клиентов (Солодовник, Прусакова, ООО "Вета", Смирнов) оператору zookingdom@mail.ru с темой "Платежка от <Имя>". Уведомляет об успешной передаче.',
+    schedule: 'пн, вт — 10:27–17:27 МСК',
+  },
+  {
+    id: 'kpi',
+    name: 'KPI «Продажи»',
+    description: 'Личный мотивационный отчёт Владимира Соколова (Ухта). Разбирает файл "Проекция объема продаж.xlsx", считает достижение ступеней мотивации, начисления и проекцию. Письмо уходит только на NOTIFY_EMAIL.',
+    schedule: 'будни — 14:05 МСК',
+  },
+  {
+    id: 'residues',
+    name: 'Рекомендации к заказу по остаткам',
+    description: 'Сверяет полный прайс с остатком на складе и продажами за три месяца, собирает список того, что заказать. Запускает пакет residues и присылает результат на почту.',
+    schedule: 'пн — 10:00 МСК',
+  },
+];
+
 type InputValues = Record<string, Record<string, boolean | string | string[]>>;
 
 function defaultInputs(scenario: WorkflowScenario): Record<string, boolean | string | string[]> {
@@ -326,12 +407,14 @@ export function RunProcessesPage() {
             borderRadius: 8,
             boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)',
             padding: 12,
-            minWidth: 340,
+            minWidth: 420,
+            maxHeight: 700,
+            overflowY: 'auto',
             zIndex: 50,
           }}
           onClick={(e) => e.stopPropagation()}
         >
-          <div style={{ fontSize: 13, fontWeight: 600, color: '#0f172a', marginBottom: 10, borderBottom: '1px solid #f1f5f9', paddingBottom: 6 }}>
+          <div style={{ fontSize: 13, fontWeight: 600, color: '#0f172a', marginBottom: 8, borderBottom: '1px solid #f1f5f9', paddingBottom: 6 }}>
             Сценарии запуска
           </div>
           {SCENARIOS.map((scenario) => (
@@ -350,6 +433,25 @@ export function RunProcessesPage() {
               <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 4 }}>
                 {scenario.day}{scenario.time ? ` в ${scenario.time}` : ''}
               </div>
+            </div>
+          ))}
+          <div style={{ fontSize: 13, fontWeight: 600, color: '#0f172a', marginTop: 14, marginBottom: 8, borderBottom: '1px solid #f1f5f9', paddingBottom: 6 }}>
+            Все скрипты
+          </div>
+          {ALL_SCRIPTS.map((script) => (
+            <div
+              key={script.id}
+              style={{
+                padding: '8px 10px',
+                borderBottom: '1px solid #f1f5f9',
+                cursor: 'default',
+                fontSize: 12.5,
+                color: '#334155',
+              }}
+            >
+              <div style={{ fontWeight: 600, color: '#0f172a', marginBottom: 2 }}>{script.name}</div>
+              <div style={{ color: '#64748b', fontSize: 11.5, overflowWrap: 'anywhere' }}>{script.description}</div>
+              <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 4 }}>{script.schedule}</div>
             </div>
           ))}
         </div>
