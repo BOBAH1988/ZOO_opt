@@ -129,7 +129,6 @@ function defaultInputs(scenario: WorkflowScenario): Record<string, boolean | str
 export function RunProcessesPage() {
   const { user } = useAuth();
   const [running, setRunning] = useState<string | null>(null);
-  const [result, setResult] = useState<{ message: string; runUrl?: string | null; status: 'accepted' | 'error' } | null>(null);
   const [confirmOpen, setConfirmOpen] = useState<{ id: string; name: string } | null>(null);
   const [settingsOpen, setSettingsOpen] = useState<WorkflowScenario | null>(null);
   const [openMultiselect, setOpenMultiselect] = useState<Record<string, boolean>>({});
@@ -180,7 +179,6 @@ export function RunProcessesPage() {
   };
 
   const handleRunClick = (scenario: WorkflowScenario) => {
-    setResult(null);
     setConfirmOpen({ id: scenario.id, name: scenario.name });
   };
 
@@ -200,11 +198,9 @@ export function RunProcessesPage() {
       inputs[k] = Array.isArray(v) ? v.join(',') : v;
     }
     setRunning(scenario.id);
-    setResult(null);
 
     if (!apiConfigured) {
       const message = 'Запуск не настроен: отсутствует серверный API.';
-      setResult({ message, status: 'error' });
       await writeLog({ workflowId: scenario.id, workflowName: scenario.name, status: 'error', message, inputs });
       setRunning(null);
       return;
@@ -212,7 +208,6 @@ export function RunProcessesPage() {
 
     try {
       const response = await runWorkflow({ workflowId: scenario.id, inputs });
-      setResult({ message: response.message, runUrl: response.runUrl ?? null, status: 'accepted' });
       setRunStatus((prev) => ({ ...prev, [scenario.id]: 'ok' }));
       await writeLog({
         workflowId: scenario.id,
@@ -224,7 +219,6 @@ export function RunProcessesPage() {
       });
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Неизвестная ошибка при запуске';
-      setResult({ message, status: 'error' });
       setRunStatus((prev) => ({ ...prev, [scenario.id]: 'error' }));
       await writeLog({ workflowId: scenario.id, workflowName: scenario.name, status: 'error', message, inputs });
     } finally {
@@ -272,22 +266,7 @@ export function RunProcessesPage() {
         })}
       </div>
 
-      {result && (
-        <div className={`alert ${result.status === 'accepted' ? 'alert-info' : 'alert-danger'}`} style={{ marginTop: 16 }}>
-          <strong style={{ textTransform: 'uppercase', fontSize: 11, letterSpacing: '0.4px' }}>
-            {result.status === 'accepted' ? 'Запрос принят' : 'Ошибка'}
-          </strong>
-          <p style={{ margin: '6px 0 0', fontSize: 13 }}>{result.message}</p>
-          {result.runUrl && (
-            <a href={result.runUrl} target="_blank" rel="noopener noreferrer" style={{ marginTop: 8, display: 'inline-block', fontSize: 13, fontWeight: 500 }}>
-              Открыть запуск в GitHub Actions
-            </a>
-          )}
-          <p style={{ marginTop: 8, fontSize: 12, color: '#6b7280' }}>
-            Статус «запрос принят» не означает завершение workflow. История запросов сохраняется в разделе «Отчёты» (при настроенном Firestore).
-          </p>
-        </div>
-      )}
+
 
       {confirmOpen && (
         <div className="dialog-overlay" onClick={() => setConfirmOpen(null)}>
