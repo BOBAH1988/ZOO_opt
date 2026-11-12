@@ -431,7 +431,10 @@ export function RunProcessesPage() {
               }}
             >
               <div style={{ fontWeight: 600, color: '#0f172a', marginBottom: 2 }}>{scenario.name}</div>
-              <div style={{ color: '#64748b', fontSize: 11.5, overflowWrap: 'anywhere' }}>{scenario.description}</div>
+              <div style={{ color: '#64748b', fontSize: 11.5, overflowWrap: 'anywhere' }}>
+                {scenario.description}
+                <span style={{ display: 'block', marginTop: 2, fontSize: 10, color: '#94a3b8', fontFamily: 'monospace' }}>Код скрипта: {scenario.id}</span>
+              </div>
               <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 4 }}>
                 {scenario.day}{scenario.time ? ` в ${scenario.time}` : ''}
               </div>
@@ -452,7 +455,10 @@ export function RunProcessesPage() {
               }}
             >
               <div style={{ fontWeight: 600, color: '#0f172a', marginBottom: 2 }}>{script.name}</div>
-              <div style={{ color: '#64748b', fontSize: 11.5, overflowWrap: 'anywhere' }}>{script.description}</div>
+              <div style={{ color: '#64748b', fontSize: 11.5, overflowWrap: 'anywhere' }}>
+                {script.description}
+                <span style={{ display: 'block', marginTop: 2, fontSize: 10, color: '#94a3b8', fontFamily: 'monospace' }}>Код скрипта: {script.id}</span>
+              </div>
               <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 4 }}>{script.schedule}</div>
             </div>
           ))}
