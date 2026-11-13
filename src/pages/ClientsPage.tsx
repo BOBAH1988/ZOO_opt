@@ -314,7 +314,7 @@ export function ClientsPage() {
 
       {editingId && (
         <div className="dialog-overlay" onClick={() => { setEditingId(null); resetForm(); }}>
-          <div className="dialog" onClick={(e) => e.stopPropagation()}>
+          <div className="dialog" onClick={(e) => e.stopPropagation()} style={{ maxHeight: '85vh', overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
             <div className="dialog-title">
               {editingId === 'new' ? 'Новый клиент' : 'Редактирование клиента'}
             </div>
@@ -322,6 +322,7 @@ export function ClientsPage() {
               onSubmit={(e) =>
                 editingId === 'new' ? handleCreate(e) : handleUpdate(editingId, e)
               }
+              style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column' }}
             >
               <div className="form-group">
                 <label className="form-label">Клиент</label>
@@ -410,9 +411,9 @@ export function ClientsPage() {
 
       {viewingClient && (
         <div className="dialog-overlay" onClick={() => setViewingClient(null)}>
-          <div className="dialog" onClick={(e) => e.stopPropagation()}>
+          <div className="dialog" onClick={(e) => e.stopPropagation()} style={{ maxHeight: '85vh', overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
             <div className="dialog-title">Клиент</div>
-            <div className="dialog-body" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, fontSize: 13 }}>
+            <div className="dialog-body" style={{ flex: 1, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, fontSize: 13, overflowY: 'auto' }}>
               <div>
                 <label className="form-label" style={{ fontSize: 11, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 2, display: 'block' }}>Активный</label>
                 <div style={{ marginBottom: 10 }}>{viewingClient.active ? '✅ Активный' : '❌ Не активный'}</div>
