@@ -184,14 +184,12 @@ export function ReportsPage() {
               <div style={{ fontSize: 20, fontWeight: 700, color: 'var(--color-success)' }}>—</div>
             </div>
             <div style={{ flex: 1, minWidth: 0, padding: 10, background: 'var(--color-bg)', borderRadius: 8, textAlign: 'center' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'center' }}>
-                <div style={{ width: 52, height: 52, borderRadius: 50, border: '4px solid var(--color-border)', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
-                  <svg width="44" height="44" viewBox="0 0 24 24" style={{ transform: 'rotate(-90deg)' }}>
-                    <circle cx="12" cy="12" r="10" stroke="var(--color-border)" strokeWidth="4" fill="none" />
-                    <circle cx="12" cy="12" r="10" stroke="#2563eb" strokeWidth="4" fill="none" strokeDasharray="62.8" strokeDashoffset="62.8" />
-                  </svg>
-                  <div style={{ position: 'absolute', fontSize: 14, fontWeight: 700, color: 'var(--color-text)' }}>0%</div>
-                </div>
+              <div style={{ width: 56, height: 56, borderRadius: '50%', border: '4px solid var(--color-border)', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', margin: '0 auto' }}>
+                <svg width="48" height="48" viewBox="0 0 24 24" style={{ transform: 'rotate(-90deg)' }}>
+                  <circle cx="12" cy="12" r="10" stroke="var(--color-border)" strokeWidth="4" fill="none" />
+                  <circle cx="12" cy="12" r="10" stroke="#2563eb" strokeWidth="4" fill="none" strokeDasharray="62.8" strokeDashoffset="62.8" />
+                </svg>
+                <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', fontSize: 15, fontWeight: 700, color: 'var(--color-text)' }}>0%</div>
               </div>
             </div>
           </div>
@@ -209,14 +207,12 @@ export function ReportsPage() {
               <div style={{ fontSize: 20, fontWeight: 700, color: 'var(--color-success)' }}>{clients.filter((c) => c.active).length}</div>
             </div>
             <div style={{ flex: 1, minWidth: 0, padding: 10, background: 'var(--color-bg)', borderRadius: 8, textAlign: 'center' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'center' }}>
-                <div style={{ width: 52, height: 52, borderRadius: 50, border: '4px solid var(--color-border)', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
-                  <svg width="44" height="44" viewBox="0 0 24 24" style={{ transform: 'rotate(-90deg)' }}>
-                    <circle cx="12" cy="12" r="10" stroke="var(--color-border)" strokeWidth="4" fill="none" />
-                    <circle cx="12" cy="12" r="10" stroke="#2563eb" strokeWidth="4" fill="none" strokeDasharray="62.8" strokeDashoffset="0" />
-                  </svg>
-                  <div style={{ position: 'absolute', fontSize: 14, fontWeight: 700, color: 'var(--color-text)' }}>{clients.length > 0 ? 100 : 0}%</div>
-                </div>
+              <div style={{ width: 56, height: 56, borderRadius: '50%', border: '4px solid var(--color-border)', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', margin: '0 auto' }}>
+                <svg width="48" height="48" viewBox="0 0 24 24" style={{ transform: 'rotate(-90deg)' }}>
+                  <circle cx="12" cy="12" r="10" stroke="var(--color-border)" strokeWidth="4" fill="none" />
+                  <circle cx="12" cy="12" r="10" stroke="#2563eb" strokeWidth="4" fill="none" strokeDasharray="62.8" strokeDashoffset="0" />
+                </svg>
+                <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', fontSize: 15, fontWeight: 700, color: 'var(--color-text)' }}>{clients.length > 0 ? 100 : 0}%</div>
               </div>
             </div>
           </div>
