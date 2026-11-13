@@ -82,3 +82,18 @@ GitHub Pages: base `/ZOO_opt/`, HashRouter, workflow `.github/workflows/deploy.y
 - Развернуть сервер `/run` (например, Cloudflare Workers) и перенести доверительную запись `runLogs` на сервер (Admin SDK) при необходимости.
 - Добавить Firebase Emulator тесты для правил/сценариев, e2e/smoke проверки.
 - Усилить контроль рассылок реальным адресатам (роли, подтверждения, аудит на сервере).
+
+## Решение проблем (troubleshooting)
+
+| Ошибка | Причина | Решение |
+|--------|---------|---------|
+| `Запуск не настроен: отсутствует серверный API (VITE_API_BASE_URL)` | `VITE_API_BASE_URL` не задан в клиенте | Локально: `VITE_API_BASE_URL=http://localhost:8787` в `.env` и запущен `server/index.js`. Онлайн: задайте repository secret `VITE_API_BASE_URL` = URL Cloudflare Worker (например `https://zoo-opt-run-api.zoo-opt.workers.dev`) в GitHub Settings → Secrets → Actions и пересоберите сайт (пуш в `main`). |
+| `net::ERR_CONNECTION_REFUSED` на `localhost:8787` | Локальный Express-сервер не запущен | `cd server && npm install && npm start`. Сервер должен слушать порт 8787. |
+| WebSocket HMR падает с `400` в dev (`ws://localhost:5173/ZOO_opt/...`) | Vite dev сервер не знает базовый путь `/ZOO_opt/` | В `vite.config.ts` добавьте `server.origin: 'http://localhost:5173'` (или `server.hmr.path: '/__vite_hmr'`). |
+| `502 Bad Gateway` / `Failed to dispatch GitHub Actions workflow` | `GITHUB_TOKEN` не задан в секретах Cloudflare Worker | `cd server/cloudflare && npx wrangler secret put GITHUB_TOKEN` → введите Fine-grained PAT с правом `Actions: Read and write` на `BOBAH1988/mail-automation` → `npx wrangler deploy --name zoo-opt-run-api`. |
+| `GitHub rejected the workflow dispatch request (403)` | Токену не хватает прав или отсутствует заголовок `User-Agent` | 1) В токене GitHub (Fine-grained) выберите репозиторий `BOBAH1988/mail-automation` и право `Repository permissions → Actions: Read and write`. 2) Убедитесь, что в `server/cloudflare/src/index.js` и `server/index.js` в запросе к GitHub API есть заголовок `User-Agent: zoo-opt-run-api`. |
+| `Request forbidden by administrative rules... User-Agent header` | GitHub требует `User-Agent` на все запросы к REST API | Добавьте `'User-Agent': 'zoo-opt-run-api'` в заголовки `fetch` к `api.github.com` (уже исправлено в `server/cloudflare/src/index.js` и `server/index.js`). |
+| `Workflow is not allowed` | Указанный `workflowId` нет в серверном белом списке | Проверьте `ALLOWED_WORKFLOWS` в `server/cloudflare/src/index.js` / `server/index.js` — должен содержать запускаемый `workflowId` и соответствующий файл в репозитории `mail-automation` с триггером `workflow_dispatch`. |
+| `Real email sending is not enabled for this account` | `test_mode=false` для workflow с `realSendGuard`, но UID не в `REAL_SEND_UIDS` | Добавьте свой Firebase UID в secret `REAL_SEND_UIDS` воркера, либо оставьте `test_mode=true`. |
+| `Invalid or missing Firebase ID token` | Пользователь не авторизован в Firebase | Войдите в приложение через Firebase Auth перед запуском. |
+
