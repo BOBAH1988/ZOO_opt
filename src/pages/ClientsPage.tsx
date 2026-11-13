@@ -272,27 +272,30 @@ export function ClientsPage() {
           />
         </div>
       ) : (
-        <div className="card">
-          <table className="table">
+        <div className="card" style={{ overflow: 'hidden' }}>
+          <table
+            className="table"
+            style={{ tableLayout: 'fixed', width: '100%', borderCollapse: 'collapse' }}
+          >
             <thead>
               <tr>
-                <th>ИП/ООО</th>
-                <th>Клиент</th>
-                <th>Email</th>
-                <th>Телефон</th>
-                <th style={{ width: 120 }}></th>
+                <th style={{ width: '22%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>ИП/ООО</th>
+                <th style={{ width: '26%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>Клиент</th>
+                <th style={{ width: '32%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>Email</th>
+                <th style={{ width: '14%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>Телефон</th>
+                <th style={{ width: '6%' }}></th>
               </tr>
             </thead>
             <tbody>
               {filtered.map((client) => (
                 <tr key={client.id}>
-                  <td>{client.company || '—'}</td>
-                  <td>
+                  <td style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{client.company || '—'}</td>
+                  <td style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                     <strong>{client.name}</strong>
                   </td>
-                  <td>{client.email}</td>
-                  <td>{client.phone || '—'}</td>
-                  <td style={{ whiteSpace: 'nowrap', padding: 0 }}>
+                  <td style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{client.email}</td>
+                  <td style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{client.phone || '—'}</td>
+                  <td style={{ width: '60px', whiteSpace: 'nowrap', padding: 0 }}>
                     <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end' }}>
                       <button
                         className="btn btn-outline btn-sm"
