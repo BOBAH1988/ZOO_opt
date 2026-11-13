@@ -276,12 +276,12 @@ export function ClientsPage() {
         <div className="card" style={{ overflow: 'hidden' }}>
           <table
             className="table"
-            style={{ tableLayout: 'fixed', width: '100%', borderCollapse: 'collapse' }}
+            style={{ width: '100%', borderCollapse: 'collapse' }}
           >
             <thead>
               <tr>
-                <th style={{ width: '70%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>Форма</th>
-                <th style={{ width: '30%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>Клиент</th>
+                <th style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>Форма</th>
+                <th style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>Клиент</th>
               </tr>
             </thead>
             <tbody>
