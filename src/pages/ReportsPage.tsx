@@ -176,11 +176,11 @@ export function ReportsPage() {
           <div className="card" style={{ marginTop: 12, marginBottom: 12, padding: 12 }}>
             <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
             <div style={{ flex: 1, minWidth: 140, padding: 12, background: 'var(--color-bg)', borderRadius: 8, textAlign: 'center' }}>
-              <div style={{ fontSize: 11, color: 'var(--color-text-secondary)', textTransform: 'uppercase', marginBottom: 4 }}>План</div>
+              <div style={{ fontSize: 11, color: 'var(--color-text-secondary)', textTransform: 'uppercase', marginBottom: 4 }}>Общий план</div>
               <div style={{ fontSize: 24, fontWeight: 700, color: 'var(--color-text)' }}>—</div>
             </div>
             <div style={{ flex: 1, minWidth: 140, padding: 12, background: 'var(--color-bg)', borderRadius: 8, textAlign: 'center' }}>
-              <div style={{ fontSize: 11, color: 'var(--color-text-secondary)', textTransform: 'uppercase', marginBottom: 4 }}>Факт</div>
+              <div style={{ fontSize: 11, color: 'var(--color-text-secondary)', textTransform: 'uppercase', marginBottom: 4 }}>Ощий факт</div>
               <div style={{ fontSize: 24, fontWeight: 700, color: 'var(--color-success)' }}>—</div>
             </div>
             <div style={{ flex: 1, minWidth: 140, padding: 12, background: 'var(--color-bg)', borderRadius: 8, textAlign: 'center' }}>
