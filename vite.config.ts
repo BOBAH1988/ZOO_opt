@@ -29,5 +29,10 @@ export default defineConfig({
   server: {
     port: 5173,
     open: false,
+    hmr: {
+      host: 'localhost',
+      port: 5173,
+      path: '/__vite_hmr',
+    },
   },
 });
