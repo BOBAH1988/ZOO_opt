@@ -280,11 +280,8 @@ export function ClientsPage() {
           >
             <thead>
               <tr>
-                <th style={{ width: '22%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>Форма</th>
-                <th style={{ width: '26%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>Клиент</th>
-                <th style={{ width: '32%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>Email</th>
-                <th style={{ width: '14%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>Телефон</th>
-                <th style={{ width: '6%' }}></th>
+                <th style={{ width: '70%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>Форма</th>
+                <th style={{ width: '30%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>Клиент</th>
               </tr>
             </thead>
             <tbody>
@@ -294,9 +291,6 @@ export function ClientsPage() {
                   <td style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                     <strong>{client.name}</strong>
                   </td>
-                  <td style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{client.email}</td>
-                  <td style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{client.phone || '—'}</td>
-                  <td style={{ width: '60px', whiteSpace: 'nowrap', padding: 0 }}></td>
                 </tr>
               ))}
             </tbody>
