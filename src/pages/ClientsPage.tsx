@@ -296,25 +296,7 @@ export function ClientsPage() {
                   </td>
                   <td style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{client.email}</td>
                   <td style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{client.phone || '—'}</td>
-                  <td style={{ width: '60px', whiteSpace: 'nowrap', padding: 0 }}>
-                    <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end' }}>
-                      <button
-                        className="btn btn-outline btn-sm"
-                        title="Редактировать"
-                        onClick={(e) => { e.stopPropagation(); setViewingClient(null); setForm({ name: client.name, email: client.email, phone: client.phone, company: client.company, address: client.address, day: client.day, mode: client.mode, manager: client.manager, notes: client.notes }); setEditingId(client.id); }}
-                      >
-                        ✏️
-                      </button>
-                      <button
-                        className="btn btn-outline btn-sm"
-                        title="Удалить"
-                        style={{ color: '#b91c1c' }}
-                        onClick={(e) => { e.stopPropagation(); handleDeleteConfirm(client.id, client.name) }}
-                      >
-                        🗑️
-                      </button>
-                    </div>
-                  </td>
+                  <td style={{ width: '60px', whiteSpace: 'nowrap', padding: 0 }}></td>
                 </tr>
               ))}
             </tbody>
@@ -437,6 +419,19 @@ export function ClientsPage() {
               </div>
             </div>
             <div className="dialog-actions">
+              <button
+                className="btn btn-outline"
+                onClick={() => { setViewingClient(null); setForm({ name: viewingClient.name, email: viewingClient.email, phone: viewingClient.phone, company: viewingClient.company, address: viewingClient.address, day: viewingClient.day, mode: viewingClient.mode, manager: viewingClient.manager, notes: viewingClient.notes }); setEditingId(viewingClient.id); }}
+              >
+                ✏️ Редактировать
+              </button>
+              <button
+                className="btn btn-outline"
+                style={{ color: '#b91c1c' }}
+                onClick={() => { setViewingClient(null); handleDeleteConfirm(viewingClient.id, viewingClient.name) }}
+              >
+                🗑️ Удалить
+              </button>
               <button className="btn btn-outline" onClick={() => setViewingClient(null)}>Закрыть</button>
             </div>
           </div>
