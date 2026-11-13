@@ -436,14 +436,14 @@ export function ClientsPage() {
                 className="btn btn-outline"
                 onClick={() => { setViewingClient(null); setForm({ name: viewingClient.name, email: viewingClient.email, phone: viewingClient.phone, company: viewingClient.company, address: viewingClient.address, day: viewingClient.day, mode: viewingClient.mode, manager: viewingClient.manager, notes: viewingClient.notes, active: viewingClient.active }); setEditingId(viewingClient.id); }}
               >
-                ✏️ Редактировать
+                Редактировать
               </button>
               <button
                 className="btn btn-outline"
                 style={{ color: '#b91c1c' }}
                 onClick={() => { setViewingClient(null); handleDeleteConfirm(viewingClient.id, viewingClient.name) }}
               >
-                🗑️ Удалить
+                Удалить
               </button>
               <button className="btn btn-outline" onClick={() => setViewingClient(null)}>Закрыть</button>
             </div>
