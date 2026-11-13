@@ -12,11 +12,8 @@
 
 import { auth } from '@/firebase';
 
-// Базовый URL серверного API. Публичный адрес Cloudflare Worker — проверка доступа
-// выполняется на сервере (Firebase ID token + allowlist UID), поэтому значение
-// по умолчанию допустимо. Переопределяется переменной окружения VITE_API_BASE_URL.
-const DEFAULT_API_BASE_URL = 'https://zoo-opt-run-api.zoo-opt.workers.dev';
-export const API_BASE_URL: string = import.meta.env.VITE_API_BASE_URL || DEFAULT_API_BASE_URL;
+// Базовый URL серверного API. Настраивается через переменную окружения.
+export const API_BASE_URL: string = import.meta.env.VITE_API_BASE_URL || '';
 
 export interface RunWorkflowRequest {
   workflowId: string;
