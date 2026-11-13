@@ -136,7 +136,12 @@ export function ReportsPage() {
             email: data.email.trim(),
             phone: typeof data.phone === 'string' && data.phone.trim() ? data.phone.trim() : undefined,
             company: typeof data.company === 'string' && data.company.trim() ? data.company.trim() : undefined,
+            address: typeof data.address === 'string' && data.address.trim() ? data.address.trim() : undefined,
+            day: typeof data.day === 'string' && data.day.trim() ? data.day.trim() : undefined,
+            mode: typeof data.mode === 'string' && data.mode.trim() ? data.mode.trim() : undefined,
+            manager: typeof data.manager === 'string' && data.manager.trim() ? data.manager.trim() : undefined,
             notes: typeof data.notes === 'string' && data.notes.trim() ? data.notes.trim() : undefined,
+            active: typeof data.active === 'boolean' ? data.active : true,
             createdAt: typeof data.createdAt === 'string' ? data.createdAt : '',
             updatedAt: typeof data.updatedAt === 'string' ? data.updatedAt : '',
             ownerUid: data.ownerUid,
@@ -172,20 +177,20 @@ export function ReportsPage() {
             <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
             <div style={{ flex: 1, minWidth: 140, padding: 12, background: 'var(--color-bg)', borderRadius: 8, textAlign: 'center' }}>
               <div style={{ fontSize: 11, color: 'var(--color-text-secondary)', textTransform: 'uppercase', marginBottom: 4 }}>План</div>
-              <div style={{ fontSize: 24, fontWeight: 700, color: 'var(--color-text)' }}>{clients.length}</div>
+              <div style={{ fontSize: 24, fontWeight: 700, color: 'var(--color-text)' }}>—</div>
             </div>
             <div style={{ flex: 1, minWidth: 140, padding: 12, background: 'var(--color-bg)', borderRadius: 8, textAlign: 'center' }}>
               <div style={{ fontSize: 11, color: 'var(--color-text-secondary)', textTransform: 'uppercase', marginBottom: 4 }}>Факт</div>
-              <div style={{ fontSize: 24, fontWeight: 700, color: 'var(--color-success)' }}>{clients.length}</div>
+              <div style={{ fontSize: 24, fontWeight: 700, color: 'var(--color-success)' }}>—</div>
             </div>
             <div style={{ flex: 1, minWidth: 140, padding: 12, background: 'var(--color-bg)', borderRadius: 8, textAlign: 'center' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, justifyContent: 'center' }}>
                 <div style={{ width: 60, height: 60, borderRadius: 50, border: '4px solid var(--color-border)', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
                   <svg width="52" height="52" viewBox="0 0 24 24" style={{ transform: 'rotate(-90deg)' }}>
                     <circle cx="12" cy="12" r="10" stroke="var(--color-border)" strokeWidth="4" fill="none" />
-                    <circle cx="12" cy="12" r="10" stroke="#2563eb" strokeWidth="4" fill="none" strokeDasharray="62.8" strokeDashoffset="0" />
+                    <circle cx="12" cy="12" r="10" stroke="#2563eb" strokeWidth="4" fill="none" strokeDasharray="62.8" strokeDashoffset="62.8" />
                   </svg>
-                  <div style={{ position: 'absolute', fontSize: 16, fontWeight: 700, color: 'var(--color-text)' }}>{clients.length > 0 ? 100 : 0}%</div>
+                  <div style={{ position: 'absolute', fontSize: 16, fontWeight: 700, color: 'var(--color-text)' }}>0%</div>
                 </div>
               </div>
             </div>
@@ -201,7 +206,7 @@ export function ReportsPage() {
             </div>
             <div style={{ flex: 1, minWidth: 140, padding: 12, background: 'var(--color-bg)', borderRadius: 8, textAlign: 'center' }}>
               <div style={{ fontSize: 11, color: 'var(--color-text-secondary)', textTransform: 'uppercase', marginBottom: 4 }}>Активных клиентов</div>
-              <div style={{ fontSize: 24, fontWeight: 700, color: 'var(--color-success)' }}>{clients.length}</div>
+              <div style={{ fontSize: 24, fontWeight: 700, color: 'var(--color-success)' }}>{clients.filter((c) => c.active).length}</div>
             </div>
             <div style={{ flex: 1, minWidth: 140, padding: 12, background: 'var(--color-bg)', borderRadius: 8, textAlign: 'center' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, justifyContent: 'center' }}>
