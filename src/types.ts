@@ -10,6 +10,8 @@ export interface Client {
   manager?: string;
   notes?: string;
   active?: boolean;
+  title?: string;
+  grade?: 'Gold' | 'Silver' | 'Bronze';
   createdAt: string;
   updatedAt: string;
   ownerUid: string;
@@ -26,6 +28,8 @@ export interface NewClientInput {
   manager?: string;
   notes?: string;
   active?: boolean;
+  title?: string;
+  grade?: 'Gold' | 'Silver' | 'Bronze';
 }
 
 export interface UpdateClientInput {
@@ -39,6 +43,8 @@ export interface UpdateClientInput {
   manager?: string;
   notes?: string;
   active?: boolean;
+  title?: string;
+  grade?: 'Gold' | 'Silver' | 'Bronze';
 }
 
 export interface WorkflowScenario {

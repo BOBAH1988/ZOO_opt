@@ -30,6 +30,8 @@ interface ClientDoc extends DocumentData {
   manager?: unknown;
   notes?: unknown;
   active?: unknown;
+  title?: unknown;
+  grade?: unknown;
   createdAt?: unknown;
   updatedAt?: unknown;
   ownerUid?: unknown;
@@ -69,6 +71,8 @@ function docToClient(snap: QueryDocumentSnapshot<DocumentData>): Client | null {
     manager: typeof data.manager === 'string' && data.manager.trim() ? data.manager.trim() : undefined,
     notes: typeof data.notes === 'string' && data.notes.trim() ? data.notes.trim() : undefined,
     active: typeof data.active === 'boolean' ? data.active : true,
+    title: typeof data.title === 'string' && data.title.trim() ? data.title.trim() : undefined,
+    grade: (data.grade === 'Gold' || data.grade === 'Silver' || data.grade === 'Bronze') ? data.grade : undefined,
     createdAt: toIsoString(data.createdAt),
     updatedAt: toIsoString(data.updatedAt),
     ownerUid: data.ownerUid,
@@ -86,7 +90,7 @@ export function ClientsPage() {
   const [viewingClient, setViewingClient] = useState<Client | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
   const [deleteConfirmed, setDeleteConfirmed] = useState(false);
-  const [form, setForm] = useState<NewClientInput>({ name: '', email: '', phone: '', company: '', address: '', day: '', mode: '', manager: '', notes: '', active: true });
+  const [form, setForm] = useState<NewClientInput>({ name: '', email: '', phone: '', company: '', address: '', day: '', mode: '', manager: '', notes: '', active: true, title: '', grade: 'Gold' });
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -142,7 +146,7 @@ export function ClientsPage() {
   );
 
   const resetForm = () => {
-    setForm({ name: '', email: '', phone: '', company: '', address: '', day: '', mode: '', manager: '', notes: '', active: true });
+    setForm({ name: '', email: '', phone: '', company: '', address: '', day: '', mode: '', manager: '', notes: '', active: true, title: '', grade: 'Gold' });
   };
 
   const handleCreate = async (e: React.FormEvent) => {
@@ -162,6 +166,8 @@ export function ClientsPage() {
         manager: form.manager?.trim() || null,
         notes: form.notes?.trim() || null,
         active: form.active ?? true,
+        title: form.title?.trim() || null,
+        grade: form.grade,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
         ownerUid: user.uid,
@@ -193,6 +199,8 @@ export function ClientsPage() {
         manager: form.manager?.trim() || null,
         notes: form.notes?.trim() || null,
         active: form.active ?? true,
+        title: form.title?.trim() || null,
+        grade: form.grade,
         updatedAt: serverTimestamp(),
       });
       setEditingId(null);
@@ -345,14 +353,29 @@ export function ClientsPage() {
                   value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
               </div>
               <div className="form-group">
-                <label className="form-label">День</label>
+                <label className="form-label">День посещения</label>
                 <input className="form-input"
                   value={form.day} onChange={(e) => setForm({ ...form, day: e.target.value })} />
               </div>
               <div className="form-group">
-                <label className="form-label">Режим</label>
+                <label className="form-label">Примечания</label>
                 <input className="form-input"
-                  value={form.mode} onChange={(e) => setForm({ ...form, mode: e.target.value })} />
+                  value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} />
+              </div>
+              <div className="form-group">
+                <label className="form-label">Название</label>
+                <input className="form-input"
+                  value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} />
+              </div>
+              <div className="form-group">
+                <label className="form-label">Грейд</label>
+                <select className="form-input"
+                  value={form.grade}
+                  onChange={(e) => setForm({ ...form, grade: e.target.value as 'Gold' | 'Silver' | 'Bronze' })}>
+                  <option value="Gold">Gold</option>
+                  <option value="Silver">Silver</option>
+                  <option value="Bronze">Bronze</option>
+                </select>
               </div>
               <div className="form-group">
                 <label className="form-label">Телефон</label>
@@ -403,11 +426,11 @@ export function ClientsPage() {
                 <div style={{ marginBottom: 10 }}>{viewingClient.email}</div>
               </div>
               <div>
-                <label className="form-label" style={{ fontSize: 11, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 2, display: 'block' }}>День</label>
+                <label className="form-label" style={{ fontSize: 11, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 2, display: 'block' }}>День посещения</label>
                 <div style={{ marginBottom: 10 }}>{viewingClient.day || '—'}</div>
               </div>
               <div>
-                <label className="form-label" style={{ fontSize: 11, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 2, display: 'block' }}>Режим</label>
+                <label className="form-label" style={{ fontSize: 11, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 2, display: 'block' }}>Режим работы</label>
                 <div style={{ marginBottom: 10 }}>{viewingClient.mode || '—'}</div>
               </div>
               <div>
@@ -423,6 +446,14 @@ export function ClientsPage() {
                 <div style={{ marginBottom: 10 }}>{viewingClient.notes || '—'}</div>
               </div>
               <div>
+                <label className="form-label" style={{ fontSize: 11, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 2, display: 'block' }}>Название</label>
+                <div style={{ marginBottom: 10 }}>{viewingClient.title || '—'}</div>
+              </div>
+              <div>
+                <label className="form-label" style={{ fontSize: 11, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 2, display: 'block' }}>Грейд</label>
+                <div style={{ marginBottom: 10 }}>{viewingClient.grade || '—'}</div>
+              </div>
+              <div>
                 <label className="form-label" style={{ fontSize: 11, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 2, display: 'block' }}>Создан</label>
                 <div style={{ marginBottom: 10 }}>{viewingClient.createdAt || '—'}</div>
               </div>
@@ -434,7 +465,7 @@ export function ClientsPage() {
             <div className="dialog-actions">
               <button
                 className="btn btn-outline"
-                onClick={() => { setViewingClient(null); setForm({ name: viewingClient.name, email: viewingClient.email, phone: viewingClient.phone, company: viewingClient.company, address: viewingClient.address, day: viewingClient.day, mode: viewingClient.mode, manager: viewingClient.manager, notes: viewingClient.notes, active: viewingClient.active }); setEditingId(viewingClient.id); }}
+                onClick={() => { setViewingClient(null); setForm({ name: viewingClient.name, email: viewingClient.email, phone: viewingClient.phone, company: viewingClient.company, address: viewingClient.address, day: viewingClient.day, mode: viewingClient.mode, manager: viewingClient.manager, notes: viewingClient.notes, active: viewingClient.active, title: viewingClient.title, grade: viewingClient.grade }); setEditingId(viewingClient.id); }}
               >
                 Редактировать
               </button>
