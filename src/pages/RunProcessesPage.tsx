@@ -32,7 +32,7 @@ const SCENARIOS: WorkflowScenario[] = [
     warning: null,
     testModeDefault: true,
     inputs: [
-      { key: 'test_mode', label: 'Тестовый режим (только вам, не клиентам)', type: 'boolean', defaultValue: false, description: '', required: false },
+      { key: 'test_mode', label: 'Тестовый режим (только вам, не клиентам)', type: 'boolean', defaultValue: true, description: '', required: false },
       { key: 'only', label: 'Проекты для запуска', type: 'multiselect', defaultValue: [], description: 'Пусто = вся группа', required: false, options: PROJECT_OPTIONS },
       { key: 'ignore_window', label: 'Игнорировать время и день недели', type: 'boolean', defaultValue: true, description: '', required: false },
     ],
@@ -46,7 +46,7 @@ const SCENARIOS: WorkflowScenario[] = [
     warning: null,
     testModeDefault: true,
     inputs: [
-      { key: 'test_mode', label: 'Тестовый режим (только вам)', type: 'boolean', defaultValue: false, description: '', required: false },
+      { key: 'test_mode', label: 'Тестовый режим (только вам)', type: 'boolean', defaultValue: true, description: '', required: false },
     ],
   },
   {
@@ -58,7 +58,7 @@ const SCENARIOS: WorkflowScenario[] = [
     warning: null,
     testModeDefault: true,
     inputs: [
-      { key: 'test_mode', label: 'Тестовый режим (только вам, не сетям)', type: 'boolean', defaultValue: false, description: '', required: false },
+      { key: 'test_mode', label: 'Тестовый режим (только вам, не сетям)', type: 'boolean', defaultValue: true, description: '', required: false },
       { key: 'skip_if_sent', label: 'Не дублировать рассылку', type: 'boolean', defaultValue: true, description: '', required: false },
     ],
   },
@@ -71,7 +71,7 @@ const SCENARIOS: WorkflowScenario[] = [
     warning: null,
     testModeDefault: true,
     inputs: [
-      { key: 'test_mode', label: 'Тестовый режим (только вам, не клиентам)', type: 'boolean', defaultValue: false, description: '', required: false },
+      { key: 'test_mode', label: 'Тестовый режим (только вам, не клиентам)', type: 'boolean', defaultValue: true, description: '', required: false },
       { key: 'only', label: 'Проекты для запуска', type: 'multiselect', defaultValue: [], description: 'Пусто = вся группа', required: false, options: PROJECT_OPTIONS },
       { key: 'ignore_window', label: 'Игнорировать время и день недели', type: 'boolean', defaultValue: true, description: '', required: false },
     ],
@@ -85,7 +85,7 @@ const SCENARIOS: WorkflowScenario[] = [
     warning: null,
     testModeDefault: true,
     inputs: [
-      { key: 'test_mode', label: 'Тестовый режим (только вам, не клиентам)', type: 'boolean', defaultValue: false, description: '', required: false },
+      { key: 'test_mode', label: 'Тестовый режим (только вам, не клиентам)', type: 'boolean', defaultValue: true, description: '', required: false },
       { key: 'only', label: 'Проекты для запуска', type: 'multiselect', defaultValue: [], description: 'Пусто = вся группа', required: false, options: [
         { label: 'счёт Прусакова клиенту', value: 'prusakova' },
         { label: 'счета в Велес', value: 'veles' },
@@ -102,7 +102,7 @@ const SCENARIOS: WorkflowScenario[] = [
     warning: null,
     testModeDefault: true,
     inputs: [
-      { key: 'test_mode', label: 'Тестовый режим (только вам, не клиентам)', type: 'boolean', defaultValue: false, description: '', required: false },
+      { key: 'test_mode', label: 'Тестовый режим (только вам, не клиентам)', type: 'boolean', defaultValue: true, description: '', required: false },
       { key: 'only', label: 'Проекты для запуска', type: 'multiselect', defaultValue: [], description: 'Пусто = вся группа', required: false, options: PROJECT_OPTIONS },
       { key: 'ignore_window', label: 'Игнорировать время и день недели', type: 'boolean', defaultValue: true, description: '', required: false },
     ],
@@ -230,6 +230,13 @@ export function RunProcessesPage() {
       }
     } catch {
       // игнорируем ошибки чтения localStorage
+    }
+    // Сохранённый test_mode намеренно отбрасывается: рассылка реальным
+    // адресатам должна включаться осознанно в каждой сессии, иначе сервер
+    // отвечает 403 (REAL_SEND_UIDS) на «запомненное» значение.
+    for (const s of SCENARIOS) {
+      const fallback = defaultInputs(s);
+      if ('test_mode' in fallback) init[s.id] = { ...init[s.id], test_mode: fallback.test_mode };
     }
     return init;
   });
