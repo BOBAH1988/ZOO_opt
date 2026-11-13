@@ -280,7 +280,7 @@ export function ClientsPage() {
           >
             <thead>
               <tr>
-                <th style={{ width: '22%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>ИП/ООО</th>
+                <th style={{ width: '22%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>Форма</th>
                 <th style={{ width: '26%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>Клиент</th>
                 <th style={{ width: '32%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>Email</th>
                 <th style={{ width: '14%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>Телефон</th>
@@ -339,7 +339,7 @@ export function ClientsPage() {
                   value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
               </div>
               <div className="form-group">
-                <label className="form-label">ИП/ООО</label>
+                <label className="form-label">Форма</label>
                 <input className="form-input"
                   value={form.company} onChange={(e) => setForm({ ...form, company: e.target.value })} />
               </div>
@@ -396,7 +396,7 @@ export function ClientsPage() {
                 <div style={{ marginBottom: 10 }}>{viewingClient.name}</div>
               </div>
               <div>
-                <label className="form-label" style={{ fontSize: 11, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 2, display: 'block' }}>ИП/ООО</label>
+                <label className="form-label" style={{ fontSize: 11, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 2, display: 'block' }}>Форма</label>
                 <div style={{ marginBottom: 10 }}>{viewingClient.company || '—'}</div>
               </div>
               <div>
