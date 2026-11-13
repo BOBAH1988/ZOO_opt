@@ -155,7 +155,7 @@ export function ClientsPage() {
     setSaving(true);
     setError(null);
     try {
-      await addDoc(collection(db, 'clients'), {
+      const data: Record<string, unknown> = {
         name: form.name.trim(),
         email: form.email.trim(),
         phone: form.phone?.trim() || null,
@@ -167,18 +167,20 @@ export function ClientsPage() {
         notes: form.notes?.trim() || null,
         active: form.active ?? true,
         title: form.title?.trim() || null,
-        grade: form.grade,
+        grade: form.grade ?? null,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
         ownerUid: user.uid,
-      });
-      resetForm();
-      setEditingId(null);
+      };
+      Object.keys(data).forEach((key) => data[key] === undefined && delete data[key]);
+      await addDoc(collection(db, 'clients'), data);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Ошибка создания клиента';
       setError(message);
     } finally {
       setSaving(false);
+      resetForm();
+      setEditingId(null);
     }
   };
 
@@ -188,7 +190,7 @@ export function ClientsPage() {
     setSaving(true);
     setError(null);
     try {
-      await updateDoc(doc(db, 'clients', id), {
+      const data: Record<string, unknown> = {
         name: form.name.trim(),
         email: form.email.trim(),
         phone: form.phone?.trim() || null,
@@ -200,16 +202,18 @@ export function ClientsPage() {
         notes: form.notes?.trim() || null,
         active: form.active ?? true,
         title: form.title?.trim() || null,
-        grade: form.grade,
+        grade: form.grade ?? null,
         updatedAt: serverTimestamp(),
-      });
-      setEditingId(null);
-      resetForm();
+      };
+      Object.keys(data).forEach((key) => data[key] === undefined && delete data[key]);
+      await updateDoc(doc(db, 'clients', id), data);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Ошибка обновления клиента';
       setError(message);
     } finally {
       setSaving(false);
+      resetForm();
+      setEditingId(null);
     }
   };
 
@@ -474,7 +478,7 @@ export function ClientsPage() {
             <div className="dialog-actions">
               <button
                 className="btn btn-outline"
-                onClick={() => { setViewingClient(null); setForm({ name: viewingClient.name, email: viewingClient.email, phone: viewingClient.phone, company: viewingClient.company, address: viewingClient.address, day: viewingClient.day, mode: viewingClient.mode, manager: viewingClient.manager, notes: viewingClient.notes, active: viewingClient.active, title: viewingClient.title, grade: viewingClient.grade }); setEditingId(viewingClient.id); }}
+                onClick={() => { setViewingClient(null); setForm({ name: viewingClient.name, email: viewingClient.email, phone: viewingClient.phone, company: viewingClient.company, address: viewingClient.address, day: viewingClient.day, mode: viewingClient.mode, manager: viewingClient.manager, notes: viewingClient.notes, active: viewingClient.active, title: viewingClient.title, grade: viewingClient.grade ?? 'Gold' }); setEditingId(viewingClient.id); }}
               >
                 Редактировать
               </button>
