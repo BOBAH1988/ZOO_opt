@@ -292,25 +292,27 @@ export function ClientsPage() {
                   <td>{client.company || '—'}</td>
                   <td>{client.email}</td>
                   <td>{client.phone || '—'}</td>
-                  <td style={{ display: 'flex', gap: 6 }}>
-                    <button
-                      className="btn btn-outline btn-sm"
-                      title="Редактировать"
-                      onClick={() => {
-                        setForm({ name: client.name, email: client.email, phone: client.phone, company: client.company, address: client.address, day: client.day, mode: client.mode, manager: client.manager, notes: client.notes });
-                        setEditingId(client.id);
-                      }}
-                    >
-                      ✏️
-                    </button>
-                    <button
-                      className="btn btn-outline btn-sm"
-                      title="Удалить"
-                      style={{ color: '#b91c1c' }}
-                      onClick={() => handleDeleteConfirm(client.id, client.name)}
-                    >
-                      🗑️
-                    </button>
+                  <td style={{ whiteSpace: 'nowrap', padding: 0 }}>
+                    <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end' }}>
+                      <button
+                        className="btn btn-outline btn-sm"
+                        title="Редактировать"
+                        onClick={() => {
+                          setForm({ name: client.name, email: client.email, phone: client.phone, company: client.company, address: client.address, day: client.day, mode: client.mode, manager: client.manager, notes: client.notes });
+                          setEditingId(client.id);
+                        }}
+                      >
+                        ✏️
+                      </button>
+                      <button
+                        className="btn btn-outline btn-sm"
+                        title="Удалить"
+                        style={{ color: '#b91c1c' }}
+                        onClick={() => handleDeleteConfirm(client.id, client.name)}
+                      >
+                        🗑️
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
