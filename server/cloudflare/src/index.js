@@ -217,8 +217,15 @@ export default {
 
     try {
       await dispatchWorkflow(env, validation.workflow, validation.inputs);
-    } catch {
-      return jsonResponse({ message: 'Failed to dispatch GitHub Actions workflow' }, 502, origin, env);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to dispatch GitHub Actions workflow';
+      console.log(JSON.stringify({
+        type: validation.inputs.test_mode === false ? 'real_send_failed' : 'workflow_dispatch_failed',
+        uid,
+        workflowId: validation.workflowId,
+        error: message,
+      }));
+      return jsonResponse({ message }, 502, origin, env);
     }
 
     return jsonResponse({
