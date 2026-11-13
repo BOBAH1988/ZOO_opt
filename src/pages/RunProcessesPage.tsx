@@ -597,8 +597,8 @@ export function RunProcessesPage() {
               Вы собираетесь запустить <strong>{confirmOpen.name}</strong>.
             </div>
             <div className="dialog-actions">
-              <button className="btn" style={{ background: 'rgba(21, 128, 61, 0.75)', color: '#ffffff' }} onClick={handleConfirm}>Да</button>
-              <button className="btn" style={{ background: 'rgba(185, 28, 28, 0.75)', color: '#ffffff' }} onClick={() => setConfirmOpen(null)}>Нет</button>
+              <button className="btn btn-success" onClick={handleConfirm}>Да</button>
+              <button className="btn btn-danger" onClick={() => setConfirmOpen(null)}>Нет</button>
             </div>
           </div>
         </div>
