@@ -17,6 +17,7 @@ import { db } from '@/firebase';
 import { isFirebaseConfigured } from '@/firebase.config';
 import { useAuth } from '@/context/AuthContext';
 import { EmptyState } from '@/components/EmptyState';
+import { toIsoString } from '@/lib/clientData';
 import type { Client, NewClientInput } from '@/types';
 
 interface ClientDoc extends DocumentData {
@@ -35,23 +36,6 @@ interface ClientDoc extends DocumentData {
   createdAt?: unknown;
   updatedAt?: unknown;
   ownerUid?: unknown;
-}
-
-function toIsoString(value: unknown): string {
-  if (!value) return '';
-  if (value instanceof Date) return value.toISOString();
-  if (typeof value === 'string') {
-    const d = new Date(value);
-    return Number.isNaN(d.getTime()) ? value : d.toISOString();
-  }
-  if (typeof value === 'object' && 'toDate' in value && typeof (value as { toDate?: () => Date }).toDate === 'function') {
-    try {
-      return (value as { toDate: () => Date }).toDate().toISOString();
-    } catch {
-      return '';
-    }
-  }
-  return '';
 }
 
 function docToClient(snap: QueryDocumentSnapshot<DocumentData>): Client | null {

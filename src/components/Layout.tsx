@@ -59,7 +59,7 @@ export function Layout() {
     <>
       <header className="header">
         <div className="brand">
-          <img src="/ZOO_opt/icon.svg" alt="" className="brand-icon" />
+          <img src={`${import.meta.env.BASE_URL}icon.svg`} alt="" className="brand-icon" />
           ЗооКонтроль
         </div>
         <div className="header-right">

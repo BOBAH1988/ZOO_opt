@@ -166,7 +166,7 @@ export function Login({ onLogin }: LoginProps) {
   return (
     <div className="auth-page">
       <div className="auth-header">
-        <img src="/ZOO_opt/icon.svg" alt="ЗооКонтроль" className="auth-logo" />
+        <img src={`${import.meta.env.BASE_URL}icon.svg`} alt="ЗооКонтроль" className="auth-logo" />
         <h1 className="auth-title">ЗооКонтроль</h1>
         <p className="auth-subtitle">Клиенты • Отчёты • KPI • Автоматизация</p>
       </div>

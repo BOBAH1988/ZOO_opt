@@ -50,6 +50,14 @@ export class ApiUnauthorizedError extends Error {
   }
 }
 
+const REQUEST_TIMEOUT_MS = 30_000;
+
+function fetchWithTimeout(url: string, options: RequestInit, timeoutMs: number = REQUEST_TIMEOUT_MS): Promise<Response> {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+  return fetch(url, { ...options, signal: controller.signal }).finally(() => clearTimeout(timeoutId));
+}
+
 export async function runWorkflow(
   request: RunWorkflowRequest,
 ): Promise<RunWorkflowResponse> {
@@ -63,14 +71,24 @@ export async function runWorkflow(
   }
 
   const token = await user.getIdToken();
-  const response = await fetch(`${API_BASE_URL}/run`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify(request),
-  });
+  let response: Response;
+  try {
+    response = await fetchWithTimeout(`${API_BASE_URL}/run`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(request),
+    });
+  } catch (err) {
+    if (err instanceof Error && err.name === 'AbortError') {
+      const timeoutErr = new Error(`Ошибка сервера: превышено время ожидания (${REQUEST_TIMEOUT_MS / 1000} с)`) as ApiError;
+      timeoutErr.status = 504;
+      throw timeoutErr;
+    }
+    throw err;
+  }
 
   if (!response.ok) {
     let detail = `${response.status} ${response.statusText}`;

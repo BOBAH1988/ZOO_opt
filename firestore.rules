@@ -34,7 +34,19 @@ service cloud.firestore {
       allow create: if isSignedIn()
         && request.resource.data.requestedBy == request.auth.uid
         && request.resource.data.workflowId is string
-        && request.resource.data.status is string;
+        && request.resource.data.workflowId.size() > 0
+        && request.resource.data.workflowId.size() <= 100
+        && request.resource.data.status is string
+        && (request.resource.data.status == 'accepted' || request.resource.data.status == 'error')
+        && request.resource.data.message is string
+        && request.resource.data.message.size() > 0
+        && request.resource.data.message.size() <= 2000
+        && request.resource.data.inputs is map
+        && (!('runUrl' in request.resource.data)
+          || request.resource.data.runUrl == null
+          || (request.resource.data.runUrl is string && request.resource.data.runUrl.size() <= 500))
+        && (!('createdAt' in request.resource.data)
+          || request.resource.data.createdAt is timestamp);
       allow update, delete: if false;
     }
 

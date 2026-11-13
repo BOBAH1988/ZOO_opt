@@ -4,16 +4,8 @@ import { db } from '@/firebase';
 import { isFirebaseConfigured } from '@/firebase.config';
 import { useAuth } from '@/context/AuthContext';
 import { EmptyState } from '@/components/EmptyState';
+import { toIsoString } from '@/lib/clientData';
 import type { Client, RunLog } from '@/types';
-
-function toIso(value: unknown): string {
-  if (value && typeof value === 'object' && 'toDate' in value && typeof (value as { toDate?: unknown }).toDate === 'function') {
-    try { return (value as { toDate: () => Date }).toDate().toISOString(); } catch { return ''; }
-  }
-  if (value instanceof Date) return value.toISOString();
-  if (typeof value === 'string') return value;
-  return '';
-}
 
 function docToLog(snap: QueryDocumentSnapshot<DocumentData>): RunLog | null {
   const d = snap.data();
@@ -32,7 +24,7 @@ function docToLog(snap: QueryDocumentSnapshot<DocumentData>): RunLog | null {
     requestedBy: d.requestedBy,
     requestedByEmail: typeof d.requestedByEmail === 'string' ? d.requestedByEmail : null,
     inputs,
-    createdAt: toIso(d.createdAt),
+    createdAt: toIsoString(d.createdAt),
   };
 }
 
@@ -48,7 +40,10 @@ export function ReportsPage() {
   const tipRef = useRef<HTMLDivElement>(null);
   const PAGE_SIZE = 3;
   const prevPage = () => setPage((p) => Math.max(0, p - 1));
-  const nextPage = () => setPage((p) => Math.min(Math.ceil(logs.length / PAGE_SIZE) - 1, p + 1));
+  const nextPage = () => setPage((p) => {
+    const maxPage = Math.max(0, Math.ceil(logs.length / PAGE_SIZE) - 1);
+    return Math.min(maxPage, p + 1);
+  });
 
   const pagedLogs = logs.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
 

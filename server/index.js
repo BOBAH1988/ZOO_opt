@@ -11,6 +11,8 @@ const GITHUB_OWNER = process.env.GITHUB_OWNER || 'BOBAH1988';
 const GITHUB_REPO = process.env.GITHUB_REPO || 'mail-automation';
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN || '';
 const ALLOWED_UIDS = (process.env.ALLOWED_UIDS || '').split(',').map((s) => s.trim()).filter(Boolean);
+const REAL_SEND_UIDS = (process.env.REAL_SEND_UIDS || '').split(',').map((s) => s.trim()).filter(Boolean);
+const APP_ORIGIN = process.env.APP_ORIGIN || '';
 
 const ALLOWED_WORKFLOWS = {
   tests: { path: '.github/workflows/tests.yml', inputs: {} },
@@ -77,7 +79,9 @@ async function dispatchWorkflow(workflowId, inputs) {
 }
 
 const app = express();
-app.use(cors());
+app.use(cors({
+  origin: APP_ORIGIN ? APP_ORIGIN : false,
+}));
 app.use(express.json({ limit: '16kb' }));
 
 app.get('/health', (_req, res) => res.json({ ok: true }));
@@ -107,6 +111,18 @@ app.post('/run', async (req, res) => {
 
     const validation = validateInputs(workflowId, inputs || {});
     if (!validation.ok) return res.status(400).json({ message: validation.error });
+
+    const spec = ALLOWED_WORKFLOWS[workflowId];
+
+    if (
+      spec.realSendGuard &&
+      validation.cleaned.test_mode === false &&
+      REAL_SEND_UIDS.length > 0 &&
+      !REAL_SEND_UIDS.includes(uid)
+    ) {
+      logEvent({ level: 'warn', type: 'real_send_forbidden', requestId, uid, workflowId });
+      return res.status(403).json({ message: 'Real email sending is not enabled for this account' });
+    }
 
     logEvent({ level: 'info', type: 'run_request', requestId, uid, email, workflowId, inputs: validation.cleaned });
     await dispatchWorkflow(workflowId, validation.cleaned);
