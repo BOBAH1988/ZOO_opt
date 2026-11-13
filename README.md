@@ -45,7 +45,7 @@ VITE_REGISTRATION_INVITE_CODE=
 ## Firebase
 
 - **Auth:** Email/Password. Включите провайдер в Firebase Console; настройте подтверждение email/сброс пароля и домены при необходимости.
-- **Firestore:** коллекции `clients` (поля: `name`, `email`, `phone?`, `company?`, `address?`, `day?`, `mode?`, `manager?`, `notes?`, `createdAt`, `updatedAt`, `ownerUid`) и `runLogs`. Правила и индекс `runLogs` хранятся в репозитории.
+- **Firestore:** коллекции `clients` (поля: `name`, `email`, `phone?`, `company?`, `address?`, `day?`, `mode?`, `manager?`, `notes?`, `active?`, `title?`, `grade?` (Gold/Silver/Bronze), `createdAt`, `updatedAt`, `ownerUid`) и `runLogs`. Правила и индекс `runLogs` хранятся в репозитории.
 - Правило вида `allow create: if request.auth != null` для клиентов **не используется** — доступ ограничен владельцем и валидацией.
 - После входа в Firebase CLI (`firebase login`) опубликуйте конфигурацию Firestore из корня репозитория: `firebase deploy --only firestore:rules,firestore:indexes --project zoo-opt`. Индекс `runLogs` поддерживает запрос отчётов по `requestedBy` с сортировкой по `createdAt`.
 
