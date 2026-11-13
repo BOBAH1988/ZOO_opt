@@ -484,7 +484,7 @@ export function ClientsPage() {
                 className="btn btn-outline"
                 onClick={() => { setViewingClient(null); setForm({ name: viewingClient.name, email: viewingClient.email, phone: viewingClient.phone, company: viewingClient.company, address: viewingClient.address, day: viewingClient.day, mode: viewingClient.mode, manager: viewingClient.manager, notes: viewingClient.notes, active: viewingClient.active, title: viewingClient.title, grade: viewingClient.grade ?? 'Gold' }); setEditingId(viewingClient.id); }}
               >
-                Редактировать
+                Править
               </button>
               <button
                 className="btn btn-outline"
