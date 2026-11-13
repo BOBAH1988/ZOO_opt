@@ -530,7 +530,13 @@ export function RunProcessesPage() {
               {runStatus[scenario.id]?.status === 'ok' ? (
                 <span className="btn btn-success" style={{ width: '100%', padding: '6px 10px', fontSize: 13, textAlign: 'center', display: 'block' }}>Ок</span>
               ) : runStatus[scenario.id]?.status === 'error' ? (
-                <span className="btn btn-danger" style={{ width: '100%', padding: '6px 10px', fontSize: 13, textAlign: 'center', display: 'block' }}>Сбой</span>
+                <button
+                  className="btn btn-danger"
+                  onClick={() => setRunStatus((prev) => { const next = { ...prev }; delete next[scenario.id]; return next; })}
+                  style={{ width: '100%', padding: '6px 10px', fontSize: 13, textAlign: 'center', display: 'block' }}
+                >
+                  Сбой — попробовать снова
+                </button>
               ) : (
                 <button className="btn btn-primary" onClick={() => handleRunClick(scenario)} disabled={running === scenario.id}>
                   {running === scenario.id ? 'Запуск…' : 'Запустить'}
