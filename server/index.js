@@ -65,6 +65,7 @@ async function dispatchWorkflow(workflowId, inputs) {
       Authorization: `Bearer ${GITHUB_TOKEN}`,
       'X-GitHub-Api-Version': '2022-11-28',
       'Content-Type': 'application/json',
+      'User-Agent': 'zoo-opt-run-api',
     },
     body: JSON.stringify({ ref: 'main', inputs: Object.fromEntries(Object.entries(inputs).map(([k, v]) => [k, String(v)])) }),
   });

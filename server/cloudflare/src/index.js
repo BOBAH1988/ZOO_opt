@@ -118,6 +118,7 @@ async function dispatchWorkflow(env, workflow, inputs) {
       Authorization: `Bearer ${env.GITHUB_TOKEN}`,
       'X-GitHub-Api-Version': '2022-11-28',
       'Content-Type': 'application/json',
+      'User-Agent': 'zoo-opt-run-api',
     },
     body: JSON.stringify({
       ref: 'main',
