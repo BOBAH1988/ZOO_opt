@@ -24,6 +24,10 @@ interface ClientDoc extends DocumentData {
   email?: unknown;
   phone?: unknown;
   company?: unknown;
+  address?: unknown;
+  day?: unknown;
+  mode?: unknown;
+  manager?: unknown;
   notes?: unknown;
   createdAt?: unknown;
   updatedAt?: unknown;
@@ -58,6 +62,10 @@ function docToClient(snap: QueryDocumentSnapshot<DocumentData>): Client | null {
     email: data.email.trim(),
     phone: typeof data.phone === 'string' && data.phone.trim() ? data.phone.trim() : undefined,
     company: typeof data.company === 'string' && data.company.trim() ? data.company.trim() : undefined,
+    address: typeof data.address === 'string' && data.address.trim() ? data.address.trim() : undefined,
+    day: typeof data.day === 'string' && data.day.trim() ? data.day.trim() : undefined,
+    mode: typeof data.mode === 'string' && data.mode.trim() ? data.mode.trim() : undefined,
+    manager: typeof data.manager === 'string' && data.manager.trim() ? data.manager.trim() : undefined,
     notes: typeof data.notes === 'string' && data.notes.trim() ? data.notes.trim() : undefined,
     createdAt: toIsoString(data.createdAt),
     updatedAt: toIsoString(data.updatedAt),
@@ -74,7 +82,7 @@ export function ClientsPage() {
   const [search, setSearch] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
-  const [form, setForm] = useState<NewClientInput>({ name: '', email: '' });
+  const [form, setForm] = useState<NewClientInput>({ name: '', email: '', phone: '', company: '', address: '', day: '', mode: '', manager: '', notes: '' });
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -124,11 +132,13 @@ export function ClientsPage() {
   const filtered = clients.filter((c) =>
     c.name.toLowerCase().includes(search.toLowerCase()) ||
     c.email.toLowerCase().includes(search.toLowerCase()) ||
-    (c.company && c.company.toLowerCase().includes(search.toLowerCase()))
+    (c.company && c.company.toLowerCase().includes(search.toLowerCase())) ||
+    (c.address && c.address.toLowerCase().includes(search.toLowerCase())) ||
+    (c.manager && c.manager.toLowerCase().includes(search.toLowerCase()))
   );
 
   const resetForm = () => {
-    setForm({ name: '', email: '', phone: undefined, company: undefined, notes: undefined });
+    setForm({ name: '', email: '', phone: '', company: '', address: '', day: '', mode: '', manager: '', notes: '' });
   };
 
   const handleCreate = async (e: React.FormEvent) => {
@@ -142,6 +152,10 @@ export function ClientsPage() {
         email: form.email.trim(),
         phone: form.phone?.trim() || null,
         company: form.company?.trim() || null,
+        address: form.address?.trim() || null,
+        day: form.day?.trim() || null,
+        mode: form.mode?.trim() || null,
+        manager: form.manager?.trim() || null,
         notes: form.notes?.trim() || null,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
@@ -168,6 +182,10 @@ export function ClientsPage() {
         email: form.email.trim(),
         phone: form.phone?.trim() || null,
         company: form.company?.trim() || null,
+        address: form.address?.trim() || null,
+        day: form.day?.trim() || null,
+        mode: form.mode?.trim() || null,
+        manager: form.manager?.trim() || null,
         notes: form.notes?.trim() || null,
         updatedAt: serverTimestamp(),
       });
@@ -258,6 +276,7 @@ export function ClientsPage() {
             <thead>
               <tr>
                 <th>Клиент</th>
+                <th>ИП/ООО</th>
                 <th>Email</th>
                 <th>Телефон</th>
                 <th style={{ width: 120 }}></th>
@@ -268,20 +287,15 @@ export function ClientsPage() {
                 <tr key={client.id}>
                   <td>
                     <strong>{client.name}</strong>
-                      {client.company ? (
-                        <>
-                          <br />
-                          <span style={{ fontSize: 12, color: '#6b7280' }}>{client.company}</span>
-                        </>
-                      ) : null}
                   </td>
+                  <td>{client.company || '—'}</td>
                   <td>{client.email}</td>
                   <td>{client.phone || '—'}</td>
                   <td style={{ display: 'flex', gap: 6 }}>
                     <button
                       className="btn btn-outline btn-sm"
                       onClick={() => {
-                        setForm({ name: client.name, email: client.email, phone: client.phone, company: client.company, notes: client.notes });
+                        setForm({ name: client.name, email: client.email, phone: client.phone, company: client.company, address: client.address, day: client.day, mode: client.mode, manager: client.manager, notes: client.notes });
                         setEditingId(client.id);
                       }}
                     >
@@ -314,29 +328,44 @@ export function ClientsPage() {
               }
             >
               <div className="form-group">
-                <label className="form-label">Имя / организация</label>
+                <label className="form-label">Клиент</label>
                 <input className="form-input" required
                   value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
               </div>
               <div className="form-group">
-                <label className="form-label">Email</label>
+                <label className="form-label">ИП/ООО</label>
+                <input className="form-input"
+                  value={form.company} onChange={(e) => setForm({ ...form, company: e.target.value })} />
+              </div>
+              <div className="form-group">
+                <label className="form-label">Адрес</label>
+                <input className="form-input"
+                  value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} />
+              </div>
+              <div className="form-group">
+                <label className="form-label">Почта</label>
                 <input className="form-input" type="email" required
                   value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
               </div>
               <div className="form-group">
+                <label className="form-label">День</label>
+                <input className="form-input"
+                  value={form.day} onChange={(e) => setForm({ ...form, day: e.target.value })} />
+              </div>
+              <div className="form-group">
+                <label className="form-label">Режим</label>
+                <input className="form-input"
+                  value={form.mode} onChange={(e) => setForm({ ...form, mode: e.target.value })} />
+              </div>
+              <div className="form-group">
                 <label className="form-label">Телефон</label>
                 <input className="form-input"
-                  value={form.phone || ''} onChange={(e) => setForm({ ...form, phone: e.target.value || undefined })} />
+                  value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
               </div>
               <div className="form-group">
-                <label className="form-label">Компания</label>
+                <label className="form-label">Управляющий</label>
                 <input className="form-input"
-                  value={form.company || ''} onChange={(e) => setForm({ ...form, company: e.target.value || undefined })} />
-              </div>
-              <div className="form-group">
-                <label className="form-label">Примечания</label>
-                <input className="form-input"
-                  value={form.notes || ''} onChange={(e) => setForm({ ...form, notes: e.target.value || undefined })} />
+                  value={form.manager} onChange={(e) => setForm({ ...form, manager: e.target.value })} />
               </div>
               <div className="dialog-actions">
                 <button className="btn btn-outline" type="button" onClick={() => { setEditingId(null); resetForm(); }}>

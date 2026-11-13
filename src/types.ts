@@ -4,6 +4,10 @@ export interface Client {
   email: string;
   phone?: string;
   company?: string;
+  address?: string;
+  day?: string;
+  mode?: string;
+  manager?: string;
   notes?: string;
   createdAt: string;
   updatedAt: string;
@@ -15,6 +19,10 @@ export interface NewClientInput {
   email: string;
   phone?: string;
   company?: string;
+  address?: string;
+  day?: string;
+  mode?: string;
+  manager?: string;
   notes?: string;
 }
 
@@ -23,6 +31,10 @@ export interface UpdateClientInput {
   email?: string;
   phone?: string;
   company?: string;
+  address?: string;
+  day?: string;
+  mode?: string;
+  manager?: string;
   notes?: string;
 }
 
