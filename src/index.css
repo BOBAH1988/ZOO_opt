@@ -45,8 +45,8 @@ button:disabled { opacity: 0.6; cursor: not-allowed; }
   padding: 0 20px; height: 56px; display: flex; align-items: center;
   justify-content: space-between; position: sticky; top: 0; z-index: 100;
 }
-.brand { font-weight: 700; font-size: 18px; color: var(--color-primary); letter-spacing: 0.2px; display: flex; align-items: center; gap: 10px; white-space: nowrap; flex-shrink: 0; }
-.brand-icon { width: 48px; height: 48px; border-radius: 12px; }
+.brand { font-weight: 700; font-size: 18px; color: var(--color-primary); letter-spacing: 0.2px; display: flex; align-items: center; gap: 8px; white-space: nowrap; flex-shrink: 0; }
+.brand-icon { width: 52px; height: 52px; border-radius: 12px; }
 .header-right { display: flex; align-items: center; gap: 8px; margin-left: auto; flex-shrink: 0; }
 .btn-signout { background: transparent; color: var(--color-danger); padding: 4px 10px; }
 .btn-signout:hover { background: rgba(185, 28, 28, 0.12); }
@@ -231,7 +231,7 @@ button:disabled { opacity: 0.6; cursor: not-allowed; }
   .app { padding-bottom: 150px; }
   .header { padding: 0 16px; height: 52px; }
   .brand { font-size: 18px; gap: 8px; }
-  .brand-icon { width: 46px; height: 46px; border-radius: 10px; }
+  .brand-icon { width: 48px; height: 48px; border-radius: 10px; }
   .menu-button { width: 48px; height: 48px; font-size: 26px; }
   .menu-dropdown { min-width: 180px; }
   .account-dropdown { min-width: 200px; }
@@ -295,8 +295,8 @@ a, button, [role="button"], input[type="button"], input[type="submit"], label {
   .main { padding: 10px; padding-bottom: 140px; }
   .app { padding-bottom: 140px; }
   .header { height: 50px; }
-  .brand { font-size: 16px; gap: 8px; }
-  .brand-icon { width: 40px; height: 40px; border-radius: 10px; }
+  .brand { font-size: 16px; gap: 6px; }
+  .brand-icon { width: 44px; height: 44px; border-radius: 10px; }
   .menu-button { width: 44px; height: 44px; font-size: 22px; }
   .menu-dropdown { min-width: 170px; }
   .dialog { width: 92%; padding: 16px; margin: 12px; }
