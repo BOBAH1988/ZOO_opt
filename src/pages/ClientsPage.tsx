@@ -82,6 +82,7 @@ export function ClientsPage() {
   const [search, setSearch] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
+  const [deleteConfirmed, setDeleteConfirmed] = useState(false);
   const [form, setForm] = useState<NewClientInput>({ name: '', email: '', phone: '', company: '', address: '', day: '', mode: '', manager: '', notes: '' });
   const [saving, setSaving] = useState(false);
 
@@ -294,19 +295,21 @@ export function ClientsPage() {
                   <td style={{ display: 'flex', gap: 6 }}>
                     <button
                       className="btn btn-outline btn-sm"
+                      title="Редактировать"
                       onClick={() => {
                         setForm({ name: client.name, email: client.email, phone: client.phone, company: client.company, address: client.address, day: client.day, mode: client.mode, manager: client.manager, notes: client.notes });
                         setEditingId(client.id);
                       }}
                     >
-                      Редактировать
+                      ✏️
                     </button>
                     <button
                       className="btn btn-outline btn-sm"
-                      onClick={() => handleDeleteConfirm(client.id, client.name)}
+                      title="Удалить"
                       style={{ color: '#b91c1c' }}
+                      onClick={() => handleDeleteConfirm(client.id, client.name)}
                     >
-                      Удалить
+                      🗑️
                     </button>
                   </td>
                 </tr>
@@ -381,15 +384,25 @@ export function ClientsPage() {
       )}
 
       {deleteTarget && (
-        <div className="dialog-overlay" onClick={() => setDeleteTarget(null)}>
+        <div className="dialog-overlay" onClick={() => { setDeleteTarget(null); setDeleteConfirmed(false); }}>
           <div className="dialog" onClick={(e) => e.stopPropagation()}>
             <div className="dialog-title">Удаление клиента</div>
             <div className="dialog-body">
               Вы уверены, что хотите удалить клиента <strong>{deleteTarget.name}</strong>? Это действие нельзя отменить.
             </div>
+            <div className="form-group" style={{ marginBottom: 12 }}>
+              <label className="form-label" style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 0, fontSize: 12 }}>
+                <input
+                  type="checkbox"
+                  checked={deleteConfirmed}
+                  onChange={(e) => setDeleteConfirmed(e.target.checked)}
+                />
+                <span>Подтверждаю удаление</span>
+              </label>
+            </div>
             <div className="dialog-actions">
-              <button className="btn btn-outline" onClick={() => setDeleteTarget(null)}>Отмена</button>
-              <button className="btn btn-danger" onClick={handleDelete} disabled={saving}>
+              <button className="btn btn-outline" onClick={() => { setDeleteTarget(null); setDeleteConfirmed(false); }}>Отмена</button>
+              <button className="btn btn-danger" onClick={handleDelete} disabled={saving || !deleteConfirmed}>
                 {saving ? 'Удаление…' : 'Удалить'}
               </button>
             </div>
