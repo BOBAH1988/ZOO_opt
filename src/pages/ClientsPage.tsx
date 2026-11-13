@@ -81,6 +81,7 @@ export function ClientsPage() {
   const [skippedCount, setSkippedCount] = useState(0);
   const [search, setSearch] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [viewingClient, setViewingClient] = useState<Client | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
   const [deleteConfirmed, setDeleteConfirmed] = useState(false);
   const [form, setForm] = useState<NewClientInput>({ name: '', email: '', phone: '', company: '', address: '', day: '', mode: '', manager: '', notes: '' });
@@ -288,7 +289,7 @@ export function ClientsPage() {
             </thead>
             <tbody>
               {filtered.map((client) => (
-                <tr key={client.id}>
+                <tr key={client.id} onClick={() => setViewingClient(client)} style={{ cursor: 'pointer' }}>
                   <td style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{client.company || '—'}</td>
                   <td style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                     <strong>{client.name}</strong>
@@ -300,10 +301,7 @@ export function ClientsPage() {
                       <button
                         className="btn btn-outline btn-sm"
                         title="Редактировать"
-                        onClick={() => {
-                          setForm({ name: client.name, email: client.email, phone: client.phone, company: client.company, address: client.address, day: client.day, mode: client.mode, manager: client.manager, notes: client.notes });
-                          setEditingId(client.id);
-                        }}
+                        onClick={(e) => { e.stopPropagation(); setViewingClient(null); setForm({ name: client.name, email: client.email, phone: client.phone, company: client.company, address: client.address, day: client.day, mode: client.mode, manager: client.manager, notes: client.notes }); setEditingId(client.id); }}
                       >
                         ✏️
                       </button>
@@ -311,7 +309,7 @@ export function ClientsPage() {
                         className="btn btn-outline btn-sm"
                         title="Удалить"
                         style={{ color: '#b91c1c' }}
-                        onClick={() => handleDeleteConfirm(client.id, client.name)}
+                        onClick={(e) => { e.stopPropagation(); handleDeleteConfirm(client.id, client.name) }}
                       >
                         🗑️
                       </button>
@@ -388,7 +386,63 @@ export function ClientsPage() {
         </div>
       )}
 
-      {deleteTarget && (
+      {viewingClient && (
+        <div className="dialog-overlay" onClick={() => setViewingClient(null)}>
+          <div className="dialog" onClick={(e) => e.stopPropagation()}>
+            <div className="dialog-title">Клиент</div>
+            <div className="dialog-body" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, fontSize: 13 }}>
+              <div>
+                <label className="form-label" style={{ fontSize: 11, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 2, display: 'block' }}>Клиент</label>
+                <div style={{ marginBottom: 10 }}>{viewingClient.name}</div>
+              </div>
+              <div>
+                <label className="form-label" style={{ fontSize: 11, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 2, display: 'block' }}>ИП/ООО</label>
+                <div style={{ marginBottom: 10 }}>{viewingClient.company || '—'}</div>
+              </div>
+              <div>
+                <label className="form-label" style={{ fontSize: 11, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 2, display: 'block' }}>Адрес</label>
+                <div style={{ marginBottom: 10 }}>{viewingClient.address || '—'}</div>
+              </div>
+              <div>
+                <label className="form-label" style={{ fontSize: 11, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 2, display: 'block' }}>Почта</label>
+                <div style={{ marginBottom: 10 }}>{viewingClient.email}</div>
+              </div>
+              <div>
+                <label className="form-label" style={{ fontSize: 11, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 2, display: 'block' }}>День</label>
+                <div style={{ marginBottom: 10 }}>{viewingClient.day || '—'}</div>
+              </div>
+              <div>
+                <label className="form-label" style={{ fontSize: 11, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 2, display: 'block' }}>Режим</label>
+                <div style={{ marginBottom: 10 }}>{viewingClient.mode || '—'}</div>
+              </div>
+              <div>
+                <label className="form-label" style={{ fontSize: 11, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 2, display: 'block' }}>Телефон</label>
+                <div style={{ marginBottom: 10 }}>{viewingClient.phone || '—'}</div>
+              </div>
+              <div>
+                <label className="form-label" style={{ fontSize: 11, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 2, display: 'block' }}>Управляющий</label>
+                <div style={{ marginBottom: 10 }}>{viewingClient.manager || '—'}</div>
+              </div>
+              <div>
+                <label className="form-label" style={{ fontSize: 11, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 2, display: 'block' }}>Примечания</label>
+                <div style={{ marginBottom: 10 }}>{viewingClient.notes || '—'}</div>
+              </div>
+              <div>
+                <label className="form-label" style={{ fontSize: 11, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 2, display: 'block' }}>Создан</label>
+                <div style={{ marginBottom: 10 }}>{viewingClient.createdAt || '—'}</div>
+              </div>
+              <div>
+                <label className="form-label" style={{ fontSize: 11, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 2, display: 'block' }}>Обновлён</label>
+                <div style={{ marginBottom: 0 }}>{viewingClient.updatedAt || '—'}</div>
+              </div>
+            </div>
+            <div className="dialog-actions">
+              <button className="btn btn-outline" onClick={() => setViewingClient(null)}>Закрыть</button>
+            </div>
+          </div>
+        </div>
+      )}
+        {deleteTarget && (
         <div className="dialog-overlay" onClick={() => { setDeleteTarget(null); setDeleteConfirmed(false); }}>
           <div className="dialog" onClick={(e) => e.stopPropagation()}>
             <div className="dialog-title">Удаление клиента</div>
