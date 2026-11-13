@@ -201,11 +201,11 @@ export function ReportsPage() {
           <div className="card" style={{ marginTop: 12, marginBottom: 12, padding: 12 }}>
             <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
             <div style={{ flex: 1, minWidth: 140, padding: 12, background: 'var(--color-bg)', borderRadius: 8, textAlign: 'center' }}>
-              <div style={{ fontSize: 11, color: 'var(--color-text-secondary)', textTransform: 'uppercase', marginBottom: 4 }}>Всего клиентов</div>
+              <div style={{ fontSize: 11, color: 'var(--color-text-secondary)', textTransform: 'uppercase', marginBottom: 4 }}>Всего</div>
               <div style={{ fontSize: 24, fontWeight: 700, color: 'var(--color-text)' }}>{clients.length}</div>
             </div>
             <div style={{ flex: 1, minWidth: 140, padding: 12, background: 'var(--color-bg)', borderRadius: 8, textAlign: 'center' }}>
-              <div style={{ fontSize: 11, color: 'var(--color-text-secondary)', textTransform: 'uppercase', marginBottom: 4 }}>Активных клиентов</div>
+              <div style={{ fontSize: 11, color: 'var(--color-text-secondary)', textTransform: 'uppercase', marginBottom: 4 }}>Активных</div>
               <div style={{ fontSize: 24, fontWeight: 700, color: 'var(--color-success)' }}>{clients.filter((c) => c.active).length}</div>
             </div>
             <div style={{ flex: 1, minWidth: 140, padding: 12, background: 'var(--color-bg)', borderRadius: 8, textAlign: 'center' }}>
