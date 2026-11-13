@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Link, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { Footer } from '@/components/Footer';
+import { PWAInstallPrompt } from '@/components/PWAInstallPrompt';
 
 type NavItem = { to: string; label: string; icon?: any };
 
@@ -113,6 +114,7 @@ export function Layout() {
           </div>
         </div>
       </header>
+      <PWAInstallPrompt />
       <main className="main">
         <Outlet />
       </main>

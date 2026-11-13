@@ -11,7 +11,7 @@ MVP-приложение для управления почтовыми авто
 - **Навигация:** внутренняя навигация через `Link`/роутер (HashRouter, base `/ZOO_opt/`), без обычных ссылок на внутренние маршруты вне роутера.
 - **Регистрация/доступ:** вход, сброс пароля, опциональные ограничения регистрации (`VITE_DISABLE_SIGNUP`, `VITE_ALLOWED_EMAILS`, `VITE_ALLOWED_EMAIL_DOMAINS`, `VITE_REGISTRATION_INVITE_CODE`), попытка отправки письма подтверждения email после регистрации. Для внутренней системы рекомендуется отключить/ограничить регистрацию и управлять пользователями в Firebase.
 - **Отчёты:** история запусков из `runLogs` (дата в две строки — дата и время, процесс, статус «Ок»/«Сбой»). Столбцы «Результат» и «Сообщение» скрыты; текст сообщения показывается во всплывающей подсказке при клике на статус. Статус «Ок» не означает завершение workflow.
-- **PWA:** `public/sw.js` — чистый JS, кэш только статической оболочки, network-only для Firebase/API/авторизованных данных, `src/main.tsx` регистрирует SW.
+- **PWA:** `public/sw.js` — чистый JS, кэш только статической оболочки, network-only для Firebase/API/авторизованных данных, `src/main.tsx` регистрирует SW. Адаптация под устройства: `env(safe-area-inset-*)` для вырезов/домашнего индикатора iPhone, `touch-action: manipulation`, брейкпоинты до 480px, поля ввода 16px против зума iOS при фокусе.
 - **CI/проверки:** `npm run lint` и `npm run test` = `tsc --noEmit`, `npm run build` = `tsc -b && vite build`; deploy workflow выполняет lint, загружает/валидирует Firebase-конфиг из секрета `ZOO` и собирает проект. Правила и индексы Firestore публикуются отдельно через Firebase CLI.
 
 ## Конфигурация (`.env`, не коммитить)
@@ -74,7 +74,10 @@ GitHub Pages: base `/ZOO_opt/`, HashRouter, workflow `.github/workflows/deploy.y
 
 ## PWA
 
-- Манифест/иконки в `public/`, SW кэширует только статическую оболочку, не кэширует Firebase/персональные/авторизованные данные и `/run`.
+- Манифест/иконки в `public/`, SW кэширует только статическую оболочку, network-only для Firebase/API/авторизованных данных и `/run`.
+- iOS PWA: `apple-mobile-web-app-capable`, `apple-mobile-web-app-status-bar-style`, `apple-mobile-web-app-title`, `viewport-fit=cover`, безопасные зоны `env(safe-area-inset-*)` в CSS.
+- `manifest.json` — `display: standalone`, `shortcuts` («Клиенты», «Запуск»), иконки 192/512 + maskable.
+- На iPhone (где нет `beforeinstallprompt`) показывается баннер с инструкцией «Поделиться» → «На экран «Домой»» (`src/components/PWAInstallPrompt.tsx`).
 - Проверяйте установку и обновление после деплоя.
 
 ## Ограничения / дальнейшие шаги

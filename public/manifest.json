@@ -5,6 +5,7 @@
   "start_url": "/ZOO_opt/",
   "scope": "/ZOO_opt/",
   "display": "standalone",
+  "display_override": ["window-controls-overlay", "standalone"],
   "orientation": "portrait",
   "background_color": "#0F2A43",
   "theme_color": "#0F2A43",
@@ -70,6 +71,22 @@
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Клиенты",
+      "short_name": "Клиенты",
+      "url": "/ZOO_opt/#/clients",
+      "description": "Открыть список клиентов",
+      "icons": [ { "src": "/ZOO_opt/icon-192.png", "sizes": "192x192" } ]
+    },
+    {
+      "name": "Запуск",
+      "short_name": "Запуск",
+      "url": "/ZOO_opt/#/run",
+      "description": "Запуск бизнес-процессов",
+      "icons": [ { "src": "/ZOO_opt/icon-192.png", "sizes": "192x192" } ]
     }
   ]
 }
