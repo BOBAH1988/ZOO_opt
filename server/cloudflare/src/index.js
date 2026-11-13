@@ -128,12 +128,14 @@ async function dispatchWorkflow(env, workflow, inputs) {
   });
 
   if (!response.ok) {
+    const text = await response.text();
     console.error(JSON.stringify({
       type: 'github_dispatch_failed',
       status: response.status,
       workflow: workflow.file,
+      body: text,
     }));
-    throw new Error('GitHub rejected the workflow dispatch request');
+    throw new Error(`GitHub rejected the workflow dispatch request (${response.status})`);
   }
 }
 
