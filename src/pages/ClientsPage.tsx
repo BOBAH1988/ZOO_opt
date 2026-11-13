@@ -354,8 +354,16 @@ export function ClientsPage() {
               </div>
               <div className="form-group">
                 <label className="form-label">День посещения</label>
-                <input className="form-input"
-                  value={form.day} onChange={(e) => setForm({ ...form, day: e.target.value })} />
+                <select className="form-input"
+                  value={form.day}
+                  onChange={(e) => setForm({ ...form, day: e.target.value })}>
+                  <option value="">—</option>
+                  <option value="Понедельник">Понедельник</option>
+                  <option value="Вторник">Вторник</option>
+                  <option value="Среда">Среда</option>
+                  <option value="Четверг">Четверг</option>
+                  <option value="Пятница">Пятница</option>
+                </select>
               </div>
               <div className="form-group">
                 <label className="form-label">Примечания</label>
