@@ -276,8 +276,8 @@ export function ClientsPage() {
           <table className="table">
             <thead>
               <tr>
-                <th>Клиент</th>
                 <th>ИП/ООО</th>
+                <th>Клиент</th>
                 <th>Email</th>
                 <th>Телефон</th>
                 <th style={{ width: 120 }}></th>
@@ -286,10 +286,10 @@ export function ClientsPage() {
             <tbody>
               {filtered.map((client) => (
                 <tr key={client.id}>
+                  <td>{client.company || '—'}</td>
                   <td>
                     <strong>{client.name}</strong>
                   </td>
-                  <td>{client.company || '—'}</td>
                   <td>{client.email}</td>
                   <td>{client.phone || '—'}</td>
                   <td style={{ whiteSpace: 'nowrap', padding: 0 }}>
