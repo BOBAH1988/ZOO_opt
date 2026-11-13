@@ -500,43 +500,8 @@ export function RunProcessesPage() {
                 {scenario.day}{scenario.time ? ` ${scenario.time}` : ''}
               </span>
               <h3 style={{ margin: 0, fontSize: 15, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0 }}>{scenario.name}</h3>
-              {runStatus[scenario.id]?.status === 'error' && (
-                <div style={{ gridColumn: '1 / -1', display: 'flex', alignItems: 'center', gap: 6, padding: 4, background: '#fee2e2', borderRadius: 6, fontSize: 11, color: '#991b1b', overflowWrap: 'anywhere', wordBreak: 'break-word' }}>
-                  <span style={{ minWidth: 0, overflowWrap: 'anywhere' }}>Сбой: {runStatus[scenario.id]?.message}</span>
-                  <button
-                    onClick={() => {
-                      navigator.clipboard.writeText(runStatus[scenario.id]?.message || '');
-                    }}
-                    style={{
-                      background: 'transparent',
-                      border: '1px solid #dc2626',
-                      color: '#dc2626',
-                      borderRadius: 4,
-                      width: 24,
-                      height: 24,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      cursor: 'pointer',
-                      fontSize: 12,
-                      padding: 0,
-                    }}
-                    title="Скопировать ошибку"
-                  >
-                    📋
-                  </button>
-                </div>
-              )}
               {runStatus[scenario.id]?.status === 'ok' ? (
                 <span className="btn btn-success" style={{ width: '100%', padding: '6px 10px', fontSize: 13, textAlign: 'center', display: 'block' }}>Ок</span>
-              ) : runStatus[scenario.id]?.status === 'error' ? (
-                <button
-                  className="btn btn-danger"
-                  onClick={() => setRunStatus((prev) => { const next = { ...prev }; delete next[scenario.id]; return next; })}
-                  style={{ width: '100%', padding: '6px 10px', fontSize: 13, textAlign: 'center', display: 'block' }}
-                >
-                  Сбой — попробовать снова
-                </button>
               ) : (
                 <button className="btn btn-primary" onClick={() => handleRunClick(scenario)} disabled={running === scenario.id}>
                   {running === scenario.id ? 'Запуск…' : 'Запустить'}
@@ -564,6 +529,38 @@ export function RunProcessesPage() {
                 ⚙️
               </button>
 
+              {scenario.warning && (
+                <div style={{ gridColumn: '1 / -1', padding: 4, background: '#fbf4e3', borderRadius: 6, fontSize: 11, color: '#92400e', overflowWrap: 'anywhere', wordBreak: 'break-word' }}>
+                  ⚠️ {scenario.warning}
+                </div>
+              )}
+              {runStatus[scenario.id]?.status === 'error' && (
+                <div style={{ gridColumn: '1 / -1', display: 'flex', alignItems: 'center', gap: 6, padding: 6, background: '#fee2e2', borderRadius: 6, fontSize: 11, color: '#991b1b', overflowWrap: 'anywhere', wordBreak: 'break-word' }}>
+                  <span style={{ minWidth: 0, overflowWrap: 'anywhere' }}>Сбой: {runStatus[scenario.id]?.message}</span>
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(runStatus[scenario.id]?.message || '');
+                    }}
+                    style={{
+                      background: 'transparent',
+                      border: '1px solid #dc2626',
+                      color: '#dc2626',
+                      borderRadius: 4,
+                      width: 24,
+                      height: 24,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      cursor: 'pointer',
+                      fontSize: 12,
+                      padding: 0,
+                    }}
+                    title="Скопировать ошибку"
+                  >
+                    📋
+                  </button>
+                </div>
+              )}
               {scenario.warning && (
                 <div style={{ gridColumn: '1 / -1', padding: 4, background: '#fbf4e3', borderRadius: 6, fontSize: 11, color: '#92400e', overflowWrap: 'anywhere', wordBreak: 'break-word' }}>
                   ⚠️ {scenario.warning}
