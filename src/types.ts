@@ -9,6 +9,7 @@ export interface Client {
   mode?: string;
   manager?: string;
   notes?: string;
+  active?: boolean;
   createdAt: string;
   updatedAt: string;
   ownerUid: string;
@@ -24,6 +25,7 @@ export interface NewClientInput {
   mode?: string;
   manager?: string;
   notes?: string;
+  active?: boolean;
 }
 
 export interface UpdateClientInput {
@@ -36,6 +38,7 @@ export interface UpdateClientInput {
   mode?: string;
   manager?: string;
   notes?: string;
+  active?: boolean;
 }
 
 export interface WorkflowScenario {

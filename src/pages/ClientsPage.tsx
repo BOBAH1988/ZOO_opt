@@ -29,6 +29,7 @@ interface ClientDoc extends DocumentData {
   mode?: unknown;
   manager?: unknown;
   notes?: unknown;
+  active?: unknown;
   createdAt?: unknown;
   updatedAt?: unknown;
   ownerUid?: unknown;
@@ -67,6 +68,7 @@ function docToClient(snap: QueryDocumentSnapshot<DocumentData>): Client | null {
     mode: typeof data.mode === 'string' && data.mode.trim() ? data.mode.trim() : undefined,
     manager: typeof data.manager === 'string' && data.manager.trim() ? data.manager.trim() : undefined,
     notes: typeof data.notes === 'string' && data.notes.trim() ? data.notes.trim() : undefined,
+    active: typeof data.active === 'boolean' ? data.active : true,
     createdAt: toIsoString(data.createdAt),
     updatedAt: toIsoString(data.updatedAt),
     ownerUid: data.ownerUid,
@@ -84,7 +86,7 @@ export function ClientsPage() {
   const [viewingClient, setViewingClient] = useState<Client | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
   const [deleteConfirmed, setDeleteConfirmed] = useState(false);
-  const [form, setForm] = useState<NewClientInput>({ name: '', email: '', phone: '', company: '', address: '', day: '', mode: '', manager: '', notes: '' });
+  const [form, setForm] = useState<NewClientInput>({ name: '', email: '', phone: '', company: '', address: '', day: '', mode: '', manager: '', notes: '', active: true });
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -140,7 +142,7 @@ export function ClientsPage() {
   );
 
   const resetForm = () => {
-    setForm({ name: '', email: '', phone: '', company: '', address: '', day: '', mode: '', manager: '', notes: '' });
+    setForm({ name: '', email: '', phone: '', company: '', address: '', day: '', mode: '', manager: '', notes: '', active: true });
   };
 
   const handleCreate = async (e: React.FormEvent) => {
@@ -159,6 +161,7 @@ export function ClientsPage() {
         mode: form.mode?.trim() || null,
         manager: form.manager?.trim() || null,
         notes: form.notes?.trim() || null,
+        active: form.active ?? true,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
         ownerUid: user.uid,
@@ -189,6 +192,7 @@ export function ClientsPage() {
         mode: form.mode?.trim() || null,
         manager: form.manager?.trim() || null,
         notes: form.notes?.trim() || null,
+        active: form.active ?? true,
         updatedAt: serverTimestamp(),
       });
       setEditingId(null);
@@ -280,6 +284,7 @@ export function ClientsPage() {
           >
             <thead>
               <tr>
+                <th style={{ width: '48px', whiteSpace: 'nowrap' }}>Активный</th>
                 <th style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>Форма</th>
                 <th style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>Клиент</th>
               </tr>
@@ -287,6 +292,7 @@ export function ClientsPage() {
             <tbody>
               {filtered.map((client) => (
                 <tr key={client.id} onClick={() => setViewingClient(client)} style={{ cursor: 'pointer' }}>
+                  <td style={{ width: '48px', whiteSpace: 'nowrap', textAlign: 'center' }}>{client.active ? '✅' : '❌'}</td>
                   <td style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{client.company || '—'}</td>
                   <td style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                     <strong>{client.name}</strong>
@@ -313,6 +319,15 @@ export function ClientsPage() {
                 <label className="form-label">Клиент</label>
                 <input className="form-input" required
                   value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
+              </div>
+              <div className="form-group">
+                <label className="form-label">Активный</label>
+                <select className="form-input"
+                  value={form.active ? 'active' : 'inactive'}
+                  onChange={(e) => setForm({ ...form, active: e.target.value === 'active' })}>
+                  <option value="active">✅ Активный</option>
+                  <option value="inactive">❌ Не активный</option>
+                </select>
               </div>
               <div className="form-group">
                 <label className="form-label">Форма</label>
@@ -368,6 +383,10 @@ export function ClientsPage() {
             <div className="dialog-title">Клиент</div>
             <div className="dialog-body" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, fontSize: 13 }}>
               <div>
+                <label className="form-label" style={{ fontSize: 11, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 2, display: 'block' }}>Активный</label>
+                <div style={{ marginBottom: 10 }}>{viewingClient.active ? '✅ Активный' : '❌ Не активный'}</div>
+              </div>
+              <div>
                 <label className="form-label" style={{ fontSize: 11, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 2, display: 'block' }}>Клиент</label>
                 <div style={{ marginBottom: 10 }}>{viewingClient.name}</div>
               </div>
@@ -415,7 +434,7 @@ export function ClientsPage() {
             <div className="dialog-actions">
               <button
                 className="btn btn-outline"
-                onClick={() => { setViewingClient(null); setForm({ name: viewingClient.name, email: viewingClient.email, phone: viewingClient.phone, company: viewingClient.company, address: viewingClient.address, day: viewingClient.day, mode: viewingClient.mode, manager: viewingClient.manager, notes: viewingClient.notes }); setEditingId(viewingClient.id); }}
+                onClick={() => { setViewingClient(null); setForm({ name: viewingClient.name, email: viewingClient.email, phone: viewingClient.phone, company: viewingClient.company, address: viewingClient.address, day: viewingClient.day, mode: viewingClient.mode, manager: viewingClient.manager, notes: viewingClient.notes, active: viewingClient.active }); setEditingId(viewingClient.id); }}
               >
                 ✏️ Редактировать
               </button>
