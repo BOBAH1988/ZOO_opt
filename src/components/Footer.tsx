@@ -8,7 +8,7 @@ const NAV_ITEMS: NavItem[] = [
   { to: '/route', title: 'Маршрут', icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2.2 21.4 21.8 12 17.2 2.6 21.8Z" /></svg> },
   { to: '/run', title: 'Запуск', icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M6.8 3.4 20.6 12 6.8 20.6Z" /></svg> },
   { to: '/kpi', label: 'KPI' },
-  { to: '/clients', title: 'Клиенты', icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><ellipse cx="12" cy="6.6" rx="8.5" ry="2.8" /><path d="M3.5 8v4c0 1.55 3.8 2.8 8.5 2.8s8.5-1.25 8.5-2.8V8c0 1.55-3.8 2.8-8.5 2.8S3.5 9.55 3.5 8Z" /><path d="M3.5 13.4v4c0 1.55 3.8 2.8 8.5 2.8s8.5-1.25 8.5-2.8v-4c0 1.55-3.8 2.8-8.5 2.8S3.5 14.95 3.5 13.4Z" /></svg> },
+  { to: '/clients', title: 'Клиенты', icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="9" cy="7.6" r="3.4" /><path d="M9 12.6c-3.7 0-6.7 2.1-6.7 4.7V19h13.4v-1.7c0-2.6-3-4.7-6.7-4.7Z" /><circle cx="17" cy="8.6" r="2.8" /><path d="M17 13.1c2.9 0 5.2 1.7 5.2 3.9V19h-4.8v-1.7c0-1.5-.7-2.9-1.9-3.9.5-.2 1-.3 1.5-.3Z" /></svg> },
 ];
 
 const START_YEAR = 2026;
