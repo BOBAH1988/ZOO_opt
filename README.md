@@ -4,9 +4,9 @@ MVP-приложение для управления почтовыми авто
 
 ## Статус и реализованные доработки
 
-- **Клиенты:** чтение/запись только по `ownerUid` текущего пользователя (`where('ownerUid','==',uid)`), запись реального UID из Firebase Auth, валидация структуры документов, безопасное преобразование `Timestamp/Date/string` в ISO, понятные ошибки, пропуск некорректных записей с предупреждением. См. `src/pages/ClientsPage.tsx`.
+- **Клиенты:** чтение/запись только по `ownerUid` текущего пользователя (`where('ownerUid','==',uid)`), запись реального UID из Firebase Auth, валидация структуры документов, безопасное преобразование `Timestamp/Date/string` в ISO, понятные ошибки, пропуск некорректных записей с предупреждением. В форме редактирования адрес приводится к формату «Город. улица дом», форма выбирается из `ИП`/`ООО`, почта проверяется на корректный формат; у полей телефона и почты есть кнопки копирования, а в заголовке карточки — копирование всех данных клиента. См. `src/pages/ClientsPage.tsx`.
 - **Firestore Rules:** строгие правила владельца для `clients` и `runLogs`, запрет остального. Источник правил — `firestore.rules`; настройки Firebase CLI — `firebase.json`.
-- **Запуск процессов:** клиент отправляет `Authorization: Bearer <Firebase ID token>`, параметры workflow редактируемы в UI (запоминаются в `localStorage`), перед запуском подтверждение для сценариев с риском реальной рассылки, журнал запросов пишется в `runLogs`. После запуска вместо кнопки показывается статус «Ок»/«Сбой». Кнопка `❓` рядом с заголовком открывает список всех сценариев запуска и всех скриптов с описаниями и кодами (из `mail-automation/README.md`). См. `src/pages/RunProcessesPage.tsx`, `src/api.ts`.
+- **Запуск процессов:** клиент отправляет `Authorization: Bearer <Firebase ID token>`, параметры workflow редактируемы в UI (запоминаются в `localStorage`), перед запуском подтверждение для сценариев с риском реальной рассылки, журнал запросов пишется в `runLogs`. После запуска вместо кнопки показывается статус «Ок»/«Сбой». Кнопка `❓` рядом с заголовком открывает список всех сценариев запуска и всех скриптов с описаниями и кодами (из `mail-automation/README.md`). Списки проектов в настройках каждого сценария ограничены составом его workflow; сохранённые в `localStorage` лишние значения отбрасываются при загрузке. См. `src/pages/RunProcessesPage.tsx`, `src/api.ts`.
 - **Сервер запуска:** `/server` содержит пример Express API, а `server/cloudflare` — Cloudflare Worker для бесплатного размещения с проверкой Firebase ID token, allowlist пользователя, валидацией workflow/inputs и серверным GitHub token. Требует развёртывания и настройки `VITE_API_BASE_URL`. См. `server/README.md` и `server/cloudflare/README.md`. **Безопасность по умолчанию — fail-closed:** пустой `ALLOWED_UIDS` запрещает запуск всем, пустой `REAL_SEND_UIDS` запрещает реальную рассылку всем.
 - **Навигация:** внутренняя навигация через `Link`/роутер (HashRouter, base `/ZOO_opt/`), без обычных ссылок на внутренние маршруты вне роутера.
 - **Регистрация/доступ:** вход, сброс пароля, опциональные ограничения регистрации (`VITE_DISABLE_SIGNUP`, `VITE_ALLOWED_EMAILS`, `VITE_ALLOWED_EMAIL_DOMAINS`, `VITE_REGISTRATION_INVITE_CODE`), попытка отправки письма подтверждения email после регистрации. Для внутренней системы рекомендуется отключить/ограничить регистрацию и управлять пользователями в Firebase.
@@ -38,13 +38,14 @@ VITE_REGISTRATION_INVITE_CODE=
 
 Даже если все `VITE_FIREBASE_*` заданы верно, ошибка `400 (Bad Request)` на потоке `google.firestore.v1.Firestore/Listen` означает, что **база данных Firestore не создана** в проекте Firebase или не настроены правила доступа.
 
-### Шаги настройки:
+### Шаги настройки
 
 1. Откройте [Firebase Console](https://console.firebase.google.com/), выберите проект `zoo-opt`.
 2. В боковом меню перейдите **Firestore Database** → **Create database**.
 3. Выберите режим **Native mode** (рекомендуется), затем расположение БД (ближайшее к вам).
 4. Нажмите **Enable** — создание может занять до 1 минуты.
 5. В разделе **Firestore Database → Rules** замените правила на содержимое `firestore.rules` из этого репозитория и нажмите **Publish**:
+
    ```
    rules_version = '2';
    service cloud.firestore {
@@ -53,6 +54,7 @@ VITE_REGISTRATION_INVITE_CODE=
      }
    }
    ```
+
 6. В разделе **Firestore Database → Indexes** убедитесь, что индексы из `firestore.indexes.json` созданы (либо нажмите «Create index» при первом открытии страницы, которая требует составной индекс).
 7. Скопируйте веб-конфигурацию: **Настройки проекта → Общие → Ваши приложения → Веб-приложение (</>)** → `firebaseConfig` и впишите значения в `.env` (`VITE_FIREBASE_API_KEY`, `VITE_FIREBASE_AUTH_DOMAIN`, `VITE_FIREBASE_PROJECT_ID`, `VITE_FIREBASE_APP_ID` и т.д.).
 
@@ -78,6 +80,7 @@ SDK Firebase пытается открыть веб-канал (WebChannel) дл
 ## Запуск GitHub Actions (сервер)
 
 Клиент: `POST ${VITE_API_BASE_URL}/run` с JSON `{ workflowId, inputs }` и Firebase ID token. Сервер обязан:
+
 - проверять токен и права пользователя;
 - разрешать только workflow/параметры из серверного белого списка;
 - валидировать входные данные и усиливать ограничения для реальных рассылок (`test_mode`, allowlist/роль, журнал);
@@ -117,7 +120,7 @@ GitHub Pages: base `/ZOO_opt/`, HashRouter, workflow `.github/workflows/deploy.y
 ## Решение проблем (troubleshooting)
 
 | Ошибка | Причина | Решение |
-|--------|---------|---------|
+| -------- | --------- | --------- |
 | `Запуск не настроен: отсутствует серверный API (VITE_API_BASE_URL)` | `VITE_API_BASE_URL` не задан в клиенте | Локально: `VITE_API_BASE_URL=http://localhost:8787` в `.env` и запущен `server/index.js`. Онлайн: задайте repository secret `VITE_API_BASE_URL` = URL Cloudflare Worker (например `https://zoo-opt-run-api.zoo-opt.workers.dev`) в GitHub Settings → Secrets → Actions и пересоберите сайт (пуш в `main`). |
 | `net::ERR_CONNECTION_REFUSED` на `localhost:8787` | Локальный Express-сервер не запущен | `cd server && npm install && npm start`. Сервер должен слушать порт 8787. |
 | WebSocket HMR падает с `400` в dev (`ws://localhost:5173/ZOO_opt/...`) | Vite dev сервер не знает базовый путь `/ZOO_opt/` | В `vite.config.ts` добавьте `server.origin: 'http://localhost:5173'` (или `server.hmr.path: '/__vite_hmr'`). |
@@ -133,4 +136,3 @@ GitHub Pages: base `/ZOO_opt/`, HashRouter, workflow `.github/workflows/deploy.y
 | `Сессия истекла. Войдите заново.` (401, код `invalid_token`) | ID token истёк или повреждён | Перезайдите в приложение — токен обновится автоматически. |
 | `Email не подтверждён. Подтвердите почту в Firebase Auth.` (403, код `unverified_email`) | Аккаунт создан, но письмо подтверждения не открыто; правила Firestore и сервер запуска требуют `email_verified` | Откройте письмо подтверждения (кнопка «Отправить письмо ещё раз» на экране «Подтвердите email»), затем нажмите «Я подтвердил(а) — проверить». |
 | `400 (Bad Request)` на `google.firestore.v1.Firestore/Listen` (WebChannelConnection) | База данных Firestore не создана в консоли Firebase или API-ключ не валиден | Создайте базу Firestore (Firebase Console → Firestore Database → Create database, Native mode), опубликуйте правила из `firestore.rules`, проверьте `VITE_FIREBASE_*` в `.env` и пересоберите проект. См. раздел «Настройка Firestore в консоли Firebase». |
-

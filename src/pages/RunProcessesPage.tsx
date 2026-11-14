@@ -9,17 +9,31 @@ import { db } from '@/firebase';
 import { useAuth } from '@/context/AuthContext';
 import type { WorkflowScenario, WorkflowInput } from '@/types';
 
-const PROJECT_OPTIONS = [
-  { label: 'order', value: 'order' },
+// Наборы проектов строго по составу конкретного workflow.
+const MON_TUE_PROJECT_OPTIONS = [
+  { label: 'lemur', value: 'lemur' },
   { label: 'ukhta', value: 'ukhta' },
-  { label: 'veta', value: 'veta' },
+  { label: 'order', value: 'order' },
+  { label: 'dz', value: 'dz' },
   { label: 'clients', value: 'clients' },
   { label: 'payments', value: 'payments' },
-  { label: 'invoice', value: 'invoice' },
-  { label: 'veles', value: 'veles' },
+  { label: 'veta', value: 'veta' },
+];
+
+const TUE_PROJECT_OPTIONS = [
+  { label: 'ukhta', value: 'ukhta' },
+  { label: 'clients', value: 'clients' },
+  { label: 'payments', value: 'payments' },
+];
+
+const WED_PROJECT_OPTIONS = [
+  { label: 'счёт Прусакова клиенту', value: 'prusakova' },
+  { label: 'счета в Велес', value: 'veles' },
+];
+
+const FRI_PROJECT_OPTIONS = [
   { label: 'lemur', value: 'lemur' },
   { label: 'dz', value: 'dz' },
-  { label: 'sety', value: 'sety' },
 ];
 
 const SCENARIOS: WorkflowScenario[] = [
@@ -31,7 +45,7 @@ const SCENARIOS: WorkflowScenario[] = [
     description: 'Группа понедельник–вторник. Лемур (Прусакова): проверка письма от zookingdom@mail.ru с прайсом, конвертация .xls→.xlsx, раскраска и рассылка клиентам. Ухта: проверка прайса, конвертация, удаление строк «Мит Гарден», рассылка. Заказ Прусакова оператору: пересылка заказов от zoo2017ukhta@yandex.ru на zookingdom@mail.ru. Дебиторка Ухта: разбор файла задолженности, отчёт по просрочкам. Счета клиентам по списку: пересылка Excel-вложений получателям по ключам тем. Платёжки клиентов оператору: пересылка вложений Excel/PDF от 4 клиентов оператору zookingdom@mail.ru.',
     inputs: [
       { key: 'test_mode', label: 'Тестовый режим (только вам, не клиентам)', type: 'boolean', defaultValue: false, description: '', required: false },
-      { key: 'only', label: 'Проекты для запуска', type: 'multiselect', defaultValue: [], description: 'Пусто = вся группа', required: false, options: PROJECT_OPTIONS },
+      { key: 'only', label: 'Проекты для запуска', type: 'multiselect', defaultValue: [], description: 'Пусто = вся группа', required: false, options: MON_TUE_PROJECT_OPTIONS },
       { key: 'ignore_window', label: 'Игнорировать время и день недели', type: 'boolean', defaultValue: true, description: '', required: false },
     ],
   },
@@ -64,7 +78,7 @@ const SCENARIOS: WorkflowScenario[] = [
     description: 'Группа вторник. Прайс Ухта: проверка, конвертация, раскраска и рассылка клиентам. Счета клиентам по списку: пересылка Excel-вложений получателям по ключам тем. Платёжки клиентов оператору: пересылка вложений Excel/PDF от 4 клиентов оператору zookingdom@mail.ru.',
     inputs: [
       { key: 'test_mode', label: 'Тестовый режим (только вам, не клиентам)', type: 'boolean', defaultValue: false, description: '', required: false },
-      { key: 'only', label: 'Проекты для запуска', type: 'multiselect', defaultValue: [], description: 'Пусто = вся группа', required: false, options: PROJECT_OPTIONS },
+      { key: 'only', label: 'Проекты для запуска', type: 'multiselect', defaultValue: [], description: 'Пусто = вся группа', required: false, options: TUE_PROJECT_OPTIONS },
       { key: 'ignore_window', label: 'Игнорировать время и день недели', type: 'boolean', defaultValue: true, description: '', required: false },
     ],
   },
@@ -76,12 +90,7 @@ const SCENARIOS: WorkflowScenario[] = [
     description: 'Группа среда. Счёт Прусакова клиенту: поиск непрочитанного письма от zookingdom@mail.ru с темой «Прусакова», пересылка всех Excel-вложений клиенту zoo2017ukhta@yandex.ru, автоотправка только с 13:00 до 14:30. Счета в Велес: пересылка писем от a_tarakashkin@mail.ru с Excel-вложениями получателю iruya@mail.ru.',
     inputs: [
       { key: 'test_mode', label: 'Тестовый режим (только вам, не клиентам)', type: 'boolean', defaultValue: false, description: '', required: false },
-      {
-        key: 'only', label: 'Проекты для запуска', type: 'multiselect', defaultValue: [], description: 'Пусто = вся группа', required: false, options: [
-          { label: 'счёт Прусакова клиенту', value: 'prusakova' },
-          { label: 'счета в Велес', value: 'veles' },
-        ]
-      },
+      { key: 'only', label: 'Проекты для запуска', type: 'multiselect', defaultValue: [], description: 'Пусто = вся группа', required: false, options: WED_PROJECT_OPTIONS },
       { key: 'ignore_window', label: 'Игнорировать время и день недели', type: 'boolean', defaultValue: true, description: '', required: false },
     ],
   },
@@ -93,7 +102,7 @@ const SCENARIOS: WorkflowScenario[] = [
     description: 'Группа пятница. Лемур (Прусакова): проверка письма от zookingdom@mail.ru с прайсом, конвертация, раскраска и рассылка клиентам. Дебиторка / ДЗ: проверка письма от yuriy.novikov1980@mail.ru с темой «ДЗ» и Excel-вложением, поиск совпадений по списку клиентов, ответ о задолженности или уведомление «У моих клиентов нет такой задолженности».',
     inputs: [
       { key: 'test_mode', label: 'Тестовый режим (только вам, не клиентам)', type: 'boolean', defaultValue: false, description: '', required: false },
-      { key: 'only', label: 'Проекты для запуска', type: 'multiselect', defaultValue: [], description: 'Пусто = вся группа', required: false, options: PROJECT_OPTIONS },
+      { key: 'only', label: 'Проекты для запуска', type: 'multiselect', defaultValue: [], description: 'Пусто = вся группа', required: false, options: FRI_PROJECT_OPTIONS },
       { key: 'ignore_window', label: 'Игнорировать время и день недели', type: 'boolean', defaultValue: true, description: '', required: false },
     ],
   },
@@ -209,6 +218,16 @@ function loadSettings(): InputValues {
         for (const s of SCENARIOS) {
           if (parsed.values[s.id]) {
             init[s.id] = { ...init[s.id], ...parsed.values[s.id] };
+          }
+          // Отбрасываем сохранённые проекты, которых нет в наборе текущего workflow.
+          for (const input of s.inputs) {
+            if (input.type === 'multiselect' && input.options) {
+              const allowed = new Set(input.options.map((option) => option.value));
+              const current = init[s.id][input.key];
+              if (Array.isArray(current)) {
+                init[s.id][input.key] = current.filter((value) => allowed.has(value));
+              }
+            }
           }
         }
       }
@@ -395,7 +414,7 @@ export function RunProcessesPage() {
         <h2 className="page-title" style={{ margin: 0 }}>{'Запуск'}</h2>
         <button
           type="button"
-          className="btn btn-primary"
+          className="btn btn-outline"
           onClick={() => setHelpMenuOpen((prev) => !prev)}
           title="Справка по запускам"
           aria-label="Справка по запускам"
@@ -408,6 +427,8 @@ export function RunProcessesPage() {
             fontSize: 20,
             fontWeight: 700,
             lineHeight: 1,
+            background: 'transparent',
+            color: 'var(--color-text)',
           }}
         >
           ?
