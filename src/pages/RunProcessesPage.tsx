@@ -29,8 +29,7 @@ const SCENARIOS: WorkflowScenario[] = [
     day: 'пн',
     time: '9:00',
     description: 'Группа понедельник–вторник. Лемур (Прусакова): проверка письма от zookingdom@mail.ru с прайсом, конвертация .xls→.xlsx, раскраска и рассылка клиентам. Ухта: проверка прайса, конвертация, удаление строк «Мит Гарден», рассылка. Заказ Прусакова оператору: пересылка заказов от zoo2017ukhta@yandex.ru на zookingdom@mail.ru. Дебиторка Ухта: разбор файла задолженности, отчёт по просрочкам. Счета клиентам по списку: пересылка Excel-вложений получателям по ключам тем. Платёжки клиентов оператору: пересылка вложений Excel/PDF от 4 клиентов оператору zookingdom@mail.ru.',
-    warning: 'Реальная рассылка клиентам. По умолчанию включён тестовый режим — письмо уйдёт только вам.',
-    testModeDefault: true,
+    warning: 'Реальная рассылка клиентам. Тестовый режим включён по умолчанию.',
     inputs: [
       { key: 'test_mode', label: 'Тестовый режим (только вам, не клиентам)', type: 'boolean', defaultValue: true, description: '', required: false },
       { key: 'only', label: 'Проекты для запуска', type: 'multiselect', defaultValue: [], description: 'Пусто = вся группа', required: false, options: PROJECT_OPTIONS },
@@ -43,8 +42,7 @@ const SCENARIOS: WorkflowScenario[] = [
     day: 'пн',
     time: '10:00',
     description: 'Проект 13. Сверяет полный прайс с остатком на складе и продажами за три месяца, собирает список того, что заказать. Считает автоматически и показывает только проверяемые цифры. Запускает пакет residues и присылает результат на почту.',
-    warning: 'Реальная рассылка на почту. По умолчанию включён тестовый режим — письмо уйдёт только вам.',
-    testModeDefault: true,
+    warning: 'Реальная рассылка на почту. Тестовый режим включён по умолчанию.',
     inputs: [
       { key: 'test_mode', label: 'Тестовый режим (только вам)', type: 'boolean', defaultValue: true, description: '', required: false },
     ],
@@ -55,8 +53,7 @@ const SCENARIOS: WorkflowScenario[] = [
     day: 'пн',
     time: '9:00',
     description: 'Проект 3 (Сети Ухта). Рассылка готового файла прайса по списку получателей (scripts/recipients_sety_ukhta.txt). Файл прайса хранится в репозитории и заменяется вручную. Защита от дубля: не отправляет тот же файл повторно в день. Тестовый режим — письмо только вам, тема с префиксом [ТЕСТ].',
-    warning: 'Реальная рассылка прайса получателям списка. По умолчанию включён тестовый режим — письмо уйдёт только вам.',
-    testModeDefault: true,
+    warning: 'Реальная рассылка прайса получателям списка. Тестовый режим включён по умолчанию.',
     inputs: [
       { key: 'test_mode', label: 'Тестовый режим (только вам, не сетям)', type: 'boolean', defaultValue: true, description: '', required: false },
       { key: 'skip_if_sent', label: 'Не дублировать рассылку', type: 'boolean', defaultValue: true, description: '', required: false },
@@ -68,8 +65,7 @@ const SCENARIOS: WorkflowScenario[] = [
     day: 'вт',
     time: '9:00',
     description: 'Группа вторник. Прайс Ухта: проверка, конвертация, раскраска и рассылка клиентам. Счета клиентам по списку: пересылка Excel-вложений получателям по ключам тем. Платёжки клиентов оператору: пересылка вложений Excel/PDF от 4 клиентов оператору zookingdom@mail.ru.',
-    warning: 'Реальная рассылка клиентам и оператору. По умолчанию включён тестовый режим — письма уйдут только вам.',
-    testModeDefault: true,
+    warning: 'Реальная рассылка клиентам и оператору. Тестовый режим включён по умолчанию.',
     inputs: [
       { key: 'test_mode', label: 'Тестовый режим (только вам, не клиентам)', type: 'boolean', defaultValue: true, description: '', required: false },
       { key: 'only', label: 'Проекты для запуска', type: 'multiselect', defaultValue: [], description: 'Пусто = вся группа', required: false, options: PROJECT_OPTIONS },
@@ -82,8 +78,7 @@ const SCENARIOS: WorkflowScenario[] = [
     day: 'ср',
     time: '14:00',
     description: 'Группа среда. Счёт Прусакова клиенту: поиск непрочитанного письма от zookingdom@mail.ru с темой «Прусакова», пересылка всех Excel-вложений клиенту zoo2017ukhta@yandex.ru, автоотправка только с 13:00 до 14:30. Счета в Велес: пересылка писем от a_tarakashkin@mail.ru с Excel-вложениями получателю iruya@mail.ru.',
-    warning: 'Реальная пересылка писем и счетов получателям. По умолчанию включён тестовый режим — письма уйдут только вам.',
-    testModeDefault: true,
+    warning: 'Реальная пересылка писем и счетов получателей. Тестовый режим включён по умолчанию.',
     inputs: [
       { key: 'test_mode', label: 'Тестовый режим (только вам, не клиентам)', type: 'boolean', defaultValue: true, description: '', required: false },
       { key: 'only', label: 'Проекты для запуска', type: 'multiselect', defaultValue: [], description: 'Пусто = вся группа', required: false, options: [
@@ -99,8 +94,7 @@ const SCENARIOS: WorkflowScenario[] = [
     day: 'пт',
     time: '9:00',
     description: 'Группа пятница. Лемур (Прусакова): проверка письма от zookingdom@mail.ru с прайсом, конвертация, раскраска и рассылка клиентам. Дебиторка / ДЗ: проверка письма от yuriy.novikov1980@mail.ru с темой «ДЗ» и Excel-вложением, поиск совпадений по списку клиентов, ответ о задолженности или уведомление «У моих клиентов нет такой задолженности».',
-    warning: 'Реальная рассылка клиентам и ответы по дебиторке. По умолчанию включён тестовый режим — письма уйдут только вам.',
-    testModeDefault: true,
+    warning: 'Реальная рассылка клиентам и ответы по дебиторке. Тестовый режим включён по умолчанию.',
     inputs: [
       { key: 'test_mode', label: 'Тестовый режим (только вам, не клиентам)', type: 'boolean', defaultValue: true, description: '', required: false },
       { key: 'only', label: 'Проекты для запуска', type: 'multiselect', defaultValue: [], description: 'Пусто = вся группа', required: false, options: PROJECT_OPTIONS },
@@ -112,8 +106,7 @@ const SCENARIOS: WorkflowScenario[] = [
     name: 'KPI Продажи',
     day: '',
     description: 'Проект 12. Личный мотивационный отчёт Владимира Соколова (Ухта) по выполнению плана направлений. Разбирает файл «Проекция объема продаж.xlsx», считает достижение ступеней мотивации, начисления и проекцию. Письмо с темой «Выполнение KPI» уходит только на NOTIFY_EMAIL.',
-    warning: 'Реальное письмо на NOTIFY_EMAIL. Тестовый режим неприменим для этого сценария.',
-    testModeDefault: true,
+    warning: 'Реальное письмо на NOTIFY_EMAIL.',
     inputs: [],
   },
 ];

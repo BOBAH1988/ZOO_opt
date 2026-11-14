@@ -87,9 +87,10 @@ export function Login({ onLogin }: LoginProps) {
     const normalizedEmail = email.trim().toLowerCase();
     try {
       await signIn(normalizedEmail, password);
-      const user = auth?.currentUser ?? undefined;
-      if (user && !(user as { emailVerified?: boolean }).emailVerified) {
-        setInfo('Вход выполнен, но email не подтверждён. Проверьте почту и подтвердите аккаунт.');
+      const user = auth?.currentUser;
+      if (!user?.emailVerified) {
+        setError('Email не подтверждён. Подтвердите почту в Firebase Auth перед входом.');
+        return;
       }
       onLogin();
     } catch (err: unknown) {
@@ -129,10 +130,6 @@ export function Login({ onLogin }: LoginProps) {
         }
       } else {
         setInfo('Аккаунт создан.');
-      }
-      const newUser = auth?.currentUser ?? undefined;
-      if (newUser && !(newUser as { emailVerified?: boolean }).emailVerified) {
-        setInfo('Email не подтверждён.');
       }
       onLogin();
     } catch (err: unknown) {

@@ -130,34 +130,42 @@ async function authenticate(request, projectId) {
   }
 }
 
+const GITHUB_FETCH_TIMEOUT_MS = 15_000;
+
 async function dispatchWorkflow(env, workflow, inputs) {
   const url = `https://api.github.com/repos/${env.GITHUB_OWNER}/${env.GITHUB_REPO}/actions/workflows/${workflow.file}/dispatches`;
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: {
-      Accept: 'application/vnd.github+json',
-      Authorization: `Bearer ${env.GITHUB_TOKEN}`,
-      'X-GitHub-Api-Version': '2022-11-28',
-      'Content-Type': 'application/json',
-      'User-Agent': 'zoo-opt-run-api',
-    },
-    body: JSON.stringify({
-      ref: 'main',
-      inputs: Object.fromEntries(
-        Object.entries(inputs).map(([key, value]) => [key, String(value)]),
-      ),
-    }),
-  });
-
-  if (!response.ok) {
-    const text = await response.text();
-    console.error(JSON.stringify({
-      type: 'github_dispatch_failed',
-      status: response.status,
-      workflow: workflow.file,
-      body: text,
-    }));
-    throw new Error(`GitHub rejected the workflow dispatch request (${response.status})`);
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), GITHUB_FETCH_TIMEOUT_MS);
+  try {
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        Accept: 'application/vnd.github+json',
+        Authorization: `Bearer ${env.GITHUB_TOKEN}`,
+        'X-GitHub-Api-Version': '2022-11-28',
+        'Content-Type': 'application/json',
+        'User-Agent': 'zoo-opt-run-api',
+      },
+      body: JSON.stringify({
+        ref: 'main',
+        inputs: Object.fromEntries(
+          Object.entries(inputs).map(([key, value]) => [key, String(value)]),
+        ),
+      }),
+      signal: controller.signal,
+    });
+    if (!response.ok) {
+      const text = await response.text();
+      console.error(JSON.stringify({
+        type: 'github_dispatch_failed',
+        status: response.status,
+        workflow: workflow.file,
+        body: text,
+      }));
+      throw new Error(`GitHub rejected the workflow dispatch request (${response.status})`);
+    }
+  } finally {
+    clearTimeout(timeoutId);
   }
 }
 
@@ -176,12 +184,14 @@ export default {
     }
 
     if (origin && origin !== env.APP_ORIGIN) {
-      const headers = corsHeaders(origin, env);
-      headers.set('Access-Control-Allow-Origin', origin || '*');
-      headers.set('Content-Type', 'application/json; charset=utf-8');
+      // Не эхо-ем чужой origin в ACAO — иначе любой сайт сможет прочитать ответ.
+      // Браузер заблокирует ответ из-за отсутствия совпадающего ACAO.
       return new Response(JSON.stringify({ message: 'Origin is not allowed' }), {
         status: 403,
-        headers,
+        headers: {
+          'Content-Type': 'application/json; charset=utf-8',
+          'Cache-Control': 'no-store',
+        },
       });
     }
 
@@ -209,7 +219,7 @@ export default {
 
     const uid = await authenticate(request, env.FIREBASE_PROJECT_ID);
     if (!uid) {
-      return jsonResponse({ message: 'Invalid or missing Firebase ID token' }, 401, origin, env);
+      return jsonResponse({ message: 'Необходима авторизация с подтверждённым email' }, 403, origin, env);
     }
     if (!allowedUids.includes(uid)) {
       return jsonResponse({ message: 'User is not allowed to run workflows' }, 403, origin, env);

@@ -39,6 +39,11 @@ function logEvent(event) {
   console.log(JSON.stringify({ ts: new Date().toISOString(), ...event }));
 }
 
+// Допустимые значения для поля 'only' ( Projekты рассылки, совпадает с клиентом и воркере ).
+const PROJECT_ALLOWLIST = new Set([
+  'order', 'ukhta', 'veta', 'clients', 'payments', 'invoice', 'veles', 'lemur', 'dz', 'sety', 'prusakova',
+]);
+
 function validateInputs(workflowId, inputs) {
   const spec = ALLOWED_WORKFLOWS[workflowId];
   if (!spec) return { ok: false, error: 'Workflow is not allowed' };
@@ -50,10 +55,20 @@ function validateInputs(workflowId, inputs) {
     if (expected === 'boolean' && typeof value !== 'boolean') return { ok: false, error: `${key} must be boolean` };
     if (expected === 'string' && typeof value !== 'string') return { ok: false, error: `${key} must be string` };
     if (expected === 'string' && value.length > 100) return { ok: false, error: `${key} is too long` };
-    cleaned[key] = value;
+    if (key === 'only') {
+      const projects = String(value).split(',').map((p) => p.trim()).filter(Boolean);
+      for (const p of projects) {
+        if (!PROJECT_ALLOWLIST.has(p)) {
+          return { ok: false, error: `Unknown project in only: ${p}` };
+        }
+      }
+      cleaned[key] = projects.join(',');
+    } else {
+      cleaned[key] = value;
+    }
   }
-  if (spec.realSendGuard && cleaned.test_mode === false) {
-    logEvent({ level: 'warn', type: 'real_send_requested', workflowId });
+  if (spec.realSendGuard && typeof cleaned.test_mode !== 'boolean') {
+    return { ok: false, error: 'test_mode must be boolean' };
   }
   return { ok: true, cleaned };
 }
@@ -154,7 +169,8 @@ app.post('/run', async (req, res) => {
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     logEvent({ level: 'error', type: 'run_error', requestId, error: message });
-    return res.status(500).json({ message: message || 'Internal server error' });
+    // Не утекаем внутренний текст ошибки GitHub клиенту.
+    return res.status(500).json({ message: 'Internal server error' });
   }
 });
 

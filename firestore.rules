@@ -6,8 +6,16 @@ service cloud.firestore {
       return request.auth != null;
     }
 
+    function isEmailVerified() {
+      return isSignedIn() && request.auth.token.email_verified == true;
+    }
+
     function isOwner(uid) {
       return isSignedIn() && request.auth.uid == uid;
+    }
+
+    function hasOnlyFields(data, allowedKeys) {
+      return !Object.keys(data).some((k) => !allowedKeys.has(k));
     }
 
     function validClient(data) {
@@ -30,17 +38,18 @@ service cloud.firestore {
 
     match /clients/{clientId} {
       allow read: if isSignedIn() && resource.data.ownerUid == request.auth.uid;
-      allow create: if isSignedIn() && validClient(request.resource.data);
-      allow update: if isSignedIn()
+      allow create: if isEmailVerified() && validClient(request.resource.data);
+      allow update: if isEmailVerified()
         && resource.data.ownerUid == request.auth.uid
         && validClient(request.resource.data)
-        && request.resource.data.ownerUid == resource.data.ownerUid;
+        && request.resource.data.ownerUid == resource.data.ownerUid
+        && (!('createdAt' in request.resource.data) || request.resource.data.createdAt == resource.data.createdAt || request.resource.data.createdAt is timestamp);
       allow delete: if isSignedIn() && resource.data.ownerUid == request.auth.uid;
     }
 
     match /runLogs/{logId} {
       allow read: if isSignedIn() && resource.data.requestedBy == request.auth.uid;
-      allow create: if isSignedIn()
+      allow create: if isEmailVerified()
         && request.resource.data.requestedBy == request.auth.uid
         && request.resource.data.workflowId is string
         && request.resource.data.workflowId.size() > 0

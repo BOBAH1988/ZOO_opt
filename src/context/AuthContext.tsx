@@ -20,6 +20,7 @@ export interface AuthContextType {
   loading: boolean;
   initialized: boolean;
   firebaseError: string | null;
+  emailVerified: boolean | null;
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
@@ -29,6 +30,7 @@ const AuthContext = createContext<AuthContextType | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
+  const [emailVerified, setEmailVerified] = useState<boolean | null>(null);
   const [loading, setLoading] = useState(true);
   const [initialized, setInitialized] = useState(false);
   const [firebaseError, setFirebaseError] = useState<string | null>(null);
@@ -49,6 +51,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const unsub = onAuthStateChanged(a, (u) => {
       setUser(u);
+      setEmailVerified(u?.emailVerified ?? null);
       setLoading(false);
       setInitialized(true);
     });
@@ -73,7 +76,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   return (
     <AuthContext.Provider
-      value={{ user, loading, initialized, firebaseError, signIn, signUp, signOut: signOutFn }}
+      value={{ user, emailVerified, loading, initialized, firebaseError, signIn, signUp, signOut: signOutFn }}
     >
       {children}
     </AuthContext.Provider>

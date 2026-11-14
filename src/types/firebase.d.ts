@@ -62,17 +62,25 @@ declare module 'firebase/firestore' {
     path: string,
     ...pathComponents: string[]
   ): DocumentReference<T>;
-  export function query(...args: any[]): any;
-  export function where(field: string, op: string, value: any): any;
-  export function orderBy(field: string, direction?: string): any;
+  type WhereFilterOp = '<' | '<=' | '==' | '>=' | '>' | 'array-contains' | 'in' | 'array-contains-any';
+  type OrderByDirection = 'asc' | 'desc';
+
+  export interface QueryConstraint {
+    type: 'where' | 'orderBy' | 'limit' | 'limitToLast' | 'startAt' | 'startAfter' | 'endAt' | 'endBefore';
+  }
+  export interface Query<T = DocumentData> {}
+
+  export function query(ref: CollectionReference | DocumentReference, ...constraints: QueryConstraint[]): Query;
+  export function where(field: string, op: WhereFilterOp, value: any): QueryConstraint;
+  export function orderBy(field: string, direction?: OrderByDirection): QueryConstraint;
   export function onSnapshot(
-    query: any,
+    query: Query,
     next: (snap: QuerySnapshot) => void,
     error?: (err: Error) => void,
   ): () => void;
   export function enableNetwork(db: Firestore): Promise<void>;
-  export function addDoc(ref: any, data: any): Promise<DocumentReference>;
-  export function updateDoc(ref: any, data: any): Promise<void>;
-  export function deleteDoc(ref: any): Promise<void>;
+  export function addDoc(ref: CollectionReference, data: DocumentData): Promise<DocumentReference>;
+  export function updateDoc(ref: DocumentReference, data: Partial<DocumentData>): Promise<void>;
+  export function deleteDoc(ref: DocumentReference): Promise<void>;
   export type DocumentData = Record<string, any>;
 }

@@ -54,7 +54,6 @@ export interface WorkflowScenario {
   time?: string;
   description: string;
   warning: string | null;
-  testModeDefault: boolean;
   inputs: WorkflowInput[];
 }
 

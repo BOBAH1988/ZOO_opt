@@ -150,8 +150,8 @@ export function ReportsPage() {
             manager: typeof data.manager === 'string' && data.manager.trim() ? data.manager.trim() : undefined,
             notes: typeof data.notes === 'string' && data.notes.trim() ? data.notes.trim() : undefined,
             active: typeof data.active === 'boolean' ? data.active : true,
-            createdAt: typeof data.createdAt === 'string' ? data.createdAt : '',
-            updatedAt: typeof data.updatedAt === 'string' ? data.updatedAt : '',
+            createdAt: toIsoString(data.createdAt),
+            updatedAt: toIsoString(data.updatedAt),
             ownerUid: data.ownerUid,
           });
         });

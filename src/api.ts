@@ -126,14 +126,5 @@ export function isApiConfigured(): boolean {
   return Boolean(API_BASE_URL);
 }
 
-// Для отображения в UI; фактический белый список и проверка — на сервере.
-export const ALLOWED_WORKFLOWS: Record<string, { name: string; path: string }> = {
-  kpi_sales: { name: 'KPI Продажи (ручной запуск)', path: '.github/workflows/kpi_sales.yml' },
-  tests: { name: 'Тесты (стенд)', path: '.github/workflows/tests.yml' },
-  weekly_fri: { name: 'Почта пятница', path: '.github/workflows/weekly_fri.yml' },
-  weekly_mon_tue: { name: 'Почта понедельник-вторник', path: '.github/workflows/weekly_mon_tue.yml' },
-  weekly_residues: { name: 'Рекомендации к заказу (понедельник)', path: '.github/workflows/weekly_residues.yml' },
-  weekly_sety_price: { name: 'Прайсы понедельника (сети + ИП Мамедов)', path: '.github/workflows/weekly_sety_price.yml' },
-  weekly_tue: { name: 'Прайс Ухта, счета, платежки', path: '.github/workflows/weekly_tue.yml' },
-  weekly_wed: { name: 'Почта среда', path: '.github/workflows/weekly_wed.yml' },
-};
+// Белый список workflow хранится только на сервере (server/index.js, server/cloudflare/src/index.js).
+//_CLIENT-сторона не хранит дубликат, чтобы списки не расходились.
