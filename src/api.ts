@@ -33,6 +33,8 @@ export interface ApiError extends Error {
   status?: number;
   isNotConfigured?: boolean;
   isUnauthorized?: boolean;
+  /** Код причины ошибки, возвращённый сервером (например 'github_forbidden'). */
+  code?: string;
 }
 
 export class ApiNotConfiguredError extends Error {
@@ -52,6 +54,20 @@ export class ApiUnauthorizedError extends Error {
 }
 
 const REQUEST_TIMEOUT_MS = 30_000;
+
+// Маппинг кодов причин сервера на понятные русские тексты.
+// Коды возвращаются в поле `code` ответа сервера (server/index.js).
+const ERROR_CODE_MAP: Record<string, string> = {
+  github_timeout: 'Сервер не успел дождаться ответа от GitHub. Попробуйте позже.',
+  github_auth_failed: 'Нет прав на запуск workflow в GitHub. Обратитесь к администратору.',
+  github_forbidden: 'Запрос отклонён GitHub (нет прав или workflow не найден). Проверьте токен и имя workflow.',
+  github_not_found: 'Workflow не найден в репозитории. Проверьте имя файла в .github/workflows/.',
+};
+
+/** Переводит технический код ошибки сервера в текст для пользователя. */
+export function mapErrorCode(code?: string): string {
+  return code && code in ERROR_CODE_MAP ? ERROR_CODE_MAP[code] : '';
+}
 
 function fetchWithTimeout(url: string, options: RequestInit, timeoutMs: number = REQUEST_TIMEOUT_MS): Promise<Response> {
   const controller = new AbortController();
@@ -93,14 +109,19 @@ export async function runWorkflow(
 
   if (!response.ok) {
     let detail = `${response.status} ${response.statusText}`;
+    let code: string | undefined;
     try {
-      const body = (await response.json()) as { message?: string; error?: string };
+      const body = (await response.json()) as { message?: string; error?: string; code?: string };
+      code = body.code;
       detail = body.message || body.error || detail;
     } catch {
       // Тело не JSON — оставляем текстовый статус.
     }
-    const err = new Error(`Ошибка сервера: ${detail}`) as ApiError;
+    // Если сервер вернул известный код причины — показываем человекочитаемый текст.
+    const friendly = mapErrorCode(code);
+    const err = new Error(`Ошибка сервера: ${friendly || detail}`) as ApiError;
     err.status = response.status;
+    err.code = code;
     throw err;
   }
 

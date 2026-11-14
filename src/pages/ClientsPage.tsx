@@ -17,55 +17,8 @@ import { db } from '@/firebase';
 import { isFirebaseConfigured } from '@/firebase.config';
 import { useAuth } from '@/context/AuthContext';
 import { EmptyState } from '@/components/EmptyState';
-import { toIsoString } from '@/lib/clientData';
+import { mapClientDoc } from '@/lib/clientData';
 import type { Client, NewClientInput } from '@/types';
-
-interface ClientDoc extends DocumentData {
-  name?: unknown;
-  email?: unknown;
-  phone?: unknown;
-  company?: unknown;
-  address?: unknown;
-  day?: unknown;
-  mode?: unknown;
-  manager?: unknown;
-  notes?: unknown;
-  active?: unknown;
-  title?: unknown;
-  grade?: unknown;
-  createdAt?: unknown;
-  updatedAt?: unknown;
-  ownerUid?: unknown;
-}
-
-function docToClient(snap: QueryDocumentSnapshot<DocumentData>): Client | null {
-  try {
-    const data = snap.data() as ClientDoc;
-    if (typeof data.name !== 'string' || !data.name.trim()) return null;
-    if (typeof data.email !== 'string' || !data.email.trim()) return null;
-    if (typeof data.ownerUid !== 'string' || !data.ownerUid) return null;
-    return {
-      id: snap.id,
-      name: data.name.trim(),
-      email: data.email.trim(),
-      phone: typeof data.phone === 'string' && data.phone.trim() ? data.phone.trim() : undefined,
-      company: typeof data.company === 'string' && data.company.trim() ? data.company.trim() : undefined,
-      address: typeof data.address === 'string' && data.address.trim() ? data.address.trim() : undefined,
-      day: typeof data.day === 'string' && data.day.trim() ? data.day.trim() : undefined,
-      mode: typeof data.mode === 'string' && data.mode.trim() ? data.mode.trim() : undefined,
-      manager: typeof data.manager === 'string' && data.manager.trim() ? data.manager.trim() : undefined,
-      notes: typeof data.notes === 'string' && data.notes.trim() ? data.notes.trim() : undefined,
-      active: typeof data.active === 'boolean' ? data.active : true,
-      title: typeof data.title === 'string' && data.title.trim() ? data.title.trim() : undefined,
-      grade: (data.grade === 'Gold' || data.grade === 'Silver' || data.grade === 'Bronze') ? data.grade : undefined,
-      createdAt: toIsoString(data.createdAt),
-      updatedAt: toIsoString(data.updatedAt),
-      ownerUid: data.ownerUid,
-    };
-  } catch {
-    return null;
-  }
-}
 
 export function ClientsPage() {
   const { user } = useAuth();
@@ -108,7 +61,7 @@ export function ClientsPage() {
         const list: Client[] = [];
         let skipped = 0;
         snapshot.forEach((snap: QueryDocumentSnapshot<DocumentData>) => {
-          const parsed = docToClient(snap);
+          const parsed = mapClientDoc(snap);
           if (parsed) list.push(parsed);
           else skipped += 1;
         });

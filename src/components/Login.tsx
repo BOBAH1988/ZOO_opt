@@ -87,11 +87,7 @@ export function Login({ onLogin }: LoginProps) {
     const normalizedEmail = email.trim().toLowerCase();
     try {
       await signIn(normalizedEmail, password);
-      const user = auth?.currentUser;
-      if (!user?.emailVerified) {
-        setError('Email не подтверждён. Подтвердите почту в Firebase Auth перед входом.');
-        return;
-      }
+      // Если email не подтверждён, App покажет экран подтверждения (VerifyEmail).
       onLogin();
     } catch (err: unknown) {
       setError(formatAuthError(err, 'входа'));
@@ -121,17 +117,15 @@ export function Login({ onLogin }: LoginProps) {
     const normalizedEmail = email.trim().toLowerCase();
     try {
       await signUp(normalizedEmail, password);
+      // После регистрации пользователь уже авторизован, но email не подтверждён:
+      // App покажет экран VerifyEmail с инструкцией и кнопкой повторной отправки.
       if (auth?.currentUser) {
         try {
           await sendEmailVerification(auth.currentUser);
-          setInfo('Аккаунт создан. Письмо для подтверждения email отправлено. Подтвердите почту перед входом.');
         } catch {
-          setInfo('Аккаунт создан. Подтвердите email в настройках аккаунта, если это требуется в вашем проекте.');
+          // Письмо можно запросить повторно с экрана подтверждения.
         }
-      } else {
-        setInfo('Аккаунт создан.');
       }
-      // Не пускаем в приложение без подтверждённого email — ProtectedRoute перенаправит.
     } catch (err: unknown) {
       setError(formatAuthError(err, 'регистрации'));
     } finally {

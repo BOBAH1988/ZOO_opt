@@ -133,6 +133,14 @@ async function authenticate(request, projectId) {
 
 const GITHUB_FETCH_TIMEOUT_MS = 15_000;
 
+// Безопасные коды причин для клиента (внутренний текст GitHub не отдаём).
+function githubErrorCode(status) {
+  if (status === 401) return 'github_auth_failed';
+  if (status === 403) return 'github_forbidden';
+  if (status === 404) return 'github_not_found';
+  return 'github_dispatch_failed';
+}
+
 async function dispatchWorkflow(env, workflow, inputs) {
   const url = `https://api.github.com/repos/${env.GITHUB_OWNER}/${env.GITHUB_REPO}/actions/workflows/${workflow.file}/dispatches`;
   const controller = new AbortController();
@@ -163,8 +171,17 @@ async function dispatchWorkflow(env, workflow, inputs) {
         workflow: workflow.file,
         body: text,
       }));
-      throw new Error(`GitHub rejected the workflow dispatch request (${response.status})`);
+      const err = new Error(`GitHub rejected the workflow dispatch request (${response.status})`);
+      err.code = githubErrorCode(response.status);
+      throw err;
     }
+  } catch (err) {
+    if (err instanceof Error && err.name === 'AbortError') {
+      const timeoutErr = new Error('GitHub request timed out');
+      timeoutErr.code = 'github_timeout';
+      throw timeoutErr;
+    }
+    throw err;
   } finally {
     clearTimeout(timeoutId);
   }
@@ -219,17 +236,19 @@ export default {
 
     const authResult = await authenticate(request, env.FIREBASE_PROJECT_ID);
     if (authResult === 'missing_token') {
-      return jsonResponse({ message: 'Требуется токен авторизации Firebase' }, 401, origin, env);
+      return jsonResponse({ message: 'Требуется токен авторизации Firebase', code: 'missing_token' }, 401, origin, env);
     }
     if (authResult === 'unverified_email') {
-      return jsonResponse({ message: 'Email не подтверждён. Подтвердите почту в Firebase Auth.' }, 403, origin, env);
+      return jsonResponse({ message: 'Email не подтверждён. Подтвердите почту в Firebase Auth.', code: 'unverified_email' }, 403, origin, env);
     }
+    // Истёкший или повреждённый токен — 401: клиенту нужно перелогиниться,
+    // это отличается от «нет прав» (403).
     if (authResult === 'invalid_token' || !authResult) {
-      return jsonResponse({ message: 'Недействительный или истёкший токен Firebase' }, 403, origin, env);
+      return jsonResponse({ message: 'Сессия истекла. Войдите заново.', code: 'invalid_token' }, 401, origin, env);
     }
     const uid = authResult;
     if (!allowedUids.includes(uid)) {
-      return jsonResponse({ message: 'User is not allowed to run workflows' }, 403, origin, env);
+      return jsonResponse({ message: 'User is not allowed to run workflows', code: 'uid_not_allowed' }, 403, origin, env);
     }
 
     let body;
@@ -266,13 +285,22 @@ export default {
       await dispatchWorkflow(env, validation.workflow, validation.inputs);
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to dispatch GitHub Actions workflow';
+      const code = err && typeof err === 'object' && 'code' in err && typeof err.code === 'string'
+        ? err.code
+        : 'github_dispatch_failed';
       console.log(JSON.stringify({
         type: validation.inputs.test_mode === false ? 'real_send_failed' : 'workflow_dispatch_failed',
         uid,
         workflowId: validation.workflowId,
         error: message,
       }));
-      return jsonResponse({ message }, 502, origin, env);
+      // Клиенту — код причины и статус; текст GitHub не отдаём.
+      const status = code === 'github_auth_failed' ? 502
+        : code === 'github_forbidden' ? 502
+        : code === 'github_not_found' ? 502
+        : code === 'github_timeout' ? 504
+        : 502;
+      return jsonResponse({ message: code, code }, status, origin, env);
     }
 
     return jsonResponse({

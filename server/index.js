@@ -119,18 +119,24 @@ app.post('/run', async (req, res) => {
 
     const authHeader = req.headers.authorization || '';
     const match = authHeader.match(/^Bearer (.+)$/);
-    if (!match) return res.status(401).json({ message: 'Missing bearer token' });
+    if (!match) return res.status(401).json({ message: 'Требуется токен авторизации Firebase', code: 'missing_token' });
 
-    const decoded = await admin.auth().verifyIdToken(match[1], true);
+    let decoded;
+    try {
+      decoded = await admin.auth().verifyIdToken(match[1], true);
+    } catch {
+      // Истёкший/повреждённый токен — 401: клиенту нужно перелогиниться.
+      return res.status(401).json({ message: 'Сессия истекла. Войдите заново.', code: 'invalid_token' });
+    }
     const uid = decoded.uid;
     const email = decoded.email || null;
     if (!decoded.email_verified) {
       logEvent({ level: 'warn', type: 'email_not_verified', requestId, uid, email });
-      return res.status(403).json({ message: 'Email не подтверждён. Подтвердите почту в Firebase Auth.' });
+      return res.status(403).json({ message: 'Email не подтверждён. Подтвердите почту в Firebase Auth.', code: 'unverified_email' });
     }
     if (ALLOWED_UIDS.length === 0 || !ALLOWED_UIDS.includes(uid)) {
       logEvent({ level: 'warn', type: 'forbidden_uid', requestId, uid });
-      return res.status(403).json({ message: 'User is not allowed to run workflows' });
+      return res.status(403).json({ message: 'User is not allowed to run workflows', code: 'uid_not_allowed' });
     }
 
     const { workflowId, inputs } = req.body || {};
@@ -171,17 +177,18 @@ app.post('/run', async (req, res) => {
     logEvent({ level: 'error', type: 'run_error', requestId, error: message });
 
     // Безопасные коды причин вместо утечки внутреннего текста GitHub.
+    // Статус — 5xx (проблема на стороне связи с GitHub), причина — в поле code.
     if (err instanceof Error && err.name === 'AbortError') {
       return res.status(504).json({ message: 'github_timeout', code: 'github_timeout' });
     }
     if (/GitHub dispatch failed: 401/.test(message)) {
-      return res.status(401).json({ message: 'github_auth_failed', code: 'github_auth_failed' });
+      return res.status(502).json({ message: 'github_auth_failed', code: 'github_auth_failed' });
     }
     if (/GitHub dispatch failed: 403/.test(message)) {
-      return res.status(403).json({ message: 'github_forbidden', code: 'github_forbidden' });
+      return res.status(502).json({ message: 'github_forbidden', code: 'github_forbidden' });
     }
     if (/GitHub dispatch failed: 404/.test(message)) {
-      return res.status(404).json({ message: 'github_not_found', code: 'github_not_found' });
+      return res.status(502).json({ message: 'github_not_found', code: 'github_not_found' });
     }
     return res.status(500).json({ message: 'Internal server error' });
   }

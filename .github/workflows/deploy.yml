@@ -35,6 +35,12 @@ jobs:
       - name: Lint (typecheck)
         run: npm run lint
 
+      - name: Worker tests
+        run: |
+          cd server/cloudflare
+          npm ci
+          npm test
+
       - name: Load and validate Firebase configuration
         env:
           ZOO_CONFIG: ${{ secrets.ZOO }}

@@ -345,13 +345,14 @@ a, button, [role="button"], input[type="button"], input[type="submit"], label {
   .app { padding-bottom: calc(110px + env(safe-area-inset-bottom)); }
 }
 
-/* Баннер установки PWA для iOS */
+/* Баннер установки PWA для iOS.
+   z-index ниже .dialog-overlay (200), чтобы модальные окна не перекрывались баннером. */
 .pwa-install-banner {
   position: fixed;
   top: max(8px, env(safe-area-inset-top));
   left: 12px;
   right: 12px;
-  z-index: 300;
+  z-index: 140;
   display: flex;
   align-items: center;
   justify-content: space-between;
