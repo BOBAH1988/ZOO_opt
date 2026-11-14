@@ -1,5 +1,6 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
+import { AppLoader } from '@/components/AppLoader';
 import { Layout } from '@/components/Layout';
 import { Login } from '@/components/Login';
 import { VerifyEmail } from '@/components/VerifyEmail';
@@ -14,11 +15,7 @@ export default function App() {
   const { initialized, loading, user, emailVerified } = useAuth();
 
   if (!initialized || loading) {
-    return (
-      <div style={{ padding: 24, fontFamily: 'sans-serif', color: '#6b7280' }}>
-        Инициализация…
-      </div>
-    );
+    return <AppLoader label="Загрузка" />;
   }
 
   // Вошёл, но email не подтверждён — показываем понятный экран вместо приложения.
@@ -34,7 +31,7 @@ export default function App() {
     <div className="app">
       {user ? (
         <Routes>
-          <Route path="/login" element={<Login onLogin={() => {}} />} />
+          <Route path="/login" element={<Login onLogin={() => { }} />} />
           <Route path="/" element={<Navigate to="/reports" replace />} />
           <Route element={<ProtectedRoute />}>
             <Route element={<Layout />}>
@@ -48,7 +45,7 @@ export default function App() {
           <Route path="*" element={<Navigate to="/reports" replace />} />
         </Routes>
       ) : (
-        <Login onLogin={() => {}} />
+        <Login onLogin={() => { }} />
       )}
     </div>
   );
