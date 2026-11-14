@@ -57,14 +57,28 @@ def draw_full(size):
     return img
 
 
-def draw_favicon(size):
+def draw_favicon_base(size=1024):
+    """Крупная лапа почти на всю иконку — для вкладки браузера."""
     radius = int(size * 0.1875)
     img = rounded_square(size, radius, BG)
     draw = ImageDraw.Draw(img)
-    cx = cy = size // 2
+    cx = cy = size / 2
     scale = size / 1024.0
-    draw_paw(draw, cx, cy, scale)
+    pad_rx = 330 * scale
+    pad_ry = 240 * scale
+    pad_cy = cy + 138 * scale
+    draw.ellipse((cx - pad_rx, pad_cy - pad_ry, cx + pad_rx, pad_cy + pad_ry), fill=PAW)
+    toe_r = 125 * scale
+    for dx, dy in ((-280, -170), (-90, -250), (90, -250), (280, -170)):
+        tx = cx + dx * scale
+        ty = cy + dy * scale
+        draw.ellipse((tx - toe_r, ty - toe_r, tx + toe_r, ty + toe_r), fill=PAW)
     return img
+
+
+def draw_favicon(size):
+    """Рендерим в большом размере и уменьшаем — так края остаются гладкими."""
+    return draw_favicon_base(1024).resize((size, size), Image.LANCZOS)
 
 
 def draw_maskable(size):
@@ -97,7 +111,7 @@ def main():
         img.save(os.path.join(out, name))
         print("saved", name, s)
 
-    for s in (32, 48):
+    for s in (16, 32, 48):
         img = draw_favicon(s)
         img.save(os.path.join(out, "favicon-%d.png" % s))
         print("saved", "favicon-%d.png" % s, s)

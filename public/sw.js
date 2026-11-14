@@ -8,12 +8,13 @@
  *  - Персональные данные клиентов, токены и результаты авторизованных запросов — НЕ кэшируются.
  */
 
-const CACHE_NAME = 'zoo-control-shell-v3';
+const CACHE_NAME = 'zoo-control-shell-v4';
 const SHELL_URLS = [
   '/ZOO_opt/',
   '/ZOO_opt/index.html',
   '/ZOO_opt/manifest.json',
   '/ZOO_opt/favicon.svg',
+  '/ZOO_opt/favicon-16.png',
   '/ZOO_opt/favicon-32.png',
   '/ZOO_opt/favicon-48.png',
   '/ZOO_opt/apple-touch-icon.png',

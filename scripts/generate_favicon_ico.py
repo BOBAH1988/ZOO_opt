@@ -3,9 +3,9 @@
 from PIL import Image
 import os
 
-src = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "public", "favicon-32.png"))
+src = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "public", "favicon-48.png"))
 out = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "public", "favicon.ico"))
 
 img = Image.open(src).convert("RGBA")
-img.save(out, format="ICO", sizes=[(32, 32), (48, 48), (64, 64)])
+img.save(out, format="ICO", sizes=[(16, 16), (32, 32), (48, 48)])
 print("saved", out, img.size)

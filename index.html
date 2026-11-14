@@ -1,30 +1,35 @@
 <!doctype html>
 <html lang="ru">
-  <head>
-    <meta charset="UTF-8" />
-    <!-- Адаптивный viewport: безопасная зона для iPhone (вырезы/остров), зум разрешён для доступности -->
-    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=5.0, user-scalable=yes" />
-    <link rel="icon" href="/ZOO_opt/favicon.ico" sizes="any" />
-    <link rel="icon" href="/ZOO_opt/favicon.svg" type="image/svg+xml" sizes="any" />
-    <link rel="icon" href="/ZOO_opt/favicon-32.png" type="image/png" sizes="32x32" />
-    <link rel="icon" href="/ZOO_opt/favicon-48.png" type="image/png" sizes="48x48" />
-    <!-- Крупная иконка для вкладки браузера (ретिना / высокое разрешение) -->
-    <link rel="icon" href="/ZOO_opt/icon-192.png" type="image/png" sizes="192x192" />
-    <link rel="apple-touch-icon" href="/ZOO_opt/apple-touch-icon.png" sizes="180x180" />
-    <link rel="manifest" href="/ZOO_opt/manifest.json" />
-    <!-- PWA / iOS: режим на весь экран, стиль строки состояния, название на главном экране -->
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-    <meta name="apple-mobile-web-app-title" content="ЗооКонтроль" />
-    <meta name="theme-color" content="#0F2A43" />
-    <meta name="description" content="ЗооКонтроль — клиенты, отчёты, KPI, автоматизация" />
-    <title>ЗооКонтроль</title>
-  </head>
-  <body>
-    <noscript>
-      Для работы приложения необходим JavaScript. Пожалуйста, включите его в настройках браузера.
-    </noscript>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
+
+<head>
+  <meta charset="UTF-8" />
+  <!-- Адаптивный viewport: безопасная зона для iPhone (вырезы/остров), зум разрешён для доступности -->
+  <meta name="viewport"
+    content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=5.0, user-scalable=yes" />
+  <link rel="icon" href="/ZOO_opt/favicon.svg?v=2" type="image/svg+xml" sizes="any" />
+  <link rel="icon" href="/ZOO_opt/favicon.ico?v=2" sizes="any" />
+  <link rel="icon" href="/ZOO_opt/favicon-16.png?v=2" type="image/png" sizes="16x16" />
+  <link rel="icon" href="/ZOO_opt/favicon-32.png?v=2" type="image/png" sizes="32x32" />
+  <link rel="icon" href="/ZOO_opt/favicon-48.png?v=2" type="image/png" sizes="48x48" />
+  <!-- Крупная иконка для вкладки браузера (ретिना / высокое разрешение) -->
+  <link rel="icon" href="/ZOO_opt/icon-192.png?v=2" type="image/png" sizes="192x192" />
+  <link rel="apple-touch-icon" href="/ZOO_opt/apple-touch-icon.png" sizes="180x180" />
+  <link rel="manifest" href="/ZOO_opt/manifest.json" />
+  <!-- PWA / iOS: режим на весь экран, стиль строки состояния, название на главном экране -->
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="ЗооКонтроль" />
+  <meta name="theme-color" content="#0F2A43" />
+  <meta name="description" content="ЗооКонтроль — клиенты, отчёты, KPI, автоматизация" />
+  <title>ЗооКонтроль</title>
+</head>
+
+<body>
+  <noscript>
+    Для работы приложения необходим JavaScript. Пожалуйста, включите его в настройках браузера.
+  </noscript>
+  <div id="root"></div>
+  <script type="module" src="/src/main.tsx"></script>
+</body>
+
 </html>

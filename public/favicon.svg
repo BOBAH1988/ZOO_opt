@@ -1,10 +1,11 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+<svg 
+  xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
   <title>ЗоКонтроль</title>
   <desc>Иконка вкладки браузера ЗоКонтроль</desc>
   <rect x="0" y="0" width="1024" height="1024" rx="192" ry="192" fill="#0F2A43"/>
-  <ellipse cx="512" cy="560" rx="150" ry="110" fill="#FFFFFF"/>
-  <circle cx="385" cy="395" r="55" fill="#FFFFFF"/>
-  <circle cx="485" cy="350" r="62" fill="#FFFFFF"/>
-  <circle cx="539" cy="350" r="62" fill="#FFFFFF"/>
-  <circle cx="639" cy="395" r="55" fill="#FFFFFF"/>
+  <ellipse cx="512" cy="650" rx="330" ry="240" fill="#FFFFFF"/>
+  <circle cx="232" cy="342" r="125" fill="#FFFFFF"/>
+  <circle cx="422" cy="262" r="125" fill="#FFFFFF"/>
+  <circle cx="602" cy="262" r="125" fill="#FFFFFF"/>
+  <circle cx="792" cy="342" r="125" fill="#FFFFFF"/>
 </svg>
