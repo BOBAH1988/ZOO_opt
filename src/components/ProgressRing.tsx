@@ -7,7 +7,7 @@ interface ProgressRingProps {
 const VIEWBOX_SIZE = 24;
 
 /** Кольцевой индикатор прогресса (SVG). percent: 0..1 или null (неизвестно). */
-export function ProgressRing({ percent, size = 48, thickness = 4 }: ProgressRingProps) {
+export function ProgressRing({ percent, size = 56, thickness = 3 }: ProgressRingProps) {
   const radius = (VIEWBOX_SIZE - thickness) / 2;
   const circumference = 2 * Math.PI * radius;
   const safePercent = percent === null ? null : Math.max(0, Math.min(1, percent));
