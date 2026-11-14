@@ -6,7 +6,7 @@ import './index.css';
 import { initFirebase } from './firebase';
 import { AuthProvider } from './context/AuthContext';
 
-// Инициализация Firebase (если сконфигурирован).
+// Инициализация Firebase (если сконфигурировано).
 try {
   initFirebase();
 } catch {
