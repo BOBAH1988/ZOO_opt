@@ -29,9 +29,9 @@ export default defineConfig({
   server: {
     port: 5173,
     open: false,
-    origin: 'http://localhost:5173',
-    // HMR: текущий режим `unix-socket` не поддерживается в Vite 5 под Darwin.
-    // Используем явную ip/host-настройку и путь для WebSocket-соединения.
+    // HMR: явная настройка WebSocket для Vite 5 под Darwin.
+    // server.origin убран — он заставлял клиент соединяться с базовым путём
+    // /ZOO_opt/ вместо /__vite_hmr, что вызывало тайм-аут рукопожатия.
     hmr: {
       host: 'localhost',
       port: 5173,
