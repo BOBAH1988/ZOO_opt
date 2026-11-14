@@ -5,6 +5,11 @@ import App from './App';
 import './index.css';
 import { initFirebase } from './firebase';
 import { AuthProvider } from './context/AuthContext';
+import { initPWAInstallCapture } from './lib/pwaInstall';
+
+// Перехватываем событие установки PWA до монтирования React,
+// чтобы не пропустить beforeinstallprompt.
+initPWAInstallCapture();
 
 // Инициализация Firebase (если сконфигурировано).
 try {

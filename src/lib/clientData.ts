@@ -42,18 +42,37 @@ export function formatClientName(name: string, company?: string): string {
 }
 
 /**
- * Сокращает адрес для отображения в маршруте: оставляет часть после первой запятой.
- * Пример: «Ухта, Заводская» → «Заводская». Если запятой нет — возвращает адрес как есть.
+ * Приводит адрес к виду «Город, улица дом».
+ * Поддерживает старый формат с точкой: «Ухта. Заводская 6» → «Ухта, Заводская 6».
  */
-export function formatClientAddress(address?: string): string {
-  const trimmed = (address ?? '').trim();
+export function normalizeAddress(value: string): string {
+  const trimmed = value.trim().replace(/\s+/g, ' ');
   if (!trimmed) return '';
 
-  const commaIndex = trimmed.indexOf(',');
-  if (commaIndex === -1) return trimmed;
+  const parts = trimmed
+    .split(/[,.]/)
+    .map((part) => part.trim())
+    .filter(Boolean);
+  if (parts.length >= 2) {
+    const [city, ...rest] = parts;
+    return `${city}, ${rest.join(' ')}`;
+  }
+  return trimmed;
+}
 
-  const rest = trimmed.slice(commaIndex + 1).trim();
-  return rest || trimmed;
+/**
+ * Адрес для колонки «Адрес» на странице маршрута: только часть после запятой.
+ * Пример: «Ухта, Заводская 6» → «Заводская 6». Если запятой нет — возвращает адрес как есть.
+ */
+export function formatClientAddress(address?: string): string {
+  const normalized = normalizeAddress(address ?? '');
+  if (!normalized) return '';
+
+  const commaIndex = normalized.indexOf(',');
+  if (commaIndex === -1) return normalized;
+
+  const rest = normalized.slice(commaIndex + 1).trim();
+  return rest || normalized;
 }
 
 export function toIsoString(value: unknown): string {
@@ -86,7 +105,7 @@ export function mapClientDoc(snap: QueryDocumentSnapshot<DocumentData>): Client 
       email: data.email.trim(),
       phone: typeof data.phone === 'string' && data.phone.trim() ? data.phone.trim() : undefined,
       company: typeof data.company === 'string' && data.company.trim() ? data.company.trim() : undefined,
-      address: typeof data.address === 'string' && data.address.trim() ? data.address.trim() : undefined,
+      address: typeof data.address === 'string' && data.address.trim() ? normalizeAddress(data.address) : undefined,
       day: typeof data.day === 'string' && data.day.trim() ? data.day.trim() : undefined,
       mode: typeof data.mode === 'string' && data.mode.trim() ? data.mode.trim() : undefined,
       manager: typeof data.manager === 'string' && data.manager.trim() ? data.manager.trim() : undefined,

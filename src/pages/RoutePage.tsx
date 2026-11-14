@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   collection,
   query,
@@ -11,6 +11,7 @@ import {
 import { db } from '@/firebase';
 import { isFirebaseConfigured } from '@/firebase.config';
 import { useAuth } from '@/context/AuthContext';
+import { DialogCloseButton } from '@/components/DialogCloseButton';
 import { EmptyState } from '@/components/EmptyState';
 import { formatClientAddress, formatClientName, mapClientDoc } from '@/lib/clientData';
 import type { Client } from '@/types';
@@ -43,15 +44,103 @@ function formatShortDate(date: Date): string {
   return `${day}.${month}.${year}`;
 }
 
-/** План перед визитом в точку: что сделать и текущий статус. */
-interface VisitPlan {
-  planning: string;
-  status: string;
+/** Статусы пункта чек-листа (в сохранённом плане). */
+type ChecklistStatus = 'planned' | 'in_progress' | 'done';
+
+/** Статус в режиме редактирования: дополнительно «Удалить». */
+type DraftChecklistStatus = ChecklistStatus | 'delete';
+
+/** Пункт чек-листа перед визитом. */
+interface ChecklistItem {
+  id: string;
+  text: string;
+  status: ChecklistStatus;
 }
 
-const EMPTY_PLAN: VisitPlan = { planning: '', status: '' };
+/** Черновик пункта: строки со статусом «Удалить» убираются при сохранении. */
+interface DraftChecklistItem {
+  id: string;
+  text: string;
+  status: DraftChecklistStatus;
+}
+
+/** План перед визитом в точку: чек-лист задач. */
+interface VisitPlan {
+  items: ChecklistItem[];
+}
+
+const STATUS_LABELS: Record<ChecklistStatus, string> = {
+  planned: 'Запланировано',
+  in_progress: 'В процессе',
+  done: 'Выполнено',
+};
 
 const PLAN_STORAGE_PREFIX = 'zoo-route-plans:';
+
+/** Уникальный id пункта чек-листа. */
+function createChecklistId(): string {
+  try {
+    if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+      return crypto.randomUUID();
+    }
+  } catch {
+    // crypto.randomUUID может быть недоступен в старых браузерах
+  }
+  return `item-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+}
+
+/** Создаёт пустой черновик пункта чек-листа. */
+function createDraftItem(): DraftChecklistItem {
+  return { id: createChecklistId(), text: '', status: 'planned' };
+}
+
+/** Приводит статус из старого свободного поля к одному из известных. */
+function normalizeLegacyStatus(value: string): ChecklistStatus {
+  const normalized = value.trim().toLowerCase();
+  if (normalized === 'выполнено' || normalized === 'done') return 'done';
+  if (normalized === 'в процессе' || normalized === 'in_progress') return 'in_progress';
+  return 'planned';
+}
+
+/** Поддерживает новый формат { items } и старый { planning, status }. */
+function normalizePlan(value: unknown): VisitPlan {
+  if (!value || typeof value !== 'object') return { items: [] };
+  const raw = value as Record<string, unknown>;
+
+  if (Array.isArray(raw.items)) {
+    const items = raw.items
+      .map((entry): ChecklistItem | null => {
+        if (!entry || typeof entry !== 'object') return null;
+        const item = entry as Record<string, unknown>;
+        const text = typeof item.text === 'string' ? item.text.trim() : '';
+        if (!text) return null;
+        const status: ChecklistStatus =
+          item.status === 'done' || item.status === 'in_progress' ? item.status : 'planned';
+        return {
+          id: typeof item.id === 'string' && item.id ? item.id : createChecklistId(),
+          text,
+          status,
+        };
+      })
+      .filter((item): item is ChecklistItem => item !== null);
+    return { items };
+  }
+
+  // Совместимость со старым форматом: одна строка «Планирование» + «Статус».
+  const planning = typeof raw.planning === 'string' ? raw.planning.trim() : '';
+  const legacyStatus = typeof raw.status === 'string' ? raw.status.trim() : '';
+  if (!planning && !legacyStatus) return { items: [] };
+
+  return {
+    items: [
+      {
+        id: createChecklistId(),
+        text: planning || legacyStatus,
+        status: normalizeLegacyStatus(legacyStatus),
+      },
+    ],
+  };
+}
 
 function loadPlans(storageKey: string | null): Record<string, VisitPlan> {
   if (!storageKey) return {};
@@ -63,13 +152,8 @@ function loadPlans(storageKey: string | null): Record<string, VisitPlan> {
 
     const normalized: Record<string, VisitPlan> = {};
     Object.entries(parsed as Record<string, unknown>).forEach(([clientId, value]) => {
-      if (value && typeof value === 'object') {
-        const plan = value as Partial<VisitPlan>;
-        normalized[clientId] = {
-          planning: typeof plan.planning === 'string' ? plan.planning : '',
-          status: typeof plan.status === 'string' ? plan.status : '',
-        };
-      }
+      const plan = normalizePlan(value);
+      if (plan.items.length > 0) normalized[clientId] = plan;
     });
     return normalized;
   } catch {
@@ -339,7 +423,9 @@ export function RoutePage() {
   const [sortingDay, setSortingDay] = useState<WeekDay | null>(null);
   const [planClient, setPlanClient] = useState<Client | null>(null);
   const [planEditing, setPlanEditing] = useState(false);
-  const [planDraft, setPlanDraft] = useState<VisitPlan>(EMPTY_PLAN);
+  const [planDraft, setPlanDraft] = useState<DraftChecklistItem[]>([]);
+  const [focusItemId, setFocusItemId] = useState<string | null>(null);
+  const checklistInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
   const toggleVisited = (day: WeekDay, clientId: string) => {
     const key = `${day}:${clientId}`;
@@ -370,36 +456,75 @@ export function RoutePage() {
   const openPlan = (client: Client) => {
     setPlanClient(client);
     setPlanEditing(false);
-    setPlanDraft(plans[client.id] ?? EMPTY_PLAN);
+    setPlanDraft((plans[client.id]?.items ?? []).map((item) => ({ ...item })));
   };
 
   const closePlan = () => {
     setPlanClient(null);
     setPlanEditing(false);
+    setPlanDraft([]);
   };
 
   const startPlanEdit = () => {
     if (!planClient) return;
-    setPlanDraft(plans[planClient.id] ?? EMPTY_PLAN);
+    const existing = plans[planClient.id]?.items ?? [];
+    const draft = existing.length > 0 ? existing.map((item) => ({ ...item })) : [createDraftItem()];
+    setPlanDraft(draft);
     setPlanEditing(true);
+    if (existing.length === 0) setFocusItemId(draft[0].id);
+  };
+
+  // После добавления строки переводим фокус в её поле ввода.
+  useEffect(() => {
+    if (!focusItemId) return;
+    const input = checklistInputRefs.current[focusItemId];
+    if (input) {
+      input.focus();
+      input.scrollIntoView({ block: 'nearest' });
+    }
+    setFocusItemId(null);
+  }, [focusItemId, planDraft]);
+
+  const updateDraftItem = (
+    id: string,
+    patch: Partial<Pick<DraftChecklistItem, 'text' | 'status'>>,
+  ) => {
+    setPlanDraft((prev) => prev.map((item) => (item.id === id ? { ...item, ...patch } : item)));
+  };
+
+  // Enter в строке добавляет новый пункт сразу под текущим.
+  const addDraftItemAfter = (index: number) => {
+    const item = createDraftItem();
+    setPlanDraft((prev) => {
+      const next = [...prev];
+      next.splice(Math.max(index + 1, 0), 0, item);
+      return next;
+    });
+    setFocusItemId(item.id);
   };
 
   const savePlan = () => {
     if (!planClient) return;
-    const nextPlan: VisitPlan = {
-      planning: planDraft.planning.trim(),
-      status: planDraft.status.trim(),
-    };
+    // Строки со статусом «Удалить» и пустые строки не сохраняем.
+    const items = planDraft
+      .filter((item) => item.status !== 'delete')
+      .map((item) => ({
+        id: item.id,
+        text: item.text.trim(),
+        status: item.status as ChecklistStatus,
+      }))
+      .filter((item) => item.text.length > 0);
 
     const next = { ...plans };
-    if (!nextPlan.planning && !nextPlan.status) {
+    if (items.length === 0) {
       delete next[planClient.id];
     } else {
-      next[planClient.id] = nextPlan;
+      next[planClient.id] = { items };
     }
 
     setPlans(next);
     persistPlans(storageKey, next);
+    setPlanDraft(items.map((item) => ({ ...item })));
     setPlanEditing(false);
   };
 
@@ -409,7 +534,7 @@ export function RoutePage() {
     delete next[planClient.id];
     setPlans(next);
     persistPlans(storageKey, next);
-    setPlanDraft(EMPTY_PLAN);
+    setPlanDraft([]);
     setPlanEditing(false);
   };
 
@@ -512,11 +637,10 @@ export function RoutePage() {
     persistOrders(orderStorageKey, next);
   };
 
-  const currentPlan = planClient ? plans[planClient.id] ?? EMPTY_PLAN : EMPTY_PLAN;
-  const shownPlan = planEditing ? planDraft : currentPlan;
-  const hasPlanData = Boolean(
-    currentPlan.planning || currentPlan.status || planDraft.planning || planDraft.status,
-  );
+  const currentItems = planClient ? plans[planClient.id]?.items ?? [] : [];
+  const doneCount = currentItems.filter((item) => item.status === 'done').length;
+  const hasPlanData =
+    currentItems.length > 0 || planDraft.some((item) => item.text.trim().length > 0);
 
   return (
     <div>
@@ -561,66 +685,100 @@ export function RoutePage() {
             className="dialog route-plan-dialog"
             onClick={(event) => event.stopPropagation()}
           >
-            <button
-              type="button"
-              className="route-plan-close"
-              onClick={closePlan}
-              aria-label="Закрыть окно планирования"
-            >
-              <svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                aria-hidden="true"
-                focusable="false"
-              >
-                <path d="M18 6 6 18M6 6l12 12" />
-              </svg>
-            </button>
+            <DialogCloseButton onClick={closePlan} label="Закрыть окно планирования" />
             <div className="dialog-title">{planClient.name}</div>
             <p className="route-plan-subtitle">{planClient.address || 'Адрес не указан'}</p>
 
-            <div className="route-plan-grid">
-              <div className="route-plan-col">
-                <label className="form-label" htmlFor="route-plan-planning">
-                  Планирование
-                </label>
+            <div className="route-plan-section">
+              <div className="route-plan-section-head">
+                <span className="form-label">Планирование задач</span>
                 {planEditing ? (
-                  <textarea
-                    id="route-plan-planning"
-                    className="form-input route-plan-textarea"
-                    value={planDraft.planning}
-                    onChange={(event) =>
-                      setPlanDraft((prev) => ({ ...prev, planning: event.target.value }))
-                    }
-                    placeholder="Что нужно сделать перед визитом"
-                  />
+                  <span className="route-plan-hint">Enter — новая строка</span>
                 ) : (
-                  <div className="route-plan-value">{shownPlan.planning || '—'}</div>
+                  currentItems.length > 0 && (
+                    <span className="route-plan-progress">
+                      Выполнено {doneCount} из {currentItems.length}
+                    </span>
+                  )
                 )}
               </div>
 
-              <div className="route-plan-col">
-                <label className="form-label" htmlFor="route-plan-status">
-                  Статус
-                </label>
-                {planEditing ? (
-                  <textarea
-                    id="route-plan-status"
-                    className="form-input route-plan-textarea"
-                    value={planDraft.status}
-                    onChange={(event) =>
-                      setPlanDraft((prev) => ({ ...prev, status: event.target.value }))
-                    }
-                    placeholder="Статус"
-                  />
-                ) : (
-                  <div className="route-plan-value">{shownPlan.status || '—'}</div>
-                )}
-              </div>
+              {planEditing ? (
+                <>
+                  <div className="route-checklist route-checklist--edit">
+                    {planDraft.map((item, index) => (
+                      <div
+                        key={item.id}
+                        className={`route-checklist-row${item.status === 'delete' ? ' route-checklist-row--deleted' : ''}`}
+                      >
+                        <span className="route-checklist-mark" aria-hidden="true">
+                          {item.status === 'done' ? '✓' : item.status === 'in_progress' ? '◐' : '○'}
+                        </span>
+                        <input
+                          ref={(element) => {
+                            checklistInputRefs.current[item.id] = element;
+                          }}
+                          className="form-input route-checklist-input"
+                          value={item.text}
+                          placeholder={index === 0 ? 'Что нужно сделать перед визитом' : 'Новая строка'}
+                          onChange={(event) => updateDraftItem(item.id, { text: event.target.value })}
+                          onKeyDown={(event) => {
+                            if (event.key === 'Enter') {
+                              event.preventDefault();
+                              addDraftItemAfter(index);
+                            }
+                          }}
+                          aria-label={`Пункт ${index + 1}`}
+                        />
+                        <select
+                          className="form-input route-checklist-status"
+                          value={item.status}
+                          onChange={(event) =>
+                            updateDraftItem(item.id, {
+                              status: event.target.value as DraftChecklistStatus,
+                            })
+                          }
+                          aria-label={`Статус пункта ${index + 1}`}
+                        >
+                          <option value="planned">Запланировано</option>
+                          <option value="in_progress">В процессе</option>
+                          <option value="done">Выполнено</option>
+                          <option value="delete">Удалить</option>
+                        </select>
+                      </div>
+                    ))}
+                  </div>
+                  <button
+                    type="button"
+                    className="btn btn-outline btn-sm route-checklist-add"
+                    onClick={() => addDraftItemAfter(planDraft.length - 1)}
+                  >
+                    + Добавить строку
+                  </button>
+                  <p className="route-plan-hint">
+                    Строки со статусом «Удалить» исчезнут после сохранения.
+                  </p>
+                </>
+              ) : currentItems.length === 0 ? (
+                <div className="route-plan-empty">Пока нет задач</div>
+              ) : (
+                <ul className="route-checklist">
+                  {currentItems.map((item) => (
+                    <li
+                      key={item.id}
+                      className={`route-checklist-item route-checklist-item--${item.status}`}
+                    >
+                      <span className="route-checklist-mark" aria-hidden="true">
+                        {item.status === 'done' ? '✓' : item.status === 'in_progress' ? '◐' : '○'}
+                      </span>
+                      <span className="route-checklist-text">{item.text}</span>
+                      <span className={`route-checklist-badge route-checklist-badge--${item.status}`}>
+                        {STATUS_LABELS[item.status]}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              )}
             </div>
 
             <div className="dialog-actions">

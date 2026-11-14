@@ -16,8 +16,9 @@ import {
 import { db } from '@/firebase';
 import { isFirebaseConfigured } from '@/firebase.config';
 import { useAuth } from '@/context/AuthContext';
+import { DialogCloseButton } from '@/components/DialogCloseButton';
 import { EmptyState } from '@/components/EmptyState';
-import { formatClientName, mapClientDoc } from '@/lib/clientData';
+import { formatClientName, mapClientDoc, normalizeAddress } from '@/lib/clientData';
 import type { Client, NewClientInput } from '@/types';
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
@@ -104,21 +105,6 @@ async function copyToClipboard(text: string): Promise<void> {
   textarea.select();
   document.execCommand('copy');
   document.body.removeChild(textarea);
-}
-
-/** Приводит адрес к виду «Город. улица дом». */
-export function normalizeAddress(value: string): string {
-  const trimmed = value.trim().replace(/\s+/g, ' ');
-  if (!trimmed) return '';
-  const parts = trimmed
-    .split(/[,.]/)
-    .map((part) => part.trim())
-    .filter(Boolean);
-  if (parts.length >= 2) {
-    const [city, ...rest] = parts;
-    return `${city}. ${rest.join(' ')}`;
-  }
-  return trimmed;
 }
 
 /** Формирует текстовое представление карточки клиента для копирования. */
@@ -643,6 +629,7 @@ export function ClientsPage() {
       {editingId && (
         <div className="dialog-overlay" onClick={() => { setEditingId(null); resetForm(); }}>
           <div className="dialog" onClick={(e) => e.stopPropagation()} style={{ maxHeight: '85vh', overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
+            <DialogCloseButton onClick={() => { setEditingId(null); resetForm(); }} label="Закрыть окно клиента" />
             <div className="dialog-title-row">
               <div className="dialog-title">
                 {editingId === 'new' ? 'Новый клиент' : 'Редактирование клиента'}
@@ -690,9 +677,9 @@ export function ClientsPage() {
               </div>
               <div className="form-group">
                 <label className="form-label">Адрес</label>
-                <input className="form-input" placeholder="Город. улица дом"
+                <input className="form-input" placeholder="Город, улица дом"
                   value={form.address ?? ''} onChange={(e) => setForm({ ...form, address: e.target.value })} />
-                <div className="form-hint">Формат: Город. улица дом</div>
+                <div className="form-hint">Формат: Город, улица дом</div>
               </div>
               <div className="form-group">
                 <label className="form-label">Почта</label>
@@ -764,6 +751,7 @@ export function ClientsPage() {
       {viewingClient && (
         <div className="dialog-overlay" onClick={() => setViewingClient(null)}>
           <div className="dialog" onClick={(e) => e.stopPropagation()} style={{ maxHeight: '85vh', overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
+            <DialogCloseButton onClick={() => setViewingClient(null)} label="Закрыть информацию о клиенте" />
             <div className="dialog-title">Клиент</div>
             <div className="dialog-body" style={{ flex: 1, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, fontSize: 13, overflowY: 'auto' }}>
               <div>
@@ -862,6 +850,7 @@ export function ClientsPage() {
       {deleteTarget && (
         <div className="dialog-overlay" onClick={() => { setDeleteTarget(null); setDeleteConfirmed(false); }}>
           <div className="dialog" onClick={(e) => e.stopPropagation()}>
+            <DialogCloseButton onClick={() => { setDeleteTarget(null); setDeleteConfirmed(false); }} label="Закрыть окно удаления" />
             <div className="dialog-title">Удаление клиента</div>
             <div className="dialog-body">
               Вы уверены, что хотите удалить клиента <strong>{deleteTarget.name}</strong>? Это действие нельзя отменить.

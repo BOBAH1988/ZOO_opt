@@ -3,7 +3,24 @@ import { Link, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { Footer } from '@/components/Footer';
 import { PWAInstallPrompt } from '@/components/PWAInstallPrompt';
-import { ClientsIcon, HomeIcon, KpiIcon, RouteIcon, RunIcon } from '@/components/navIcons';
+import { PWAInstallDialog } from '@/components/PWAInstallDialog';
+import {
+  ClientsIcon,
+  HomeIcon,
+  InstallIcon,
+  KpiIcon,
+  MoonIcon,
+  RouteIcon,
+  RunIcon,
+  SunIcon,
+} from '@/components/navIcons';
+import {
+  clearInstallPrompt,
+  getInstallPrompt,
+  isAppInstalled,
+  subscribePWAInstall,
+  type BeforeInstallPromptEvent,
+} from '@/lib/pwaInstall';
 
 type NavItem = { to: string; label: string; icon?: any };
 
@@ -20,6 +37,10 @@ export function Layout() {
   const location = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
   const [accountOpen, setAccountOpen] = useState(false);
+  const [installPromptEvent, setInstallPromptEvent] = useState<BeforeInstallPromptEvent | null>(
+    () => getInstallPrompt(),
+  );
+  const [installDialog, setInstallDialog] = useState<{ installed: boolean } | null>(null);
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
     if (typeof window !== 'undefined') {
       try {
@@ -48,6 +69,8 @@ export function Layout() {
     setAccountOpen(false);
   }, [location.pathname]);
 
+  useEffect(() => subscribePWAInstall(setInstallPromptEvent), []);
+
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       const target = event.target as Node;
@@ -63,6 +86,32 @@ export function Layout() {
   }, []);
 
   const toggleTheme = () => setTheme((t) => (t === 'light' ? 'dark' : 'light'));
+
+  const handleInstall = async () => {
+    setMenuOpen(false);
+
+    if (isAppInstalled()) {
+      setInstallDialog({ installed: true });
+      return;
+    }
+
+    const promptEvent = installPromptEvent ?? getInstallPrompt();
+    if (!promptEvent) {
+      // Браузер не прислал beforeinstallprompt — показываем инструкцию.
+      setInstallDialog({ installed: false });
+      return;
+    }
+
+    try {
+      await promptEvent.prompt();
+      const choice = await promptEvent.userChoice;
+      clearInstallPrompt();
+      setInstallDialog(choice.outcome === 'accepted' ? null : { installed: false });
+    } catch {
+      clearInstallPrompt();
+      setInstallDialog({ installed: false });
+    }
+  };
 
   return (
     <>
@@ -116,8 +165,23 @@ export function Layout() {
                     <span className="menu-item-label">{item.label}</span>
                   </Link>
                 ))}
+                <button
+                  type="button"
+                  className="menu-item menu-install-button"
+                  onClick={handleInstall}
+                >
+                  <span className="menu-item-icon">
+                    <InstallIcon />
+                  </span>
+                  <span className="menu-item-label">Установить</span>
+                </button>
                 <button type="button" className="menu-item menu-theme-toggle" onClick={toggleTheme}>
-                  {theme === 'light' ? 'Темная тема' : 'Светлая тема'}
+                  <span className="menu-item-icon">
+                    {theme === 'light' ? <MoonIcon /> : <SunIcon />}
+                  </span>
+                  <span className="menu-item-label">
+                    {theme === 'light' ? 'Темная тема' : 'Светлая тема'}
+                  </span>
                 </button>
               </div>
             )}
@@ -125,6 +189,11 @@ export function Layout() {
         </div>
       </header>
       <PWAInstallPrompt />
+      <PWAInstallDialog
+        open={installDialog !== null}
+        installed={installDialog?.installed ?? false}
+        onClose={() => setInstallDialog(null)}
+      />
       <main className="main">
         <Outlet />
       </main>

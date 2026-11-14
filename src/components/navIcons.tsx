@@ -59,3 +59,42 @@ export function ClientsIcon({ className }: IconProps) {
         </svg>
     );
 }
+
+/** Установка приложения: стрелка вниз в «поддон». */
+export function InstallIcon({ className }: IconProps) {
+    return (
+        <svg {...baseProps} className={className}>
+            <path d="M11 3h2v9.2l3.1-3.1 1.4 1.4L12 16l-5.5-5.5 1.4-1.4L11 12.2V3Z" />
+            <path d="M4 16h2v3h12v-3h2v5H4v-5Z" />
+        </svg>
+    );
+}
+
+/** Солнце — переключение на светлую тему. */
+export function SunIcon({ className }: IconProps) {
+    return (
+        <svg
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            className={className}
+            aria-hidden="true"
+        >
+            <circle cx="12" cy="12" r="4.2" />
+            <path d="M12 2v2.2M12 19.8V22M2 12h2.2M19.8 12H22M4.9 4.9l1.6 1.6M17.5 17.5l1.6 1.6M4.9 19.1l1.6-1.6M17.5 6.5l1.6-1.6" />
+        </svg>
+    );
+}
+
+/** Луна — переключение на тёмную тему. */
+export function MoonIcon({ className }: IconProps) {
+    return (
+        <svg {...baseProps} className={className}>
+            <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z" />
+        </svg>
+    );
+}

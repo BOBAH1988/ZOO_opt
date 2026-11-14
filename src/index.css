@@ -229,6 +229,18 @@ button:disabled {
   color: #ffffff;
 }
 
+.menu-install-button {
+  width: 100%;
+  text-align: left;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  margin-top: 4px;
+  border-top: 1px solid var(--color-border);
+  border-radius: 0;
+  padding-top: 10px;
+}
+
 .menu-theme-toggle {
   width: 100%;
   text-align: left;
@@ -954,48 +966,6 @@ button:disabled {
   max-width: 640px;
 }
 
-.route-plan-dialog .dialog-title {
-  padding-right: 32px;
-}
-
-.route-plan-close {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
-  min-height: 32px;
-  padding: 0;
-  border: none;
-  border-radius: 999px;
-  background: transparent;
-  color: var(--color-danger);
-  cursor: pointer;
-  transition: background 0.15s ease, color 0.15s ease;
-}
-
-.route-plan-close svg {
-  width: 20px;
-  height: 20px;
-}
-
-.route-plan-close:hover {
-  background: rgba(185, 28, 28, 0.12);
-  color: var(--color-danger);
-}
-
-.route-plan-close:active {
-  background: rgba(185, 28, 28, 0.2);
-}
-
-.route-plan-close:focus-visible {
-  outline: 2px solid var(--color-danger);
-  outline-offset: 2px;
-}
-
 .route-plan-subtitle {
   margin: -8px 0 16px;
   font-size: 13px;
@@ -1003,35 +973,142 @@ button:disabled {
   overflow-wrap: anywhere;
 }
 
-.route-plan-grid {
-  display: grid;
-  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
-  gap: 12px;
+.route-plan-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
   margin-bottom: 20px;
 }
 
-.route-plan-col {
-  min-width: 0;
+.route-plan-section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
 }
 
-.route-plan-value {
-  min-height: 96px;
-  padding: 10px 12px;
+.route-plan-section-head .form-label {
+  margin: 0;
+}
+
+.route-plan-hint {
+  font-size: 11px;
+  color: var(--color-text-secondary);
+}
+
+.route-plan-progress {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+}
+
+.route-plan-empty {
+  padding: 12px;
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius);
+  color: var(--color-text-secondary);
+  font-size: 13px;
+}
+
+/* Чек-лист: режим просмотра */
+.route-checklist {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.route-checklist-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
-  background: var(--color-bg);
-  color: var(--color-text);
+  background: var(--color-surface);
+  font-size: 13px;
+}
+
+.route-checklist-mark {
+  flex: 0 0 18px;
+  width: 18px;
+  text-align: center;
   font-size: 14px;
-  line-height: 1.5;
-  white-space: pre-wrap;
+  line-height: 20px;
+  color: var(--color-text-secondary);
+}
+
+.route-checklist-text {
+  flex: 1;
+  min-width: 0;
   overflow-wrap: anywhere;
 }
 
-.route-plan-textarea {
-  min-height: 96px;
-  resize: vertical;
-  font-family: inherit;
-  line-height: 1.5;
+.route-checklist-item--done .route-checklist-text {
+  color: var(--color-text-secondary);
+  text-decoration: line-through;
+}
+
+.route-checklist-item--done .route-checklist-mark {
+  color: #15803d;
+}
+
+.route-checklist-item--in_progress .route-checklist-mark {
+  color: #b45309;
+}
+
+.route-checklist-badge {
+  flex: 0 0 auto;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--color-bg);
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+}
+
+.route-checklist-badge--in_progress {
+  background: rgba(217, 119, 6, 0.12);
+  color: #b45309;
+}
+
+.route-checklist-badge--done {
+  background: rgba(22, 163, 74, 0.12);
+  color: #15803d;
+}
+
+/* Чек-лист: режим редактирования */
+.route-checklist--edit {
+  gap: 6px;
+}
+
+.route-checklist-row {
+  display: grid;
+  grid-template-columns: 18px minmax(0, 1fr) 150px;
+  gap: 8px;
+  align-items: center;
+}
+
+.route-checklist-row .form-input {
+  min-height: 36px;
+  padding: 6px 10px;
+  font-size: 13px;
+}
+
+.route-checklist-row--deleted {
+  opacity: 0.55;
+}
+
+.route-checklist-row--deleted .route-checklist-input {
+  text-decoration: line-through;
+}
+
+.route-checklist-add {
+  align-self: flex-start;
 }
 
 .route-plan-clear {
@@ -1080,13 +1157,12 @@ button:disabled {
     min-width: 36px;
   }
 
-  .route-plan-grid {
-    grid-template-columns: 1fr;
+  .route-checklist-row {
+    grid-template-columns: 18px minmax(0, 1fr);
   }
 
-  .route-plan-value,
-  .route-plan-textarea {
-    min-height: 72px;
+  .route-checklist-status {
+    grid-column: 2;
   }
 }
 
@@ -1122,6 +1198,7 @@ button:disabled {
 }
 
 .dialog {
+  position: relative;
   background: var(--color-surface);
   border-radius: var(--radius);
   padding: 24px;
@@ -1132,10 +1209,51 @@ button:disabled {
   overflow-wrap: anywhere;
 }
 
+/* Красный крестик закрытия в правом верхнем углу любого диалога. */
+.dialog-close {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  min-height: 32px;
+  padding: 0;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--color-danger);
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.dialog-close svg {
+  width: 20px;
+  height: 20px;
+}
+
+.dialog-close:hover {
+  background: rgba(185, 28, 28, 0.12);
+  color: var(--color-danger);
+}
+
+.dialog-close:active {
+  background: rgba(185, 28, 28, 0.2);
+}
+
+.dialog-close:focus-visible {
+  outline: 2px solid var(--color-danger);
+  outline-offset: 2px;
+}
+
 .dialog-title {
   font-size: 16px;
   font-weight: 600;
   margin: 0 0 12px 0;
+  padding-right: 36px;
 }
 
 .dialog-title-row {
@@ -1144,10 +1262,12 @@ button:disabled {
   justify-content: space-between;
   gap: 12px;
   margin: 0 0 12px 0;
+  padding-right: 36px;
 }
 
 .dialog-title-row .dialog-title {
   margin: 0;
+  padding-right: 0;
 }
 
 .dialog-body {

@@ -5,6 +5,7 @@ import {
   serverTimestamp,
 } from 'firebase/firestore';
 import { runWorkflow, isApiConfigured } from '@/api';
+import { DialogCloseButton } from '@/components/DialogCloseButton';
 import { db } from '@/firebase';
 import { useAuth } from '@/context/AuthContext';
 import type { WorkflowScenario, WorkflowInput } from '@/types';
@@ -590,6 +591,7 @@ export function RunProcessesPage() {
       {confirmOpen && (
         <div className="dialog-overlay" onClick={() => setConfirmOpen(null)}>
           <div className="dialog" onClick={(e) => e.stopPropagation()}>
+            <DialogCloseButton onClick={() => setConfirmOpen(null)} label="Закрыть окно подтверждения" />
             <div className="dialog-title">Точно запустить?</div>
             <div className="dialog-body">
               Вы собираетесь запустить <strong>{confirmOpen.name}</strong>.
@@ -606,24 +608,8 @@ export function RunProcessesPage() {
 
       {settingsOpen && (
         <div className="dialog-overlay" onClick={() => setSettingsOpen(null)}>
-          <div className="dialog" onClick={(e) => e.stopPropagation()} style={{ position: 'relative' }}>
-            <button
-              onClick={() => setSettingsOpen(null)}
-              style={{
-                position: 'absolute',
-                top: 8,
-                right: 8,
-                background: 'transparent',
-                border: 'none',
-                fontSize: 20,
-                color: '#ef4444',
-                cursor: 'pointer',
-                padding: 0,
-                lineHeight: 1,
-              }}
-            >
-              ×
-            </button>
+          <div className="dialog" onClick={(e) => e.stopPropagation()}>
+            <DialogCloseButton onClick={() => setSettingsOpen(null)} label="Закрыть настройки" />
             <div className="dialog-title">Настройка</div>
             <div className="dialog-body">
               <p style={{ fontSize: 13, color: '#6b7280', marginBottom: 16 }}>{settingsOpen.description}</p>
