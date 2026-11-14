@@ -22,6 +22,7 @@ const ALLOWED_WORKFLOWS = {
   weekly_wed: { path: '.github/workflows/weekly_wed.yml', inputs: { test_mode: 'boolean', only: 'string', ignore_window: 'boolean' }, realSendGuard: true },
   weekly_residues: { path: '.github/workflows/weekly_residues.yml', inputs: { test_mode: 'boolean' }, realSendGuard: true },
   weekly_sety_price: { path: '.github/workflows/weekly_sety_price.yml', inputs: { test_mode: 'boolean', skip_if_sent: 'boolean' }, realSendGuard: true },
+  weekly_tue: { path: '.github/workflows/weekly_tue.yml', inputs: { test_mode: 'boolean', only: 'string', ignore_window: 'boolean' }, realSendGuard: true },
 };
 
 function initFirebaseAdmin() {
@@ -96,10 +97,14 @@ app.post('/run', async (req, res) => {
     const match = authHeader.match(/^Bearer (.+)$/);
     if (!match) return res.status(401).json({ message: 'Missing bearer token' });
 
-    const decoded = await admin.auth().verifyIdToken(match[1]);
+    const decoded = await admin.auth().verifyIdToken(match[1], true);
     const uid = decoded.uid;
     const email = decoded.email || null;
-    if (ALLOWED_UIDS.length > 0 && !ALLOWED_UIDS.includes(uid)) {
+    if (!decoded.email_verified) {
+      logEvent({ level: 'warn', type: 'email_not_verified', requestId, uid, email });
+      return res.status(403).json({ message: 'Email не подтверждён. Подтвердите почту в Firebase Auth.' });
+    }
+    if (ALLOWED_UIDS.length === 0 || !ALLOWED_UIDS.includes(uid)) {
       logEvent({ level: 'warn', type: 'forbidden_uid', requestId, uid });
       return res.status(403).json({ message: 'User is not allowed to run workflows' });
     }
@@ -117,8 +122,7 @@ app.post('/run', async (req, res) => {
     if (
       spec.realSendGuard &&
       validation.cleaned.test_mode === false &&
-      REAL_SEND_UIDS.length > 0 &&
-      !REAL_SEND_UIDS.includes(uid)
+      (REAL_SEND_UIDS.length === 0 || !REAL_SEND_UIDS.includes(uid))
     ) {
       logEvent({ level: 'warn', type: 'real_send_forbidden', requestId, uid, workflowId });
       return res.status(403).json({ message: 'Real email sending is not enabled for this account' });

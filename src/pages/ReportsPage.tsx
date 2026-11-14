@@ -75,7 +75,12 @@ export function ReportsPage() {
   }, [tooltip]);
 
   useEffect(() => {
-    if (!isFirebaseConfigured() || !db || !user) {
+    if (!user) {
+      setLogs([]);
+      setLoading(false);
+      return;
+    }
+    if (!isFirebaseConfigured() || !db) {
       setLoading(false);
       return;
     }
@@ -106,7 +111,12 @@ export function ReportsPage() {
   }, [user]);
 
   useEffect(() => {
-    if (!isFirebaseConfigured() || !db || !user) {
+    if (!user) {
+      setClients([]);
+      setClientsLoading(false);
+      return;
+    }
+    if (!isFirebaseConfigured() || !db) {
       setClientsLoading(false);
       return;
     }

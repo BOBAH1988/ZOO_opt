@@ -118,5 +118,6 @@ export const ALLOWED_WORKFLOWS: Record<string, { name: string; path: string }> =
   weekly_mon_tue: { name: 'Почта понедельник-вторник', path: '.github/workflows/weekly_mon_tue.yml' },
   weekly_residues: { name: 'Рекомендации к заказу (понедельник)', path: '.github/workflows/weekly_residues.yml' },
   weekly_sety_price: { name: 'Прайсы понедельника (сети + ИП Мамедов)', path: '.github/workflows/weekly_sety_price.yml' },
+  weekly_tue: { name: 'Прайс Ухта, счета, платежки', path: '.github/workflows/weekly_tue.yml' },
   weekly_wed: { name: 'Почта среда', path: '.github/workflows/weekly_wed.yml' },
 };

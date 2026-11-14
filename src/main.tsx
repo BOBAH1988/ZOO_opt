@@ -9,8 +9,8 @@ import { AuthProvider } from './context/AuthContext';
 // Инициализация Firebase (если сконфигурирован).
 initFirebase();
 
-// Регистрация Service Worker для PWA (только в production-сборке/поддерживаемом окружении).
-if ('serviceWorker' in navigator) {
+// Регистрация Service Worker для PWA (только в production-сборке).
+if ('serviceWorker' in navigator && import.meta.env.PROD) {
   window.addEventListener('load', () => {
     const swUrl = `${import.meta.env.BASE_URL}sw.js`;
     navigator.serviceWorker.register(swUrl).catch(() => {

@@ -84,6 +84,10 @@ export function Login({ onLogin }: LoginProps) {
     setSubmitting(true);
     try {
       await signIn(email, password);
+      const user = auth?.currentUser ?? undefined;
+      if (user && !(user as { emailVerified?: boolean }).emailVerified) {
+        setInfo('Вход выполнен, но email не подтверждён. Проверьте почту и подтвердите аккаунт.');
+      }
       onLogin();
     } catch (err: unknown) {
       setError(formatAuthError(err, 'входа'));
@@ -121,6 +125,10 @@ export function Login({ onLogin }: LoginProps) {
         }
       } else {
         setInfo('Аккаунт создан.');
+      }
+      const newUser = auth?.currentUser ?? undefined;
+      if (newUser && !(newUser as { emailVerified?: boolean }).emailVerified) {
+        setInfo('Email не подтверждён.');
       }
       onLogin();
     } catch (err: unknown) {

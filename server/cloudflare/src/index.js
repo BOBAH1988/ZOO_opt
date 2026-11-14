@@ -32,6 +32,11 @@ export const ALLOWED_WORKFLOWS = {
     inputs: { test_mode: 'boolean', skip_if_sent: 'boolean' },
     realSendGuard: true,
   },
+  weekly_tue: {
+    file: 'weekly_tue.yml',
+    inputs: { test_mode: 'boolean', only: 'string', ignore_window: 'boolean' },
+    realSendGuard: true,
+  },
 };
 
 const MAX_BODY_BYTES = 16 * 1024;

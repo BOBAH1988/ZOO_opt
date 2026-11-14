@@ -16,7 +16,16 @@ service cloud.firestore {
         && data.ownerUid is string && data.ownerUid == request.auth.uid
         && (!('phone' in data) || data.phone == null || (data.phone is string && data.phone.size() <= 50))
         && (!('company' in data) || data.company == null || (data.company is string && data.company.size() <= 200))
-        && (!('notes' in data) || data.notes == null || (data.notes is string && data.notes.size() <= 2000));
+        && (!('notes' in data) || data.notes == null || (data.notes is string && data.notes.size() <= 2000))
+        && (!('address' in data) || data.address == null || (data.address is string && data.address.size() <= 500))
+        && (!('day' in data) || data.day == null || (data.day is string && data.day.size() <= 20))
+        && (!('mode' in data) || data.mode == null || (data.mode is string && data.mode.size() <= 50))
+        && (!('manager' in data) || data.manager == null || (data.manager is string && data.manager.size() <= 100))
+        && (!('active' in data) || data.active == null || data.active is boolean)
+        && (!('title' in data) || data.title == null || (data.title is string && data.title.size() <= 200))
+        && (!('grade' in data) || data.grade == null || (data.grade is string && (data.grade == 'Gold' || data.grade == 'Silver' || data.grade == 'Bronze')))
+        && (!('createdAt' in data) || data.createdAt == null || data.createdAt is timestamp)
+        && (!('updatedAt' in data) || data.updatedAt == null || data.updatedAt is timestamp);
     }
 
     match /clients/{clientId} {
@@ -36,17 +45,22 @@ service cloud.firestore {
         && request.resource.data.workflowId is string
         && request.resource.data.workflowId.size() > 0
         && request.resource.data.workflowId.size() <= 100
+        && request.resource.data.workflowName is string
+        && request.resource.data.workflowName.size() > 0
+        && request.resource.data.workflowName.size() <= 200
         && request.resource.data.status is string
         && (request.resource.data.status == 'accepted' || request.resource.data.status == 'error')
         && request.resource.data.message is string
         && request.resource.data.message.size() > 0
         && request.resource.data.message.size() <= 2000
         && request.resource.data.inputs is map
+        && request.resource.data.createdAt is timestamp
         && (!('runUrl' in request.resource.data)
           || request.resource.data.runUrl == null
           || (request.resource.data.runUrl is string && request.resource.data.runUrl.size() <= 500))
-        && (!('createdAt' in request.resource.data)
-          || request.resource.data.createdAt is timestamp);
+        && (!('requestedByEmail' in request.resource.data)
+          || request.resource.data.requestedByEmail == null
+          || (request.resource.data.requestedByEmail is string && request.resource.data.requestedByEmail.size() <= 320));
       allow update, delete: if false;
     }
 
