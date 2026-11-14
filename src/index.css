@@ -698,12 +698,6 @@ button:disabled {
 }
 
 .footer-nav-btn svg {
-  width: 20px;
-  height: 20px;
-}
-
-/* Иконка play крупнее остальных, чтобы треугольник читался так же заметно */
-.footer-nav-btn svg.footer-play-icon {
   width: 24px;
   height: 24px;
 }
@@ -846,8 +840,8 @@ button:disabled {
   }
 
   .footer-nav-btn svg {
-    width: 20px;
-    height: 20px;
+    width: 24px;
+    height: 24px;
   }
 
   .form-input {
@@ -984,8 +978,8 @@ label {
   }
 
   .footer-nav-btn svg {
-    width: 18px;
-    height: 18px;
+    width: 24px;
+    height: 24px;
   }
 
   .card {
