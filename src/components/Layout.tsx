@@ -3,15 +3,16 @@ import { Link, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { Footer } from '@/components/Footer';
 import { PWAInstallPrompt } from '@/components/PWAInstallPrompt';
+import { ClientsIcon, HomeIcon, KpiIcon, RouteIcon, RunIcon } from '@/components/navIcons';
 
 type NavItem = { to: string; label: string; icon?: any };
 
 const NAV_ITEMS: NavItem[] = [
-  { to: '/reports', label: 'Главная' },
-  { to: '/route', label: 'Маршрут' },
-  { to: '/run', label: 'Запуск' },
-  { to: '/kpi', label: 'KPI' },
-  { to: '/clients', label: 'Клиенты' },
+  { to: '/reports', label: 'Главная', icon: <HomeIcon /> },
+  { to: '/route', label: 'Маршрут', icon: <RouteIcon /> },
+  { to: '/run', label: 'Автозапуск', icon: <RunIcon /> },
+  { to: '/kpi', label: 'KPI задачи', icon: <KpiIcon /> },
+  { to: '/clients', label: 'Клиенты', icon: <ClientsIcon /> },
 ];
 
 export function Layout() {
@@ -111,7 +112,8 @@ export function Layout() {
                     to={item.to}
                     className={`menu-item${location.pathname === item.to ? ' active' : ''}`}
                   >
-                    {item.label ?? <span className="menu-item-icon">{item.icon}</span>}
+                    {item.icon && <span className="menu-item-icon">{item.icon}</span>}
+                    <span className="menu-item-label">{item.label}</span>
                   </Link>
                 ))}
                 <button type="button" className="menu-item menu-theme-toggle" onClick={toggleTheme}>

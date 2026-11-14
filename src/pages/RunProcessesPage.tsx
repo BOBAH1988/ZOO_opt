@@ -411,7 +411,7 @@ export function RunProcessesPage() {
   return (
     <div style={{ position: 'relative' }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-        <h2 className="page-title" style={{ margin: 0 }}>{'Запуск'}</h2>
+        <h2 className="page-title" style={{ margin: 0 }}>{'Автозапуск'}</h2>
         <button
           type="button"
           className="btn btn-outline"

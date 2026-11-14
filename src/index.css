@@ -190,12 +190,33 @@ button:disabled {
 }
 
 .menu-item {
-  display: block;
+  display: flex;
+  align-items: center;
+  gap: 10px;
   padding: 8px 12px;
   border-radius: var(--radius);
   color: var(--color-text);
   text-decoration: none;
   font-weight: 500;
+}
+
+.menu-item-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 18px;
+  width: 18px;
+  height: 18px;
+}
+
+.menu-item-icon svg {
+  display: block;
+  width: 18px;
+  height: 18px;
+}
+
+.menu-item-label {
+  min-width: 0;
 }
 
 .menu-item:hover {
@@ -1139,20 +1160,6 @@ button:disabled {
   text-decoration: none;
   min-height: 30px;
   white-space: nowrap;
-}
-
-.footer-nav-label {
-  min-width: 0;
-  font-weight: 600;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.footer-nav-label--kpi {
-  font-size: 16px;
-  font-weight: 700;
-  line-height: 1;
 }
 
 .footer-nav-btn svg {
