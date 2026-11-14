@@ -4,8 +4,8 @@ import { APP_VERSION_STR } from '@/version';
 type NavItem = { to: string; label?: string; icon?: any };
 
 const NAV_ITEMS: NavItem[] = [
-  { to: '/reports', icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg> },
-  { to: '/route', icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 19V5M12 5l-7 7M12 5l7 7"/></svg> },
+  { to: '/reports', icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /><polyline points="9 22 9 12 15 12 15 22" /></svg> },
+  { to: '/route', icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 19V5M12 5l-7 7M12 5l7 7" /></svg> },
   { to: '/run', label: 'Запуск' },
   { to: '/kpi', label: 'KPI' },
   { to: '/clients', label: 'Клиенты' },
@@ -27,7 +27,11 @@ export function Footer() {
             to={item.to}
             className={`footer-nav-btn${location.pathname === item.to ? ' active' : ''}`}
           >
-            {item.label ?? <span className="menu-item-icon">{item.icon}</span>}
+            {item.label ? (
+              <span className="footer-nav-label">{item.label}</span>
+            ) : (
+              <span className="menu-item-icon">{item.icon}</span>
+            )}
           </Link>
         ))}
       </nav>
