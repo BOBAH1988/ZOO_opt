@@ -579,6 +579,246 @@ button:disabled {
   background: var(--color-bg);
 }
 
+/* ---------- Страница маршрута: блоки по дням недели ---------- */
+.route-day-card {
+  padding: 12px;
+}
+
+.route-day-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.route-day-title {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.route-reset-btn {
+  flex-shrink: 0;
+  min-height: 32px;
+  padding: 4px 14px;
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: 999px;
+  border: 1px solid var(--color-primary);
+  color: var(--color-primary);
+  background: var(--color-surface);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+}
+
+.route-reset-btn:not(:disabled):hover {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: #ffffff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+.route-reset-btn:not(:disabled):active {
+  background: var(--color-primary-hover);
+  border-color: var(--color-primary-hover);
+  transform: scale(0.97);
+  box-shadow: none;
+}
+
+.route-table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.route-col-check {
+  width: 48px;
+  min-width: 48px;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.route-check-icon {
+  display: block;
+  width: 18px;
+  height: 18px;
+  margin: 0 auto;
+  color: var(--color-text-secondary);
+}
+
+.route-checkbox {
+  width: 20px;
+  height: 20px;
+  margin: 0;
+  cursor: pointer;
+  accent-color: var(--color-primary);
+  vertical-align: middle;
+}
+
+.route-col-number {
+  width: 48px;
+  min-width: 48px;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.route-col-client {
+  min-width: 140px;
+  overflow-wrap: anywhere;
+}
+
+.route-col-address {
+  min-width: 160px;
+  overflow-wrap: anywhere;
+}
+
+.route-row-clickable {
+  cursor: pointer;
+}
+
+.route-row-clickable:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: -2px;
+}
+
+/* ---------- Диалог планирования перед визитом ---------- */
+.route-plan-dialog {
+  position: relative;
+  max-width: 640px;
+}
+
+.route-plan-dialog .dialog-title {
+  padding-right: 32px;
+}
+
+.route-plan-close {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  min-height: 32px;
+  padding: 0;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--color-danger);
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.route-plan-close svg {
+  width: 20px;
+  height: 20px;
+}
+
+.route-plan-close:hover {
+  background: rgba(185, 28, 28, 0.12);
+  color: var(--color-danger);
+}
+
+.route-plan-close:active {
+  background: rgba(185, 28, 28, 0.2);
+}
+
+.route-plan-close:focus-visible {
+  outline: 2px solid var(--color-danger);
+  outline-offset: 2px;
+}
+
+.route-plan-subtitle {
+  margin: -8px 0 16px;
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  overflow-wrap: anywhere;
+}
+
+.route-plan-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.route-plan-col {
+  min-width: 0;
+}
+
+.route-plan-value {
+  min-height: 96px;
+  padding: 10px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-size: 14px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.route-plan-textarea {
+  min-height: 96px;
+  resize: vertical;
+  font-family: inherit;
+  line-height: 1.5;
+}
+
+.route-plan-clear {
+  color: var(--color-danger);
+  border-color: var(--color-danger);
+}
+
+.route-plan-clear:not(:disabled):hover {
+  background: rgba(185, 28, 28, 0.08);
+  border-color: var(--color-danger);
+}
+
+@media (max-width: 480px) {
+  .route-day-card {
+    padding: 8px;
+  }
+
+  .route-table th,
+  .route-table td {
+    padding: 8px;
+    font-size: 13px;
+  }
+
+  .route-col-check {
+    width: 40px;
+    min-width: 40px;
+  }
+
+  .route-check-icon {
+    width: 16px;
+    height: 16px;
+  }
+
+  .route-checkbox {
+    width: 18px;
+    height: 18px;
+  }
+
+  .route-col-number {
+    width: 36px;
+    min-width: 36px;
+  }
+
+  .route-plan-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .route-plan-value,
+  .route-plan-textarea {
+    min-height: 72px;
+  }
+}
+
 .badge {
   display: inline-block;
   font-size: 11px;
