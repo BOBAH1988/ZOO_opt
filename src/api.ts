@@ -13,7 +13,8 @@
 import { auth } from '@/firebase';
 
 // Базовый URL серверного API. Настраивается через переменную окружения.
-export const API_BASE_URL: string = import.meta.env.VITE_API_BASE_URL || '';
+// Завершающий слеш удаляется, чтобы избежать двойного //run.
+export const API_BASE_URL: string = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/$/, '');
 
 export interface RunWorkflowRequest {
   workflowId: string;
@@ -96,14 +97,29 @@ export async function runWorkflow(
       const body = (await response.json()) as { message?: string; error?: string };
       detail = body.message || body.error || detail;
     } catch {
-      // ignore
+      // Тело не JSON — оставляем текстовый статус.
     }
     const err = new Error(`Ошибка сервера: ${detail}`) as ApiError;
     err.status = response.status;
     throw err;
   }
 
-  return (await response.json()) as RunWorkflowResponse;
+  let body: RunWorkflowResponse;
+  try {
+    body = (await response.json()) as RunWorkflowResponse;
+  } catch {
+    const err = new Error('Ошибка сервера: неверный формат ответа') as ApiError;
+    err.status = 502;
+    throw err;
+  }
+
+  if (!body.accepted) {
+    const err = new Error(body.message || 'Сервер не принял запрос на запуск') as ApiError;
+    err.status = 400;
+    throw err;
+  }
+
+  return body;
 }
 
 export function isApiConfigured(): boolean {

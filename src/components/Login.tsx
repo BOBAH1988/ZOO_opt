@@ -14,6 +14,7 @@ function formatAuthError(err: unknown, action: 'входа' | 'регистра�
       return base + 'Пользователь с таким email не найден.';
     case 'auth/wrong-password':
     case 'auth/invalid-credential':
+    case 'auth/invalid-login-credentials':
       return base + 'Неверный email или пароль.';
     case 'auth/invalid-email':
       return base + 'Email указан некорректно.';
@@ -51,9 +52,10 @@ const SIGNUP_DISABLED = (import.meta.env.VITE_DISABLE_SIGNUP || '').toLowerCase(
 
 function canRegisterEmail(email: string): boolean {
   const normalized = email.trim().toLowerCase();
-  if (ALLOWED_EMAILS.length > 0) return ALLOWED_EMAILS.includes(normalized);
-  if (ALLOWED_DOMAINS.length > 0) return ALLOWED_DOMAINS.some((d: string) => normalized.endsWith(`@${d}`));
-  return true;
+  if (ALLOWED_EMAILS.length > 0 && ALLOWED_EMAILS.includes(normalized)) return true;
+  if (ALLOWED_DOMAINS.length > 0 && ALLOWED_DOMAINS.some((d: string) => normalized.endsWith(`@${d}`))) return true;
+  if (ALLOWED_EMAILS.length === 0 && ALLOWED_DOMAINS.length === 0) return true;
+  return false;
 }
 
 interface LoginProps {
@@ -82,8 +84,9 @@ export function Login({ onLogin }: LoginProps) {
     setError(null);
     setInfo(null);
     setSubmitting(true);
+    const normalizedEmail = email.trim().toLowerCase();
     try {
-      await signIn(email, password);
+      await signIn(normalizedEmail, password);
       const user = auth?.currentUser ?? undefined;
       if (user && !(user as { emailVerified?: boolean }).emailVerified) {
         setInfo('Вход выполнен, но email не подтверждён. Проверьте почту и подтвердите аккаунт.');
@@ -114,8 +117,9 @@ export function Login({ onLogin }: LoginProps) {
     setError(null);
     setInfo(null);
     setSubmitting(true);
+    const normalizedEmail = email.trim().toLowerCase();
     try {
-      await signUp(email, password);
+      await signUp(normalizedEmail, password);
       if (auth?.currentUser) {
         try {
           await sendEmailVerification(auth.currentUser);

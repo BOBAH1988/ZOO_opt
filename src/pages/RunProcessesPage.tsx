@@ -255,7 +255,8 @@ export function RunProcessesPage() {
   // Закрыть help-меню при клике снаружи
   useEffect(() => {
     const handler = (e: MouseEvent) => {
-      if (helpMenuOpen && !(e.target as Element).closest('.help-menu')) {
+      const target = e.target as Element | null;
+      if (helpMenuOpen && target && !target.closest('.help-menu')) {
         setHelpMenuOpen(false);
       }
     };
@@ -435,7 +436,8 @@ export function RunProcessesPage() {
             borderRadius: 8,
             boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.15), 0 8px 10px -6px rgba(0, 0, 0, 0.1)',
             padding: 12,
-            minWidth: 420,
+            minWidth: 280,
+            maxWidth: '90vw',
             maxHeight: '75vh',
             overflowY: 'auto',
             zIndex: 50,
@@ -561,7 +563,9 @@ export function RunProcessesPage() {
                   <span style={{ minWidth: 0, overflowWrap: 'anywhere' }}>Сбой: {runStatus[scenario.id]?.message}</span>
                   <button
                     onClick={() => {
-                      navigator.clipboard.writeText(runStatus[scenario.id]?.message || '');
+                      void navigator.clipboard.writeText(runStatus[scenario.id]?.message || '').catch(() => {
+                        // Копирование не критично для работы приложения
+                      });
                     }}
                     style={{
                       background: 'transparent',

@@ -4,6 +4,11 @@ const FIREBASE_JWKS = createRemoteJWKSet(
   new URL('https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com'),
 );
 
+// Допустимые значения для поля 'only' ( Projekты рассылки, совпадает с клиентом ).
+const PROJECT_ALLOWLIST = new Set([
+  'order', 'ukhta', 'veta', 'clients', 'payments', 'invoice', 'veles', 'lemur', 'dz', 'sety',
+]);
+
 export const ALLOWED_WORKFLOWS = {
   tests: { file: 'tests.yml', inputs: {} },
   kpi_sales: { file: 'kpi_sales.yml', inputs: {} },
@@ -64,7 +69,17 @@ export function validateWorkflowRequest(body) {
     if (typeof value === 'string' && value.length > 100) {
       return { ok: false, error: `${key} is too long` };
     }
-    cleaned[key] = value;
+    if (key === 'only') {
+      const projects = String(value).split(',').map((p) => p.trim()).filter(Boolean);
+      for (const p of projects) {
+        if (!PROJECT_ALLOWLIST.has(p)) {
+          return { ok: false, error: `Unknown project in only: ${p}` };
+        }
+      }
+      cleaned[key] = projects.join(',');
+    } else {
+      cleaned[key] = value;
+    }
   }
 
   if (workflow.realSendGuard && typeof cleaned.test_mode !== 'boolean') {
@@ -108,6 +123,7 @@ async function authenticate(request, projectId) {
       audience: projectId,
       algorithms: ['RS256'],
     });
+    if (payload.email_verified !== true) return null;
     return typeof payload.sub === 'string' && payload.sub ? payload.sub : null;
   } catch {
     return null;
@@ -152,13 +168,20 @@ export default {
 
     if (request.method === 'OPTIONS') {
       if (origin !== env.APP_ORIGIN) {
-        return new Response(null, { status: 403, headers: corsHeaders(origin, env) });
+        const headers = corsHeaders(origin, env);
+        headers.set('Access-Control-Allow-Origin', origin || '*');
+        return new Response(null, { status: 403, headers });
       }
       return new Response(null, { status: 204, headers: corsHeaders(origin, env) });
     }
 
     if (origin && origin !== env.APP_ORIGIN) {
-      return jsonResponse({ message: 'Origin is not allowed' }, 403, origin, env);
+      const headers = corsHeaders(origin, env);
+      headers.set('Access-Control-Allow-Origin', origin || '*');
+      return new Response(JSON.stringify({ message: 'Origin is not allowed' }), {
+        status: 403,
+        headers: { ...headers, 'Content-Type': 'application/json; charset=utf-8' },
+      });
     }
 
     if (pathname === '/health' && request.method === 'GET') {

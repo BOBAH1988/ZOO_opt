@@ -261,10 +261,16 @@ export function ReportsPage() {
                     {log.createdAt ? (
                       <>
                         <div style={{ fontWeight: 600 }}>
-                          {new Date(log.createdAt).toLocaleDateString('ru-RU')}
+                          {(() => {
+                            const d = new Date(log.createdAt);
+                            return isNaN(d.getTime()) ? '—' : d.toLocaleDateString('ru-RU');
+                          })()}
                         </div>
                         <div style={{ color: '#6b7280', fontSize: 11, marginTop: 2 }}>
-                          {new Date(log.createdAt).toLocaleTimeString('ru-RU')}
+                          {(() => {
+                            const d = new Date(log.createdAt);
+                            return isNaN(d.getTime()) ? '—' : d.toLocaleTimeString('ru-RU');
+                          })()}
                         </div>
                       </>
                     ) : '—'}
@@ -306,7 +312,9 @@ export function ReportsPage() {
                 borderRadius: 6,
                 fontSize: 12,
                 lineHeight: 1.4,
-                whiteSpace: 'nowrap',
+                maxWidth: '60vw',
+                wordBreak: 'break-word',
+                whiteSpace: 'pre-wrap',
                 pointerEvents: 'auto',
                 left: tooltip.left,
                 top: tooltip.top,

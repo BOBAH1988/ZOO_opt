@@ -58,9 +58,13 @@ function validateInputs(workflowId, inputs) {
   return { ok: true, cleaned };
 }
 
+const GITHUB_FETCH_TIMEOUT_MS = 15_000;
+
 async function dispatchWorkflow(workflowId, inputs) {
   const spec = ALLOWED_WORKFLOWS[workflowId];
   const url = `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/actions/workflows/${spec.path}/dispatches`;
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), GITHUB_FETCH_TIMEOUT_MS);
   const res = await fetch(url, {
     method: 'POST',
     headers: {
@@ -71,7 +75,9 @@ async function dispatchWorkflow(workflowId, inputs) {
       'User-Agent': 'zoo-opt-run-api',
     },
     body: JSON.stringify({ ref: 'main', inputs: Object.fromEntries(Object.entries(inputs).map(([k, v]) => [k, String(v)])) }),
+    signal: controller.signal,
   });
+  clearTimeout(timeoutId);
   if (!res.ok) {
     const text = await res.text();
     throw new Error(`GitHub dispatch failed: ${res.status} ${text}`);
@@ -91,7 +97,7 @@ app.post('/run', async (req, res) => {
   const requestId = crypto.randomUUID();
   try {
     initFirebaseAdmin();
-    if (!GITHUB_TOKEN) return res.status(500).json({ message: 'Server is not configured (missing GITHUB_TOKEN)' });
+    if (!GITHUB_TOKEN) return res.status(503).json({ message: 'Server is not configured (missing GITHUB_TOKEN)' });
 
     const authHeader = req.headers.authorization || '';
     const match = authHeader.match(/^Bearer (.+)$/);
@@ -139,8 +145,9 @@ app.post('/run', async (req, res) => {
       runId: null,
     });
   } catch (err) {
-    logEvent({ level: 'error', type: 'run_error', requestId, error: err instanceof Error ? err.message : String(err) });
-    return res.status(500).json({ message: 'Internal server error' });
+    const message = err instanceof Error ? err.message : String(err);
+    logEvent({ level: 'error', type: 'run_error', requestId, error: message });
+    return res.status(500).json({ message: message || 'Internal server error' });
   }
 });
 

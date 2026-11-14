@@ -42,7 +42,9 @@ function isUncacheable(url) {
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(SHELL_URLS)),
+    caches.open(CACHE_NAME).then((cache) => cache.addAll(SHELL_URLS)).catch((err) => {
+      console.error('Service Worker install failed:', err);
+    }),
   );
   self.skipWaiting();
 });
@@ -77,8 +79,10 @@ self.addEventListener('fetch', (event) => {
     event.respondWith(
       fetch(request)
         .then((response) => {
-          const clone = response.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put('/ZOO_opt/index.html', clone));
+          if (response && response.ok) {
+            const clone = response.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put('/ZOO_opt/index.html', clone));
+          }
           return response;
         })
         .catch(() => caches.match('/ZOO_opt/index.html')),
