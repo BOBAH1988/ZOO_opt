@@ -699,7 +699,9 @@ button:disabled {
 }
 
 .footer-nav-label--kpi {
+  font-size: 16px;
   font-weight: 700;
+  line-height: 1;
 }
 
 .footer-nav-btn svg {
