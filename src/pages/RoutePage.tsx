@@ -63,27 +63,69 @@ function persistPlans(storageKey: string | null, plans: Record<string, VisitPlan
   }
 }
 
+const ORDER_STORAGE_PREFIX = 'zoo-route-order:';
+
+/** Порядок клиентов внутри дня: ключ — день недели, значение — id клиентов. */
+type DayOrders = Record<string, string[]>;
+
+function loadOrders(storageKey: string | null): DayOrders {
+  if (!storageKey) return {};
+  try {
+    const raw = window.localStorage.getItem(storageKey);
+    if (!raw) return {};
+    const parsed: unknown = JSON.parse(raw);
+    if (!parsed || typeof parsed !== 'object') return {};
+
+    const normalized: DayOrders = {};
+    Object.entries(parsed as Record<string, unknown>).forEach(([day, value]) => {
+      if (Array.isArray(value)) {
+        normalized[day] = value.filter((id): id is string => typeof id === 'string');
+      }
+    });
+    return normalized;
+  } catch {
+    return {};
+  }
+}
+
+function persistOrders(storageKey: string | null, orders: DayOrders) {
+  if (!storageKey) return;
+  try {
+    window.localStorage.setItem(storageKey, JSON.stringify(orders));
+  } catch {
+    // Игнорируем ошибки хранилища (приватный режим, переполнение квоты).
+  }
+}
+
 interface DayRouteCardProps {
   day: WeekDay;
   clients: Client[];
   visited: Record<string, boolean>;
+  sorting: boolean;
   onToggleVisited: (day: WeekDay, clientId: string) => void;
   onResetVisited: (day: WeekDay) => void;
   onOpenPlan: (client: Client) => void;
+  onToggleSorting: (day: WeekDay) => void;
+  onMoveClient: (day: WeekDay, clientId: string, direction: -1 | 1) => void;
 }
 
 /**
  * Однотипный блок маршрута на день: заголовок + таблица клиентов.
  * Колонка «№» нумеруется по порядку внутри дня, начиная с 1.
+ * В режиме сортировки клиентов можно менять местами стрелками, при этом
+ * нумерация остаётся сквозной и последовательной.
  * Блоки без клиентов не рендерятся (см. RoutePage).
  */
 function DayRouteCard({
   day,
   clients,
   visited,
+  sorting,
   onToggleVisited,
   onResetVisited,
   onOpenPlan,
+  onToggleSorting,
+  onMoveClient,
 }: DayRouteCardProps) {
   const hasVisited = Object.keys(visited).some((key) => key.startsWith(`${day}:`));
 
@@ -91,14 +133,38 @@ function DayRouteCard({
     <section className="card route-day-card">
       <div className="route-day-header">
         <h3 className="route-day-title">{day}</h3>
-        <button
-          type="button"
-          className="btn btn-outline btn-sm route-reset-btn"
-          onClick={() => onResetVisited(day)}
-          disabled={!hasVisited}
-        >
-          Сброс
-        </button>
+        <div className="route-day-actions">
+          <button
+            type="button"
+            className={`route-sort-btn${sorting ? ' is-active' : ''}`}
+            onClick={() => onToggleSorting(day)}
+            aria-pressed={sorting}
+            title={sorting ? 'Завершить сортировку' : 'Изменить порядок клиентов'}
+            aria-label={sorting ? 'Завершить сортировку' : 'Изменить порядок клиентов'}
+          >
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+              focusable="false"
+            >
+              <path d="M8 20V4M5 7l3-3 3 3" />
+              <path d="M16 4v16M13 17l3 3 3-3" />
+            </svg>
+          </button>
+          <button
+            type="button"
+            className="btn btn-outline btn-sm route-reset-btn"
+            onClick={() => onResetVisited(day)}
+            disabled={!hasVisited}
+          >
+            Сброс
+          </button>
+        </div>
       </div>
       <div className="route-table-wrapper">
         <table className="table route-table">
@@ -122,6 +188,7 @@ function DayRouteCard({
               <th className="route-col-number">№</th>
               <th className="route-col-client">Клиент</th>
               <th className="route-col-address">Адрес</th>
+              {sorting && <th className="route-col-order">Порядок</th>}
             </tr>
           </thead>
           <tbody>
@@ -130,15 +197,19 @@ function DayRouteCard({
               return (
                 <tr
                   key={client.id}
-                  className="route-row-clickable"
-                  tabIndex={0}
-                  onClick={() => onOpenPlan(client)}
-                  onKeyDown={(event) => {
-                    if (event.key === 'Enter' || event.key === ' ') {
-                      event.preventDefault();
-                      onOpenPlan(client);
-                    }
-                  }}
+                  className={sorting ? 'route-row-sorting' : 'route-row-clickable'}
+                  tabIndex={sorting ? undefined : 0}
+                  onClick={sorting ? undefined : () => onOpenPlan(client)}
+                  onKeyDown={
+                    sorting
+                      ? undefined
+                      : (event) => {
+                        if (event.key === 'Enter' || event.key === ' ') {
+                          event.preventDefault();
+                          onOpenPlan(client);
+                        }
+                      }
+                  }
                 >
                   <td className="route-col-check">
                     <input
@@ -157,6 +228,60 @@ function DayRouteCard({
                   <td className="route-col-address">
                     {formatClientAddress(client.address) || '—'}
                   </td>
+                  {sorting && (
+                    <td className="route-col-order">
+                      <div className="route-move-buttons">
+                        <button
+                          type="button"
+                          className="route-move-btn"
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            onMoveClient(day, client.id, -1);
+                          }}
+                          disabled={index === 0}
+                          title="Переместить выше"
+                          aria-label={`Переместить выше: ${client.name}`}
+                        >
+                          <svg
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            aria-hidden="true"
+                            focusable="false"
+                          >
+                            <path d="m18 15-6-6-6 6" />
+                          </svg>
+                        </button>
+                        <button
+                          type="button"
+                          className="route-move-btn"
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            onMoveClient(day, client.id, 1);
+                          }}
+                          disabled={index === clients.length - 1}
+                          title="Переместить ниже"
+                          aria-label={`Переместить ниже: ${client.name}`}
+                        >
+                          <svg
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            aria-hidden="true"
+                            focusable="false"
+                          >
+                            <path d="m6 9 6 6 6-6" />
+                          </svg>
+                        </button>
+                      </div>
+                    </td>
+                  )}
                 </tr>
               );
             })}
@@ -179,6 +304,11 @@ export function RoutePage() {
   const [plans, setPlans] = useState<Record<string, VisitPlan>>(() =>
     loadPlans(storageKey),
   );
+  // Пользовательский порядок клиентов внутри дня недели.
+  const orderStorageKey = user ? `${ORDER_STORAGE_PREFIX}${user.uid}` : null;
+  const [orders, setOrders] = useState<DayOrders>(() => loadOrders(orderStorageKey));
+  // День, для которого включён режим изменения порядка клиентов.
+  const [sortingDay, setSortingDay] = useState<WeekDay | null>(null);
   const [planClient, setPlanClient] = useState<Client | null>(null);
   const [planEditing, setPlanEditing] = useState(false);
   const [planDraft, setPlanDraft] = useState<VisitPlan>(EMPTY_PLAN);
@@ -203,6 +333,11 @@ export function RoutePage() {
   useEffect(() => {
     setPlans(loadPlans(storageKey));
   }, [storageKey]);
+
+  // При смене пользователя подгружаем сохранённый порядок клиентов.
+  useEffect(() => {
+    setOrders(loadOrders(orderStorageKey));
+  }, [orderStorageKey]);
 
   const openPlan = (client: Client) => {
     setPlanClient(client);
@@ -308,11 +443,46 @@ export function RoutePage() {
       }
     });
 
+    // Применяем сохранённый пользователем порядок; новых клиентов
+    // добавляем в конец списка.
+    WEEK_DAYS.forEach((day) => {
+      const order = orders[day];
+      if (!order || order.length === 0) return;
+
+      const positions = new Map(order.map((id, index) => [id, index]));
+      grouped[day].sort((a, b) => {
+        const posA = positions.get(a.id);
+        const posB = positions.get(b.id);
+        if (posA === undefined && posB === undefined) return 0;
+        if (posA === undefined) return 1;
+        if (posB === undefined) return -1;
+        return posA - posB;
+      });
+    });
+
     return grouped;
-  }, [clients]);
+  }, [clients, orders]);
 
   // Показываем только дни, в которых есть клиенты.
   const daysWithClients = WEEK_DAYS.filter((day) => clientsByDay[day].length > 0);
+
+  // Включает/выключает режим изменения порядка клиентов выбранного дня.
+  const toggleSorting = (day: WeekDay) => {
+    setSortingDay((prev) => (prev === day ? null : day));
+  };
+
+  // Меняет клиента местами с соседом сверху (-1) или снизу (1).
+  const moveClient = (day: WeekDay, clientId: string, direction: -1 | 1) => {
+    const ids = clientsByDay[day].map((client) => client.id);
+    const index = ids.indexOf(clientId);
+    const target = index + direction;
+    if (index < 0 || target < 0 || target >= ids.length) return;
+
+    [ids[index], ids[target]] = [ids[target], ids[index]];
+    const next: DayOrders = { ...orders, [day]: ids };
+    setOrders(next);
+    persistOrders(orderStorageKey, next);
+  };
 
   const currentPlan = planClient ? plans[planClient.id] ?? EMPTY_PLAN : EMPTY_PLAN;
   const shownPlan = planEditing ? planDraft : currentPlan;
@@ -346,9 +516,12 @@ export function RoutePage() {
             day={day}
             clients={clientsByDay[day]}
             visited={visited}
+            sorting={sortingDay === day}
             onToggleVisited={toggleVisited}
             onResetVisited={resetVisited}
             onOpenPlan={openPlan}
+            onToggleSorting={toggleSorting}
+            onMoveClient={moveClient}
           />
         ))
       )}

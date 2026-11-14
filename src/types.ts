@@ -53,7 +53,7 @@ export interface WorkflowScenario {
   day: string;
   time?: string;
   description: string;
-  warning: string | null;
+  warning?: string | null;
   inputs: WorkflowInput[];
 }
 

@@ -1,8 +1,8 @@
 :root {
   --color-bg: #f7f9fb;
   --color-surface: #ffffff;
-  --color-primary: #4a7c94;
-  --color-primary-hover: #3d6b7f;
+  --color-primary: #3f6f84;
+  --color-primary-hover: #345c6e;
   --color-text: #1f2937;
   --color-text-secondary: #6b7280;
   --color-border: #e5e7eb;
@@ -13,15 +13,15 @@
   --color-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
   --radius: 8px;
   /* Экран загрузки: свечение и «дорожка» индикатора подстраиваются под тему */
-  --loader-glow: rgba(74, 124, 148, 0.22);
-  --loader-track: rgba(74, 124, 148, 0.18);
+  --loader-glow: rgba(63, 111, 132, 0.22);
+  --loader-track: rgba(63, 111, 132, 0.18);
 }
 
 [data-theme="dark"] {
   --color-bg: #0f172a;
   --color-surface: #1e293b;
-  --color-primary: #38bdf8;
-  --color-primary-hover: #0ea5e9;
+  --color-primary: #2f7f9e;
+  --color-primary-hover: #276b86;
   --color-text: #e5e7eb;
   --color-text-secondary: #9ca3af;
   --color-border: #334155;
@@ -30,8 +30,8 @@
   --color-warning: #fbbf24;
   --color-info: #60a5fa;
   --color-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
-  --loader-glow: rgba(56, 189, 248, 0.2);
-  --loader-track: rgba(56, 189, 248, 0.2);
+  --loader-glow: rgba(47, 127, 158, 0.2);
+  --loader-track: rgba(47, 127, 158, 0.2);
 }
 
 * {
@@ -170,7 +170,7 @@ button:disabled {
 
 .menu-button:focus-visible {
   outline: none;
-  box-shadow: 0 0 0 3px rgba(74, 124, 148, 0.35);
+  box-shadow: 0 0 0 3px rgba(63, 111, 132, 0.35);
 }
 
 .menu-dropdown {
@@ -284,7 +284,7 @@ button:disabled {
 
 .btn:focus-visible {
   outline: none;
-  box-shadow: 0 0 0 3px rgba(74, 124, 148, 0.35);
+  box-shadow: 0 0 0 3px rgba(63, 111, 132, 0.35);
 }
 
 .btn:disabled {
@@ -548,6 +548,60 @@ button:disabled {
   margin-top: 4px;
 }
 
+.input-with-action {
+  display: flex;
+  align-items: stretch;
+  gap: 6px;
+}
+
+.input-with-action .form-input {
+  flex: 1;
+  min-width: 0;
+}
+
+.copy-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  min-width: 38px;
+  padding: 0;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
+}
+
+.copy-btn:hover:not(:disabled) {
+  color: var(--color-primary);
+  border-color: var(--color-primary);
+  background: var(--color-bg);
+}
+
+.copy-btn:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.copy-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.copy-btn.copied {
+  color: var(--color-success);
+  border-color: var(--color-success);
+}
+
+.copy-btn--title {
+  width: 32px;
+  min-width: 32px;
+  height: 32px;
+  margin-left: auto;
+}
+
 .form-checkbox {
   display: flex;
   align-items: center;
@@ -631,6 +685,61 @@ button:disabled {
   box-shadow: none;
 }
 
+.route-day-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.route-sort-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  min-height: 32px;
+  padding: 0;
+  flex-shrink: 0;
+  border-radius: 999px;
+  border: 1px solid var(--color-primary);
+  color: var(--color-primary);
+  background: var(--color-surface);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.route-sort-btn svg {
+  width: 18px;
+  height: 18px;
+}
+
+.route-sort-btn:hover {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: #ffffff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+.route-sort-btn:active {
+  background: var(--color-primary-hover);
+  border-color: var(--color-primary-hover);
+  transform: scale(0.97);
+  box-shadow: none;
+}
+
+.route-sort-btn.is-active {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: #ffffff;
+}
+
+.route-sort-btn:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
 .route-table-wrapper {
   width: 100%;
   overflow-x: auto;
@@ -685,6 +794,64 @@ button:disabled {
 .route-row-clickable:focus-visible {
   outline: 2px solid var(--color-primary);
   outline-offset: -2px;
+}
+
+.route-row-sorting {
+  cursor: default;
+}
+
+.route-col-order {
+  width: 84px;
+  min-width: 84px;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.route-move-buttons {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.route-move-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  min-height: 28px;
+  padding: 0;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
+}
+
+.route-move-btn svg {
+  width: 16px;
+  height: 16px;
+}
+
+.route-move-btn:not(:disabled):hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+  background: var(--color-bg);
+}
+
+.route-move-btn:not(:disabled):active {
+  transform: scale(0.95);
+}
+
+.route-move-btn:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.route-move-btn:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
 }
 
 /* ---------- Диалог планирования перед визитом ---------- */
@@ -799,6 +966,11 @@ button:disabled {
     min-width: 40px;
   }
 
+  .route-col-order {
+    width: 72px;
+    min-width: 72px;
+  }
+
   .route-check-icon {
     width: 16px;
     height: 16px;
@@ -870,6 +1042,18 @@ button:disabled {
   font-size: 16px;
   font-weight: 600;
   margin: 0 0 12px 0;
+}
+
+.dialog-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0 0 12px 0;
+}
+
+.dialog-title-row .dialog-title {
+  margin: 0;
 }
 
 .dialog-body {
@@ -1016,7 +1200,7 @@ button:disabled {
 
 .footer-nav-btn:focus-visible {
   outline: none;
-  box-shadow: 0 0 0 3px rgba(74, 124, 148, 0.35);
+  box-shadow: 0 0 0 3px rgba(63, 111, 132, 0.35);
 }
 
 .footer-nav-btn.active {

@@ -29,9 +29,8 @@ const SCENARIOS: WorkflowScenario[] = [
     day: 'пн',
     time: '9:00',
     description: 'Группа понедельник–вторник. Лемур (Прусакова): проверка письма от zookingdom@mail.ru с прайсом, конвертация .xls→.xlsx, раскраска и рассылка клиентам. Ухта: проверка прайса, конвертация, удаление строк «Мит Гарден», рассылка. Заказ Прусакова оператору: пересылка заказов от zoo2017ukhta@yandex.ru на zookingdom@mail.ru. Дебиторка Ухта: разбор файла задолженности, отчёт по просрочкам. Счета клиентам по списку: пересылка Excel-вложений получателям по ключам тем. Платёжки клиентов оператору: пересылка вложений Excel/PDF от 4 клиентов оператору zookingdom@mail.ru.',
-    warning: 'Реальная рассылка клиентам. Тестовый режим включён по умолчанию.',
     inputs: [
-      { key: 'test_mode', label: 'Тестовый режим (только вам, не клиентам)', type: 'boolean', defaultValue: true, description: '', required: false },
+      { key: 'test_mode', label: 'Тестовый режим (только вам, не клиентам)', type: 'boolean', defaultValue: false, description: '', required: false },
       { key: 'only', label: 'Проекты для запуска', type: 'multiselect', defaultValue: [], description: 'Пусто = вся группа', required: false, options: PROJECT_OPTIONS },
       { key: 'ignore_window', label: 'Игнорировать время и день недели', type: 'boolean', defaultValue: true, description: '', required: false },
     ],
@@ -42,9 +41,8 @@ const SCENARIOS: WorkflowScenario[] = [
     day: 'пн',
     time: '10:00',
     description: 'Проект 13. Сверяет полный прайс с остатком на складе и продажами за три месяца, собирает список того, что заказать. Считает автоматически и показывает только проверяемые цифры. Запускает пакет residues и присылает результат на почту.',
-    warning: 'Реальная рассылка на почту. Тестовый режим включён по умолчанию.',
     inputs: [
-      { key: 'test_mode', label: 'Тестовый режим (только вам)', type: 'boolean', defaultValue: true, description: '', required: false },
+      { key: 'test_mode', label: 'Тестовый режим (только вам)', type: 'boolean', defaultValue: false, description: '', required: false },
     ],
   },
   {
@@ -53,9 +51,8 @@ const SCENARIOS: WorkflowScenario[] = [
     day: 'пн',
     time: '9:00',
     description: 'Проект 3 (Сети Ухта). Рассылка готового файла прайса по списку получателей (scripts/recipients_sety_ukhta.txt). Файл прайса хранится в репозитории и заменяется вручную. Защита от дубля: не отправляет тот же файл повторно в день. Тестовый режим — письмо только вам, тема с префиксом [ТЕСТ].',
-    warning: 'Реальная рассылка прайса получателям списка. Тестовый режим включён по умолчанию.',
     inputs: [
-      { key: 'test_mode', label: 'Тестовый режим (только вам, не сетям)', type: 'boolean', defaultValue: true, description: '', required: false },
+      { key: 'test_mode', label: 'Тестовый режим (только вам, не сетям)', type: 'boolean', defaultValue: false, description: '', required: false },
       { key: 'skip_if_sent', label: 'Не дублировать рассылку', type: 'boolean', defaultValue: true, description: '', required: false },
     ],
   },
@@ -65,9 +62,8 @@ const SCENARIOS: WorkflowScenario[] = [
     day: 'вт',
     time: '9:00',
     description: 'Группа вторник. Прайс Ухта: проверка, конвертация, раскраска и рассылка клиентам. Счета клиентам по списку: пересылка Excel-вложений получателям по ключам тем. Платёжки клиентов оператору: пересылка вложений Excel/PDF от 4 клиентов оператору zookingdom@mail.ru.',
-    warning: 'Реальная рассылка клиентам и оператору. Тестовый режим включён по умолчанию.',
     inputs: [
-      { key: 'test_mode', label: 'Тестовый режим (только вам, не клиентам)', type: 'boolean', defaultValue: true, description: '', required: false },
+      { key: 'test_mode', label: 'Тестовый режим (только вам, не клиентам)', type: 'boolean', defaultValue: false, description: '', required: false },
       { key: 'only', label: 'Проекты для запуска', type: 'multiselect', defaultValue: [], description: 'Пусто = вся группа', required: false, options: PROJECT_OPTIONS },
       { key: 'ignore_window', label: 'Игнорировать время и день недели', type: 'boolean', defaultValue: true, description: '', required: false },
     ],
@@ -78,13 +74,14 @@ const SCENARIOS: WorkflowScenario[] = [
     day: 'ср',
     time: '14:00',
     description: 'Группа среда. Счёт Прусакова клиенту: поиск непрочитанного письма от zookingdom@mail.ru с темой «Прусакова», пересылка всех Excel-вложений клиенту zoo2017ukhta@yandex.ru, автоотправка только с 13:00 до 14:30. Счета в Велес: пересылка писем от a_tarakashkin@mail.ru с Excel-вложениями получателю iruya@mail.ru.',
-    warning: 'Реальная пересылка писем и счетов получателей. Тестовый режим включён по умолчанию.',
     inputs: [
-      { key: 'test_mode', label: 'Тестовый режим (только вам, не клиентам)', type: 'boolean', defaultValue: true, description: '', required: false },
-      { key: 'only', label: 'Проекты для запуска', type: 'multiselect', defaultValue: [], description: 'Пусто = вся группа', required: false, options: [
-        { label: 'счёт Прусакова клиенту', value: 'prusakova' },
-        { label: 'счета в Велес', value: 'veles' },
-      ] },
+      { key: 'test_mode', label: 'Тестовый режим (только вам, не клиентам)', type: 'boolean', defaultValue: false, description: '', required: false },
+      {
+        key: 'only', label: 'Проекты для запуска', type: 'multiselect', defaultValue: [], description: 'Пусто = вся группа', required: false, options: [
+          { label: 'счёт Прусакова клиенту', value: 'prusakova' },
+          { label: 'счета в Велес', value: 'veles' },
+        ]
+      },
       { key: 'ignore_window', label: 'Игнорировать время и день недели', type: 'boolean', defaultValue: true, description: '', required: false },
     ],
   },
@@ -94,9 +91,8 @@ const SCENARIOS: WorkflowScenario[] = [
     day: 'пт',
     time: '9:00',
     description: 'Группа пятница. Лемур (Прусакова): проверка письма от zookingdom@mail.ru с прайсом, конвертация, раскраска и рассылка клиентам. Дебиторка / ДЗ: проверка письма от yuriy.novikov1980@mail.ru с темой «ДЗ» и Excel-вложением, поиск совпадений по списку клиентов, ответ о задолженности или уведомление «У моих клиентов нет такой задолженности».',
-    warning: 'Реальная рассылка клиентам и ответы по дебиторке. Тестовый режим включён по умолчанию.',
     inputs: [
-      { key: 'test_mode', label: 'Тестовый режим (только вам, не клиентам)', type: 'boolean', defaultValue: true, description: '', required: false },
+      { key: 'test_mode', label: 'Тестовый режим (только вам, не клиентам)', type: 'boolean', defaultValue: false, description: '', required: false },
       { key: 'only', label: 'Проекты для запуска', type: 'multiselect', defaultValue: [], description: 'Пусто = вся группа', required: false, options: PROJECT_OPTIONS },
       { key: 'ignore_window', label: 'Игнорировать время и день недели', type: 'boolean', defaultValue: true, description: '', required: false },
     ],
@@ -106,7 +102,6 @@ const SCENARIOS: WorkflowScenario[] = [
     name: 'KPI Продажи',
     day: '',
     description: 'Проект 12. Личный мотивационный отчёт Владимира Соколова (Ухта) по выполнению плана направлений. Разбирает файл «Проекция объема продаж.xlsx», считает достижение ступеней мотивации, начисления и проекцию. Письмо с темой «Выполнение KPI» уходит только на NOTIFY_EMAIL.',
-    warning: 'Реальное письмо на NOTIFY_EMAIL.',
     inputs: [],
   },
 ];
@@ -194,7 +189,7 @@ const ALL_SCRIPTS = [
 
 type InputValues = Record<string, Record<string, boolean | string | string[]>>;
 
-const SETTINGS_VERSION = 3;
+const SETTINGS_VERSION = 4;
 const STORAGE_KEY = 'zoo-opt-run-settings';
 
 function defaultInputs(scenario: WorkflowScenario): Record<string, boolean | string | string[]> {
@@ -399,30 +394,23 @@ export function RunProcessesPage() {
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
         <h2 className="page-title" style={{ margin: 0 }}>{'Запуск'}</h2>
         <button
+          type="button"
+          className="btn btn-primary"
           onClick={() => setHelpMenuOpen((prev) => !prev)}
+          title="Справка по запускам"
+          aria-label="Справка по запускам"
           style={{
-            background: 'transparent',
-            border: '1px solid #94a3b8',
-            borderRadius: 6,
             width: 36,
             height: 36,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            cursor: 'pointer',
-            fontSize: 22,
+            minHeight: 0,
+            padding: 0,
+            borderRadius: 6,
+            fontSize: 20,
             fontWeight: 700,
-            color: '#64748b',
             lineHeight: 1,
           }}
-          onMouseEnter={(e) => {
-            const isDark = typeof document !== 'undefined' && document.documentElement.getAttribute('data-theme') === 'dark';
-            e.currentTarget.style.background = isDark ? '#1e3a5f' : '#f8fafc';
-            e.currentTarget.style.color = isDark ? '#ffffff' : '#475569';
-          }}
-          onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#64748b'; }}
         >
-          ❓
+          ?
         </button>
       </div>
 
@@ -554,11 +542,6 @@ export function RunProcessesPage() {
                 ⚙️
               </button>
 
-              {scenario.warning && (
-                <div style={{ gridColumn: '1 / -1', padding: 4, background: '#fbf4e3', borderRadius: 6, fontSize: 11, color: '#92400e', overflowWrap: 'anywhere', wordBreak: 'break-word' }}>
-                  ⚠️ {scenario.warning}
-                </div>
-              )}
               {runStatus[scenario.id]?.status === 'error' && (
                 <div style={{ gridColumn: '1 / -1', display: 'flex', alignItems: 'center', gap: 6, padding: 6, background: '#fee2e2', borderRadius: 6, fontSize: 11, color: '#991b1b', overflowWrap: 'anywhere', wordBreak: 'break-word' }}>
                   <span style={{ minWidth: 0, overflowWrap: 'anywhere' }}>Сбой: {runStatus[scenario.id]?.message}</span>
@@ -602,19 +585,8 @@ export function RunProcessesPage() {
             <div className="dialog-body">
               Вы собираетесь запустить <strong>{confirmOpen.name}</strong>.
               <br />
-              Текущий режим: <strong>{(inputValues[confirmOpen.id]?.test_mode ?? true) ? 'тестовый (только вам)' : 'реальный — клиентам!'}</strong>.
+              Текущий режим: <strong>{(inputValues[confirmOpen.id]?.test_mode ?? false) ? 'тестовый (только вам)' : 'реальный — клиентам!'}</strong>.
             </div>
-            {(() => {
-              const scenario = SCENARIOS.find((s) => s.id === confirmOpen?.id);
-              if (scenario?.warning) {
-                return (
-                  <div style={{ gridColumn: '1 / -1', padding: 6, background: '#fbf4e3', borderRadius: 6, fontSize: 11, color: '#92400e', overflowWrap: 'anywhere', wordBreak: 'break-word', marginTop: 8 }}>
-                    ⚠️ {scenario.warning}
-                  </div>
-                );
-              }
-              return null;
-            })()}
             <div className="dialog-actions">
               <button className="btn btn-success" onClick={handleConfirm}>Да</button>
               <button className="btn btn-danger" onClick={() => setConfirmOpen(null)}>Нет</button>
@@ -652,65 +624,65 @@ export function RunProcessesPage() {
                     const val = inputValues[settingsOpen.id]?.[input.key];
                     return (
                       <div key={input.key} className="form-group" style={{ marginBottom: 0, display: 'flex', flexDirection: 'column', gap: 4 }}>
-                          {input.type === 'boolean' ? (
-                            <>
-                              <label className="form-label" style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 0 }}>
-                                <input
-                                  type="checkbox"
-                                  checked={Boolean(val)}
-                                  onChange={(e) => setInput(settingsOpen.id, input.key, e.target.checked)}
-                                />
-                                <span style={{ minWidth: 0, overflowWrap: 'anywhere' }}>{input.label}</span>
-                              </label>
-                            </>
-                          ) : input.type === 'multiselect' ? (
-                            <>
-                              <label className="form-label" style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 0, cursor: 'pointer' }} title={input.description || input.label}>
-                                {input.label}
-                              </label>
-                              <div style={{ position: 'relative', display: 'inline-block', width: '100%' }}>
-                                <button
-                                  className="btn btn-outline"
-                                  style={{ width: '100%', padding: '6px 10px', fontSize: 13, textAlign: 'left' }}
-                                  onClick={(e) => { e.stopPropagation(); toggleMultiselectOpen(settingsOpen.id, input.key); }}
-                                  title={input.description || input.label}
-                                >
-                                  {Array.isArray(val) && val.length > 0 ? val.join(', ') : 'Все'}
-                                </button>
-                                {openMultiselect[`${settingsOpen.id}.${input.key}`] && (
-                                  <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 50, marginTop: 4, background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius)', boxShadow: '0 8px 20px rgba(0,0,0,0.15)', padding: '8px', display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '6px' }}>
-                                    {(input.options || []).map((opt) => {
-                                      const cur = (val as string[] | undefined) || [];
-                                      return (
-                                        <label key={opt.value} style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer', fontSize: 13 }}>
-                                          <input
-                                            type="checkbox"
-                                            checked={cur.includes(opt.value)}
-                                            onChange={(e) => { e.stopPropagation(); toggleMultiselect(settingsOpen.id, input.key, opt.value); }}
-                                          />
-                                          {opt.label}
-                                        </label>
-                                      );
-                                    })}
-                                  </div>
-                                )}
-                              </div>
-                            </>
-                          ) : (
-                            <span style={{ minWidth: 0, overflowWrap: 'anywhere' }}>{input.label}</span>
-                          )}
-                          {input.type === 'string' && (
-                            <input
-                              className="form-input"
-                              value={String(val ?? '')}
-                              onChange={(e) => setInput(settingsOpen.id, input.key, e.target.value)}
-                              placeholder={input.description}
-                            />
-                          )}
-                          {input.description && (
-                            <div style={{ fontSize: 12, color: '#6b7280', marginTop: 4, overflowWrap: 'anywhere' }}>{input.description}</div>
-                          )}
-                        </div>
+                        {input.type === 'boolean' ? (
+                          <>
+                            <label className="form-label" style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 0 }}>
+                              <input
+                                type="checkbox"
+                                checked={Boolean(val)}
+                                onChange={(e) => setInput(settingsOpen.id, input.key, e.target.checked)}
+                              />
+                              <span style={{ minWidth: 0, overflowWrap: 'anywhere' }}>{input.label}</span>
+                            </label>
+                          </>
+                        ) : input.type === 'multiselect' ? (
+                          <>
+                            <label className="form-label" style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 0, cursor: 'pointer' }} title={input.description || input.label}>
+                              {input.label}
+                            </label>
+                            <div style={{ position: 'relative', display: 'inline-block', width: '100%' }}>
+                              <button
+                                className="btn btn-outline"
+                                style={{ width: '100%', padding: '6px 10px', fontSize: 13, textAlign: 'left' }}
+                                onClick={(e) => { e.stopPropagation(); toggleMultiselectOpen(settingsOpen.id, input.key); }}
+                                title={input.description || input.label}
+                              >
+                                {Array.isArray(val) && val.length > 0 ? val.join(', ') : 'Все'}
+                              </button>
+                              {openMultiselect[`${settingsOpen.id}.${input.key}`] && (
+                                <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 50, marginTop: 4, background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius)', boxShadow: '0 8px 20px rgba(0,0,0,0.15)', padding: '8px', display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '6px' }}>
+                                  {(input.options || []).map((opt) => {
+                                    const cur = (val as string[] | undefined) || [];
+                                    return (
+                                      <label key={opt.value} style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer', fontSize: 13 }}>
+                                        <input
+                                          type="checkbox"
+                                          checked={cur.includes(opt.value)}
+                                          onChange={(e) => { e.stopPropagation(); toggleMultiselect(settingsOpen.id, input.key, opt.value); }}
+                                        />
+                                        {opt.label}
+                                      </label>
+                                    );
+                                  })}
+                                </div>
+                              )}
+                            </div>
+                          </>
+                        ) : (
+                          <span style={{ minWidth: 0, overflowWrap: 'anywhere' }}>{input.label}</span>
+                        )}
+                        {input.type === 'string' && (
+                          <input
+                            className="form-input"
+                            value={String(val ?? '')}
+                            onChange={(e) => setInput(settingsOpen.id, input.key, e.target.value)}
+                            placeholder={input.description}
+                          />
+                        )}
+                        {input.description && (
+                          <div style={{ fontSize: 12, color: '#6b7280', marginTop: 4, overflowWrap: 'anywhere' }}>{input.description}</div>
+                        )}
+                      </div>
                     );
                   })}
                 </div>

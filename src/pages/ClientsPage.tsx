@@ -17,8 +17,132 @@ import { db } from '@/firebase';
 import { isFirebaseConfigured } from '@/firebase.config';
 import { useAuth } from '@/context/AuthContext';
 import { EmptyState } from '@/components/EmptyState';
-import { mapClientDoc } from '@/lib/clientData';
+import { formatClientName, mapClientDoc } from '@/lib/clientData';
 import type { Client, NewClientInput } from '@/types';
+
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+
+/** Копирует текст в буфер обмена, с запасным вариантом для небезопасных контекстов. */
+async function copyToClipboard(text: string): Promise<void> {
+  if (navigator.clipboard && window.isSecureContext) {
+    await navigator.clipboard.writeText(text);
+    return;
+  }
+  const textarea = document.createElement('textarea');
+  textarea.value = text;
+  textarea.setAttribute('readonly', '');
+  textarea.style.position = 'fixed';
+  textarea.style.opacity = '0';
+  document.body.appendChild(textarea);
+  textarea.select();
+  document.execCommand('copy');
+  document.body.removeChild(textarea);
+}
+
+/** Приводит адрес к виду «Город. улица дом». */
+export function normalizeAddress(value: string): string {
+  const trimmed = value.trim().replace(/\s+/g, ' ');
+  if (!trimmed) return '';
+  const parts = trimmed
+    .split(/[,.]/)
+    .map((part) => part.trim())
+    .filter(Boolean);
+  if (parts.length >= 2) {
+    const [city, ...rest] = parts;
+    return `${city}. ${rest.join(' ')}`;
+  }
+  return trimmed;
+}
+
+/** Формирует текстовое представление карточки клиента для копирования. */
+function buildClientCardText(data: NewClientInput): string {
+  const rows: Array<[string, string]> = [
+    ['Клиент', data.name?.trim() || '—'],
+    ['Форма', data.company?.trim() || '—'],
+    ['Адрес', data.address?.trim() || '—'],
+    ['Почта', data.email?.trim() || '—'],
+    ['Телефон', data.phone?.trim() || '—'],
+    ['День посещения', data.day?.trim() || '—'],
+    ['Режим работы', data.mode?.trim() || '—'],
+    ['Управляющий', data.manager?.trim() || '—'],
+    ['Примечания', data.notes?.trim() || '—'],
+    ['Название', data.title?.trim() || '—'],
+    ['Грейд', data.grade || '—'],
+    ['Активный', data.active ? 'Да' : 'Нет'],
+  ];
+  return rows.map(([label, value]) => `${label}: ${value}`).join('\n');
+}
+
+function CopyIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+      <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+    </svg>
+  );
+}
+
+function CheckIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M20 6 9 17l-5-5" />
+    </svg>
+  );
+}
+
+/** Кнопка-иконка копирования значения в буфер обмена. */
+function CopyButton({ value, title = 'Копировать', className = '' }: { value?: string; title?: string; className?: string }) {
+  const [copied, setCopied] = useState(false);
+  const canCopy = Boolean(value && value.trim());
+
+  const handleClick = async (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.stopPropagation();
+    if (!canCopy) return;
+    try {
+      await copyToClipboard(value as string);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 1500);
+    } catch {
+      // Ошибки доступа к буферу обмена игнорируем
+    }
+  };
+
+  return (
+    <button
+      type="button"
+      className={`copy-btn${copied ? ' copied' : ''}${className ? ` ${className}` : ''}`}
+      onClick={handleClick}
+      title={copied ? 'Скопировано' : title}
+      aria-label={title}
+      disabled={!canCopy}
+    >
+      {copied ? <CheckIcon /> : <CopyIcon />}
+    </button>
+  );
+}
+
+const GRADE_STARS: Record<'Bronze' | 'Silver' | 'Gold', { count: number; color: string }> = {
+  Bronze: { count: 1, color: '#cd7f32' },
+  Silver: { count: 2, color: '#9ca3af' },
+  Gold: { count: 3, color: '#f59e0b' },
+};
+
+/** Звёзды грейда: ☆ — не заполнен, ★ Bronze / ★★ Silver / ★★★ Gold. */
+function GradeStars({ grade }: { grade?: Client['grade'] }) {
+  if (!grade || !GRADE_STARS[grade]) {
+    return (
+      <span style={{ color: '#d1d5db', fontSize: 14 }} title="Грейд не заполнен">
+        ☆
+      </span>
+    );
+  }
+  const { count, color } = GRADE_STARS[grade];
+  return (
+    <span style={{ color, fontSize: 14, letterSpacing: 1 }} title={`Грейд: ${grade}`}>
+      {'★'.repeat(count)}
+    </span>
+  );
+}
 
 export function ClientsPage() {
   const { user } = useAuth();
@@ -31,7 +155,7 @@ export function ClientsPage() {
   const [viewingClient, setViewingClient] = useState<Client | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
   const [deleteConfirmed, setDeleteConfirmed] = useState(false);
-  const [form, setForm] = useState<NewClientInput>({ name: '', email: '', phone: '', company: '', address: '', day: '', mode: '', manager: '', notes: '', active: true, title: '', grade: 'Gold' });
+  const [form, setForm] = useState<NewClientInput>({ name: '', email: '', phone: '', company: 'ИП', address: '', day: '', mode: '', manager: '', notes: '', active: true, title: '', grade: 'Gold' });
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -87,21 +211,27 @@ export function ClientsPage() {
   );
 
   const resetForm = () => {
-    setForm({ name: '', email: '', phone: '', company: '', address: '', day: '', mode: '', manager: '', notes: '', active: true, title: '', grade: 'Gold' });
+    setForm({ name: '', email: '', phone: '', company: 'ИП', address: '', day: '', mode: '', manager: '', notes: '', active: true, title: '', grade: 'Gold' });
   };
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!db || !user) return;
+    const email = form.email.trim();
+    if (!EMAIL_PATTERN.test(email)) {
+      setError('Почта должна быть в формате name@example.com');
+      return;
+    }
+    const address = normalizeAddress(form.address ?? '');
     setSaving(true);
     setError(null);
     try {
       const data: Record<string, unknown> = {
         name: form.name.trim(),
-        email: form.email.trim(),
+        email,
         phone: form.phone?.trim() || null,
         company: form.company?.trim() || null,
-        address: form.address?.trim() || null,
+        address: address || null,
         day: form.day?.trim() || null,
         mode: form.mode?.trim() || null,
         manager: form.manager?.trim() || null,
@@ -129,15 +259,21 @@ export function ClientsPage() {
   const handleUpdate = async (id: string, e: React.FormEvent) => {
     e.preventDefault();
     if (!db || !user) return;
+    const email = form.email.trim();
+    if (!EMAIL_PATTERN.test(email)) {
+      setError('Почта должна быть в формате name@example.com');
+      return;
+    }
+    const address = normalizeAddress(form.address ?? '');
     setSaving(true);
     setError(null);
     try {
       const data: Record<string, unknown> = {
         name: form.name.trim(),
-        email: form.email.trim(),
+        email,
         phone: form.phone?.trim() || null,
         company: form.company?.trim() || null,
-        address: form.address?.trim() || null,
+        address: address || null,
         day: form.day?.trim() || null,
         mode: form.mode?.trim() || null,
         manager: form.manager?.trim() || null,
@@ -243,6 +379,7 @@ export function ClientsPage() {
                 <th style={{ width: '48px', whiteSpace: 'nowrap' }}>Активный</th>
                 <th style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>Форма</th>
                 <th style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>Клиент</th>
+                <th style={{ width: '80px', whiteSpace: 'nowrap', textAlign: 'center' }}>Грейд</th>
               </tr>
             </thead>
             <tbody>
@@ -251,7 +388,10 @@ export function ClientsPage() {
                   <td style={{ width: '48px', whiteSpace: 'nowrap', textAlign: 'center' }}>{client.active ? '✅' : '❌'}</td>
                   <td style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{client.company || '—'}</td>
                   <td style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                    <strong>{client.name}</strong>
+                    <strong>{formatClientName(client.name, client.company)}</strong>
+                  </td>
+                  <td style={{ width: '80px', whiteSpace: 'nowrap', textAlign: 'center' }}>
+                    <GradeStars grade={client.grade} />
                   </td>
                 </tr>
               ))}
@@ -263,8 +403,17 @@ export function ClientsPage() {
       {editingId && (
         <div className="dialog-overlay" onClick={() => { setEditingId(null); resetForm(); }}>
           <div className="dialog" onClick={(e) => e.stopPropagation()} style={{ maxHeight: '85vh', overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
-            <div className="dialog-title">
-              {editingId === 'new' ? 'Новый клиент' : 'Редактирование клиента'}
+            <div className="dialog-title-row">
+              <div className="dialog-title">
+                {editingId === 'new' ? 'Новый клиент' : 'Редактирование клиента'}
+              </div>
+              {editingId !== 'new' && (
+                <CopyButton
+                  value={buildClientCardText(form)}
+                  title="Скопировать карточку клиента"
+                  className="copy-btn--title"
+                />
+              )}
             </div>
             <form
               onSubmit={(e) =>
@@ -275,7 +424,7 @@ export function ClientsPage() {
               <div className="form-group">
                 <label className="form-label">Клиент</label>
                 <input className="form-input" required
-                  value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
+                  value={form.name ?? ''} onChange={(e) => setForm({ ...form, name: e.target.value })} />
               </div>
               <div className="form-group">
                 <label className="form-label">Активный</label>
@@ -288,23 +437,35 @@ export function ClientsPage() {
               </div>
               <div className="form-group">
                 <label className="form-label">Форма</label>
-                <input className="form-input"
-                  value={form.company} onChange={(e) => setForm({ ...form, company: e.target.value })} />
+                <select className="form-input"
+                  value={form.company || ''}
+                  onChange={(e) => setForm({ ...form, company: e.target.value })}>
+                  <option value="">—</option>
+                  <option value="ИП">ИП</option>
+                  <option value="ООО">ООО</option>
+                  {form.company && form.company !== 'ИП' && form.company !== 'ООО' && (
+                    <option value={form.company}>{form.company}</option>
+                  )}
+                </select>
               </div>
               <div className="form-group">
                 <label className="form-label">Адрес</label>
-                <input className="form-input"
-                  value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} />
+                <input className="form-input" placeholder="Город. улица дом"
+                  value={form.address ?? ''} onChange={(e) => setForm({ ...form, address: e.target.value })} />
+                <div className="form-hint">Формат: Город. улица дом</div>
               </div>
               <div className="form-group">
                 <label className="form-label">Почта</label>
-                <input className="form-input" type="email" required
-                  value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
+                <div className="input-with-action">
+                  <input className="form-input" type="email" required placeholder="name@example.com"
+                    value={form.email ?? ''} onChange={(e) => setForm({ ...form, email: e.target.value })} />
+                  <CopyButton value={form.email} title="Скопировать почту" />
+                </div>
               </div>
               <div className="form-group">
                 <label className="form-label">День посещения</label>
                 <select className="form-input"
-                  value={form.day}
+                  value={form.day ?? ''}
                   onChange={(e) => setForm({ ...form, day: e.target.value })}>
                   <option value="">—</option>
                   <option value="Понедельник">Понедельник</option>
@@ -317,17 +478,17 @@ export function ClientsPage() {
               <div className="form-group">
                 <label className="form-label">Примечания</label>
                 <input className="form-input"
-                  value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} />
+                  value={form.notes ?? ''} onChange={(e) => setForm({ ...form, notes: e.target.value })} />
               </div>
               <div className="form-group">
                 <label className="form-label">Название</label>
                 <input className="form-input"
-                  value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} />
+                  value={form.title ?? ''} onChange={(e) => setForm({ ...form, title: e.target.value })} />
               </div>
               <div className="form-group">
                 <label className="form-label">Грейд</label>
                 <select className="form-input"
-                  value={form.grade}
+                  value={form.grade ?? 'Gold'}
                   onChange={(e) => setForm({ ...form, grade: e.target.value as 'Gold' | 'Silver' | 'Bronze' })}>
                   <option value="Gold">Gold</option>
                   <option value="Silver">Silver</option>
@@ -336,13 +497,16 @@ export function ClientsPage() {
               </div>
               <div className="form-group">
                 <label className="form-label">Телефон</label>
-                <input className="form-input"
-                  value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
+                <div className="input-with-action">
+                  <input className="form-input" placeholder="+7 900 000-00-00"
+                    value={form.phone ?? ''} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
+                  <CopyButton value={form.phone} title="Скопировать номер" />
+                </div>
               </div>
               <div className="form-group">
                 <label className="form-label">Управляющий</label>
                 <input className="form-input"
-                  value={form.manager} onChange={(e) => setForm({ ...form, manager: e.target.value })} />
+                  value={form.manager ?? ''} onChange={(e) => setForm({ ...form, manager: e.target.value })} />
               </div>
               <div className="dialog-actions">
                 <button className="btn btn-outline" type="button" onClick={() => { setEditingId(null); resetForm(); }}>
@@ -422,7 +586,24 @@ export function ClientsPage() {
             <div className="dialog-actions">
               <button
                 className="btn btn-outline"
-                onClick={() => { setViewingClient(null); setForm({ name: viewingClient.name, email: viewingClient.email, phone: viewingClient.phone, company: viewingClient.company, address: viewingClient.address, day: viewingClient.day, mode: viewingClient.mode, manager: viewingClient.manager, notes: viewingClient.notes, active: viewingClient.active, title: viewingClient.title, grade: viewingClient.grade ?? 'Gold' }); setEditingId(viewingClient.id); }}
+                onClick={() => {
+                  setViewingClient(null);
+                  setForm({
+                    name: viewingClient.name,
+                    email: viewingClient.email,
+                    phone: viewingClient.phone ?? '',
+                    company: viewingClient.company ?? 'ИП',
+                    address: viewingClient.address ?? '',
+                    day: viewingClient.day ?? '',
+                    mode: viewingClient.mode ?? '',
+                    manager: viewingClient.manager ?? '',
+                    notes: viewingClient.notes ?? '',
+                    active: viewingClient.active ?? true,
+                    title: viewingClient.title ?? '',
+                    grade: viewingClient.grade ?? 'Gold',
+                  });
+                  setEditingId(viewingClient.id);
+                }}
               >
                 Править
               </button>
@@ -438,7 +619,7 @@ export function ClientsPage() {
           </div>
         </div>
       )}
-        {deleteTarget && (
+      {deleteTarget && (
         <div className="dialog-overlay" onClick={() => { setDeleteTarget(null); setDeleteConfirmed(false); }}>
           <div className="dialog" onClick={(e) => e.stopPropagation()}>
             <div className="dialog-title">Удаление клиента</div>
