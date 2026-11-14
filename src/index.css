@@ -702,6 +702,12 @@ button:disabled {
   height: 20px;
 }
 
+/* Иконка play крупнее остальных, чтобы треугольник читался так же заметно */
+.footer-nav-btn svg.footer-play-icon {
+  width: 24px;
+  height: 24px;
+}
+
 /* Подсказка с названием пункта меню над кнопкой футера */
 .footer-nav-btn::after {
   content: attr(data-tooltip);
