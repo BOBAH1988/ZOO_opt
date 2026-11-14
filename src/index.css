@@ -672,6 +672,7 @@ button:disabled {
 }
 
 .footer-nav-btn {
+  position: relative;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -687,7 +688,6 @@ button:disabled {
   text-decoration: none;
   min-height: 36px;
   white-space: nowrap;
-  overflow: hidden;
 }
 
 .footer-nav-label {
@@ -700,6 +700,56 @@ button:disabled {
 .footer-nav-btn svg {
   width: 20px;
   height: 20px;
+}
+
+/* Подсказка с названием пункта меню над кнопкой футера */
+.footer-nav-btn::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: calc(100% + 12px);
+  left: 50%;
+  transform: translateX(-50%) translateY(4px);
+  padding: 4px 8px;
+  border-radius: 6px;
+  background: var(--color-text);
+  color: var(--color-surface);
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.2;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.15s ease, transform 0.15s ease;
+  z-index: 60;
+}
+
+.footer-nav-btn::before {
+  content: '';
+  position: absolute;
+  bottom: calc(100% + 2px);
+  left: 50%;
+  transform: translateX(-50%);
+  border: 5px solid transparent;
+  border-top-color: var(--color-text);
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.15s ease;
+  z-index: 60;
+}
+
+.footer-nav-btn:hover::after,
+.footer-nav-btn:focus-visible::after {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(-50%) translateY(0);
+}
+
+.footer-nav-btn:hover::before,
+.footer-nav-btn:focus-visible::before {
+  opacity: 1;
+  visibility: visible;
 }
 
 .footer-nav-btn:hover {
