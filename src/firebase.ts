@@ -11,6 +11,7 @@ import {
 import {
   getFirestore,
   Firestore,
+  enableNetwork,
   collection,
   query,
   where,
@@ -30,22 +31,67 @@ import { firebaseConfig, isFirebaseConfigured } from './firebase.config';
 let app: FirebaseApp | null = null;
 let auth: Auth | null = null;
 let db: Firestore | null = null;
+let firestoreReady = false;
+let firestoreError: string | null = null;
 
 export function initFirebase() {
   if (!isFirebaseConfigured()) {
+    firestoreReady = false;
+    firestoreError = 'Firebase не сконфигурирован. Задайте переменные окружения VITE_FIREBASE_* (apiKey, authDomain, projectId, appId и т.д.) и пересоберите проект.';
     return { app: null, auth: null, db: null };
   }
 
-  if (getApps().length === 0) {
-    app = initializeApp(firebaseConfig);
-  } else {
-    app = getApps()[0];
+  try {
+    if (getApps().length === 0) {
+      app = initializeApp(firebaseConfig);
+    } else {
+      app = getApps()[0];
+    }
+
+    auth = getAuth(app);
+    db = getFirestore(app);
+
+    firestoreReady = true;
+    firestoreError = null;
+
+    return { app, auth, db };
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    firestoreReady = false;
+    firestoreError = `Ошибка инициализации Firebase: ${message}`;
+    console.error(firestoreError);
+    return { app: null, auth: null, db: null };
+  }
+}
+
+export function getFirestoreStatus(): { ready: boolean; error: string | null } {
+  return { ready: firestoreReady, error: firestoreError };
+}
+
+export async function testFirestoreConnection(): Promise<{ ok: boolean; error: string | null }> {
+  if (!isFirebaseConfigured()) {
+    return {
+      ok: false,
+      error: 'Firebase не сконфигурирован. Проверьте VITE_FIREBASE_* переменные.',
+    };
   }
 
-  auth = getAuth(app);
-  db = getFirestore(app);
+  if (!db) {
+    return {
+      ok: false,
+      error: 'Firestore не инициализирован. Вызовите initFirebase().',
+    };
+  }
 
-  return { app, auth, db };
+  try {
+    await enableNetwork(db);
+    return { ok: true, error: null };
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    firestoreReady = false;
+    firestoreError = `Ошибка подключения к Firestore: ${message}`;
+    return { ok: false, error: firestoreError };
+  }
 }
 
 export { app, auth, db };

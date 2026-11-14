@@ -27,3 +27,12 @@ export const isFirebaseConfigured = () => {
       firebaseConfig.appId,
   );
 };
+
+export const getFirebaseConfigIssues = (): string[] => {
+  const issues: string[] = [];
+  if (!firebaseConfig.apiKey) issues.push('VITE_FIREBASE_API_KEY');
+  if (!firebaseConfig.authDomain) issues.push('VITE_FIREBASE_AUTH_DOMAIN');
+  if (!firebaseConfig.projectId) issues.push('VITE_FIREBASE_PROJECT_ID');
+  if (!firebaseConfig.appId) issues.push('VITE_FIREBASE_APP_ID');
+  return issues;
+};

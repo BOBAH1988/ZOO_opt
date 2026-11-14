@@ -34,6 +34,32 @@ VITE_ALLOWED_EMAIL_DOMAINS=
 VITE_REGISTRATION_INVITE_CODE=
 ```
 
+## Настройка Firestore в консоли Firebase (обязательно)
+
+Даже если все `VITE_FIREBASE_*` заданы верно, ошибка `400 (Bad Request)` на потоке `google.firestore.v1.Firestore/Listen` означает, что **база данных Firestore не создана** в проекте Firebase или не настроены правила доступа.
+
+### Шаги настройки:
+
+1. Откройте [Firebase Console](https://console.firebase.google.com/), выберите проект `zoo-opt`.
+2. В боковом меню перейдите **Firestore Database** → **Create database**.
+3. Выберите режим **Native mode** (рекомендуется), затем расположение БД (ближайшее к вам).
+4. Нажмите **Enable** — создание может занять до 1 минуты.
+5. В разделе **Firestore Database → Rules** замените правила на содержимое `firestore.rules` из этого репозитория и нажмите **Publish**:
+   ```
+   rules_version = '2';
+   service cloud.firestore {
+     match /databases/{database}/documents {
+       ... (см. firestore.rules)
+     }
+   }
+   ```
+6. В разделе **Firestore Database → Indexes** убедитесь, что индексы из `firestore.indexes.json` созданы (либо нажмите «Create index» при первом открытии страницы, которая требует составной индекс).
+7. Скопируйте веб-конфигурацию: **Настройки проекта → Общие → Ваши приложения → Веб-приложение (</>)** → `firebaseConfig` и впишите значения в `.env` (`VITE_FIREBASE_API_KEY`, `VITE_FIREBASE_AUTH_DOMAIN`, `VITE_FIREBASE_PROJECT_ID`, `VITE_FIREBASE_APP_ID` и т.д.).
+
+### Почему возникает `400 Bad Request` на `Listen`
+
+SDK Firebase пытается открыть веб-канал (WebChannel) для подписки на изменения в Firestore. Если база данных не создана, проект не имеет прав на Firestore или API-ключ не валиден, Google отвечает `400 (Bad Request)` и соединение рвётся. Это не ошибка кода приложения — необходимо завершить настройку в консоли Firebase.
+
 ## GitHub Secrets (deploy)
 
 Для публикации через GitHub Actions создайте repository secret `ZOO` (Settings → Secrets and variables → Actions) со значениями веб-конфигурации Firebase из Firebase Console. Значение может быть строками `.env` (`ИМЯ=значение`, по одной на строку) или JSON-объектом с теми же ключами. Workflow записывает содержимое `ZOO` во временный `.env`, проверяет обязательные параметры входа (`VITE_FIREBASE_API_KEY`, `VITE_FIREBASE_AUTH_DOMAIN`, `VITE_FIREBASE_PROJECT_ID`, `VITE_FIREBASE_APP_ID`) и формат Firebase Web API key, затем собирает сайт.
@@ -99,4 +125,5 @@ GitHub Pages: base `/ZOO_opt/`, HashRouter, workflow `.github/workflows/deploy.y
 | `Workflow is not allowed` | Указанный `workflowId` нет в серверном белом списке | Проверьте `ALLOWED_WORKFLOWS` в `server/cloudflare/src/index.js` / `server/index.js` — должен содержать запускаемый `workflowId` и соответствующий файл в репозитории `mail-automation` с триггером `workflow_dispatch`. |
 | `Real email sending is not enabled for this account` | `test_mode=false` для workflow с `realSendGuard`, но UID не в `REAL_SEND_UIDS` | Добавьте свой Firebase UID в secret `REAL_SEND_UIDS` воркера, либо оставьте `test_mode=true`. |
 | `Invalid or missing Firebase ID token` | Пользователь не авторизован в Firebase | Войдите в приложение через Firebase Auth перед запуском. |
+| `400 (Bad Request)` на `google.firestore.v1.Firestore/Listen` (WebChannelConnection) | База данных Firestore не создана в консоли Firebase или API-ключ не валиден | Создайте базу Firestore (Firebase Console → Firestore Database → Create database, Native mode), опубликуйте правила из `firestore.rules`, проверьте `VITE_FIREBASE_*` в `.env` и пересоберите проект. См. раздел «Настройка Firestore в консоли Firebase». |
 

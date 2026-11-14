@@ -13,11 +13,13 @@ import {
   signOut,
 } from 'firebase/auth';
 import { auth, initFirebase } from '@/firebase';
+import { getFirebaseConfigIssues } from '@/firebase.config';
 
 export interface AuthContextType {
   user: User | null;
   loading: boolean;
   initialized: boolean;
+  firebaseError: string | null;
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
@@ -29,10 +31,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [initialized, setInitialized] = useState(false);
+  const [firebaseError, setFirebaseError] = useState<string | null>(null);
 
   useEffect(() => {
     const { auth: a } = initFirebase();
     if (!a) {
+      const missing = getFirebaseConfigIssues();
+      setFirebaseError(
+        missing.length
+          ? `Не заданы переменные окружения: ${missing.join(', ')}. Настройте их в .env и пересоберите проект.`
+          : 'Firebase не инициализирован.',
+      );
       setInitialized(true);
       setLoading(false);
       return;
@@ -64,7 +73,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   return (
     <AuthContext.Provider
-      value={{ user, loading, initialized, signIn, signUp, signOut: signOutFn }}
+      value={{ user, loading, initialized, firebaseError, signIn, signUp, signOut: signOutFn }}
     >
       {children}
     </AuthContext.Provider>

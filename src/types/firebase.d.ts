@@ -36,6 +36,7 @@ declare module 'firebase/firestore' {
   export function orderBy(field: string, direction?: string): unknown;
   export interface QuerySnapshot<T = DocumentData> { forEach(cb: (doc: QueryDocumentSnapshot<T>) => void): void; }
   export function onSnapshot(query: unknown, next: (snap: QuerySnapshot) => void, error?: (err: Error) => void): () => void;
+  export function enableNetwork(db: Firestore): Promise<void>;
   export function addDoc(ref: unknown, data: unknown): Promise<{ id: string }>;
   export function updateDoc(ref: unknown, data: unknown): Promise<void>;
   export function deleteDoc(ref: unknown): Promise<void>;
