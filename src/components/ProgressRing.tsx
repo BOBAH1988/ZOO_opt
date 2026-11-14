@@ -1,64 +1,47 @@
-import { useMemo } from 'react';
-
 interface ProgressRingProps {
   percent: number | null;
   size?: number;
   thickness?: number;
 }
 
+const VIEWBOX_SIZE = 24;
+
 /** Кольцевой индикатор прогресса (SVG). percent: 0..1 или null (неизвестно). */
 export function ProgressRing({ percent, size = 48, thickness = 4 }: ProgressRingProps) {
-  const radius = useMemo(() => (size - thickness) / 2, [size, thickness]);
-  const circumference = useMemo(() => 2 * Math.PI * radius, [radius]);
-  const strokeDasharray = useMemo(() => {
-    if (percent === null) return '62.8, 62.8';
-    return `${circumference} ${circumference}`;
-  }, [percent, circumference]);
-  const strokeDashoffset = useMemo(() => {
-    if (percent === null) return 62.8;
-    return circumference * (1 - Math.max(0, Math.min(1, percent)));
-  }, [percent, circumference]);
+  const radius = (VIEWBOX_SIZE - thickness) / 2;
+  const circumference = 2 * Math.PI * radius;
+  const safePercent = percent === null ? null : Math.max(0, Math.min(1, percent));
+  const strokeDashoffset = safePercent === null ? circumference : circumference * (1 - safePercent);
 
   return (
-    <div style={{ width: size, height: size, margin: '0 auto', position: 'relative' }}>
+    <div className="stat-ring" style={{ maxWidth: size }}>
       <svg
-        width={size}
-        height={size}
-        viewBox="0 0 24 24"
-        style={{ transform: 'rotate(-90deg)', display: 'block', margin: '0 auto' }}
+        width="100%"
+        height="100%"
+        viewBox={`0 0 ${VIEWBOX_SIZE} ${VIEWBOX_SIZE}`}
+        style={{ transform: 'rotate(-90deg)', display: 'block' }}
       >
         <circle
-          cx="12"
-          cy="12"
-          r="10"
+          cx={VIEWBOX_SIZE / 2}
+          cy={VIEWBOX_SIZE / 2}
+          r={radius}
           stroke="var(--color-border)"
-          strokeWidth="4"
+          strokeWidth={thickness}
           fill="none"
         />
         <circle
-          cx="12"
-          cy="12"
-          r="10"
+          cx={VIEWBOX_SIZE / 2}
+          cy={VIEWBOX_SIZE / 2}
+          r={radius}
           stroke={percent === null ? 'var(--color-border)' : 'var(--color-primary)'}
-          strokeWidth="4"
+          strokeWidth={thickness}
           fill="none"
-          strokeDasharray={strokeDasharray}
+          strokeDasharray={circumference}
           strokeDashoffset={strokeDashoffset}
           style={{ transition: 'stroke-dashoffset 0.3s ease, stroke 0.3s ease' }}
         />
       </svg>
-      <div
-        style={{
-          position: 'absolute',
-          top: '50%',
-          left: '50%',
-          transform: 'translate(-50%, -50%)',
-          fontSize: 13,
-          fontWeight: 700,
-          color: 'var(--color-text)',
-          whiteSpace: 'nowrap',
-        }}
-      >
+      <div className="stat-ring-value">
         {percent === null ? '—' : `${Math.round(percent * 100)}%`}
       </div>
     </div>

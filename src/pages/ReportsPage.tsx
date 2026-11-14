@@ -165,19 +165,19 @@ export function ReportsPage() {
       {error && <div className="alert alert-danger">{error}</div>}
       {!clientsLoading && (
         <>
-          {/* Блок KPI:данные ещё не подключены (раздел в разработке). */}
+          {/* Блок KPI: данные ещё не подключены (раздел в разработке). */}
           <div style={{ fontSize: 16, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px', color: 'var(--color-text)', marginBottom: 8 }}>KPI</div>
           <div className="card" style={{ marginTop: 12, marginBottom: 12, padding: 12 }}>
-            <div style={{ display: 'flex', gap: 10, flexWrap: 'nowrap' }}>
-              <div style={{ flex: 1, minWidth: 0, padding: 10, background: 'var(--color-bg)', borderRadius: 8, textAlign: 'center' }}>
-                <div style={{ fontSize: 10, color: 'var(--color-text-secondary)', textTransform: 'uppercase', marginBottom: 4 }}>Общий план</div>
-                <div style={{ fontSize: 20, fontWeight: 700, color: 'var(--color-text)' }}>—</div>
+            <div className="stats-row">
+              <div className="stat-tile">
+                <div className="stat-label">Общий план</div>
+                <div className="stat-value">—</div>
               </div>
-              <div style={{ flex: 1, minWidth: 0, padding: 10, background: 'var(--color-bg)', borderRadius: 8, textAlign: 'center' }}>
-                <div style={{ fontSize: 10, color: 'var(--color-text-secondary)', textTransform: 'uppercase', marginBottom: 4 }}>Общий факт</div>
-                <div style={{ fontSize: 20, fontWeight: 700, color: 'var(--color-success)' }}>—</div>
+              <div className="stat-tile">
+                <div className="stat-label">Общий факт</div>
+                <div className="stat-value stat-value--success">—</div>
               </div>
-              <div style={{ flex: 1, minWidth: 0, padding: 10, background: 'var(--color-bg)', borderRadius: 8, textAlign: 'center' }}>
+              <div className="stat-tile">
                 <ProgressRing percent={null} />
               </div>
             </div>
@@ -188,16 +188,16 @@ export function ReportsPage() {
           {/* Блок АКБ (активная клиентская база) */}
           <div style={{ fontSize: 16, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px', color: 'var(--color-text)', marginBottom: 8 }}>АКБ</div>
           <div className="card" style={{ marginTop: 12, marginBottom: 12, padding: 12 }}>
-            <div style={{ display: 'flex', gap: 10, flexWrap: 'nowrap' }}>
-              <div style={{ flex: 1, minWidth: 0, padding: 10, background: 'var(--color-bg)', borderRadius: 8, textAlign: 'center' }}>
-                <div style={{ fontSize: 10, color: 'var(--color-text-secondary)', textTransform: 'uppercase', marginBottom: 4 }}>Всего</div>
-                <div style={{ fontSize: 20, fontWeight: 700, color: 'var(--color-text)' }}>{clients.length}</div>
+            <div className="stats-row">
+              <div className="stat-tile">
+                <div className="stat-label">Всего</div>
+                <div className="stat-value">{clients.length}</div>
               </div>
-              <div style={{ flex: 1, minWidth: 0, padding: 10, background: 'var(--color-bg)', borderRadius: 8, textAlign: 'center' }}>
-                <div style={{ fontSize: 10, color: 'var(--color-text-secondary)', textTransform: 'uppercase', marginBottom: 4 }}>Активных</div>
-                <div style={{ fontSize: 20, fontWeight: 700, color: 'var(--color-success)' }}>{activeCount}</div>
+              <div className="stat-tile">
+                <div className="stat-label">Активных</div>
+                <div className="stat-value stat-value--success">{activeCount}</div>
               </div>
-              <div style={{ flex: 1, minWidth: 0, padding: 10, background: 'var(--color-bg)', borderRadius: 8, textAlign: 'center' }}>
+              <div className="stat-tile">
                 <ProgressRing percent={activeShare} />
               </div>
             </div>
@@ -224,84 +224,84 @@ export function ReportsPage() {
           </div>
           <div className="card">
             <table className="table">
-            <thead>
-              <tr>
-                <th>Дата</th>
-                <th>Процесс</th>
-                <th>Статус</th>
-              </tr>
-            </thead>
-            <tbody>
-              {pagedLogs.map((log) => (
-                <tr key={log.id}>
-                  <td style={{ fontSize: 12, lineHeight: 1 }}>
-                    {log.createdAt ? (
-                      <>
-                        <div style={{ fontWeight: 600 }}>
-                          {(() => {
-                            const d = new Date(log.createdAt);
-                            return isNaN(d.getTime()) ? '—' : d.toLocaleDateString('ru-RU');
-                          })()}
-                        </div>
-                        <div style={{ color: '#6b7280', fontSize: 11, marginTop: 2 }}>
-                          {(() => {
-                            const d = new Date(log.createdAt);
-                            return isNaN(d.getTime()) ? '—' : d.toLocaleTimeString('ru-RU');
-                          })()}
-                        </div>
-                      </>
-                    ) : '—'}
-                  </td>
-                  <td>{log.workflowName}</td>
-                  <td>
-                    <span
-                      className={`badge ${log.status === 'accepted' ? 'bg-test' : 'bg-real'}`}
-                      style={{ cursor: 'pointer', userSelect: 'none' }}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        const row = (e.target as HTMLElement).closest('tr');
-                        if (!row) return;
-                        const rect = row.getBoundingClientRect();
-                        setTooltip({
-                          left: rect.left,
-                          top: rect.top,
-                          message: log.message,
-                        });
-                      }}
-                    >
-                      {log.status === 'accepted' ? 'Ок' : 'Сбой'}
-                    </span>
-                  </td>
+              <thead>
+                <tr>
+                  <th>Дата</th>
+                  <th>Процесс</th>
+                  <th>Статус</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-          {tooltip && (
-            <div
-              ref={tipRef}
-              onClick={(e) => e.stopPropagation()}
-              style={{
-                position: 'fixed',
-                zIndex: 50,
-                background: '#111',
-                color: '#fff',
-                padding: '8px 10px',
-                borderRadius: 6,
-                fontSize: 12,
-                lineHeight: 1.4,
-                maxWidth: '60vw',
-                wordBreak: 'break-word',
-                whiteSpace: 'pre-wrap',
-                pointerEvents: 'auto',
-                left: tooltip.left,
-                top: tooltip.top,
-                boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
-              }}
-            >
-              {tooltip.message}
-            </div>
-          )}
-        </div>
+              </thead>
+              <tbody>
+                {pagedLogs.map((log) => (
+                  <tr key={log.id}>
+                    <td style={{ fontSize: 12, lineHeight: 1 }}>
+                      {log.createdAt ? (
+                        <>
+                          <div style={{ fontWeight: 600 }}>
+                            {(() => {
+                              const d = new Date(log.createdAt);
+                              return isNaN(d.getTime()) ? '—' : d.toLocaleDateString('ru-RU');
+                            })()}
+                          </div>
+                          <div style={{ color: '#6b7280', fontSize: 11, marginTop: 2 }}>
+                            {(() => {
+                              const d = new Date(log.createdAt);
+                              return isNaN(d.getTime()) ? '—' : d.toLocaleTimeString('ru-RU');
+                            })()}
+                          </div>
+                        </>
+                      ) : '—'}
+                    </td>
+                    <td>{log.workflowName}</td>
+                    <td>
+                      <span
+                        className={`badge ${log.status === 'accepted' ? 'bg-test' : 'bg-real'}`}
+                        style={{ cursor: 'pointer', userSelect: 'none' }}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          const row = (e.target as HTMLElement).closest('tr');
+                          if (!row) return;
+                          const rect = row.getBoundingClientRect();
+                          setTooltip({
+                            left: rect.left,
+                            top: rect.top,
+                            message: log.message,
+                          });
+                        }}
+                      >
+                        {log.status === 'accepted' ? 'Ок' : 'Сбой'}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            {tooltip && (
+              <div
+                ref={tipRef}
+                onClick={(e) => e.stopPropagation()}
+                style={{
+                  position: 'fixed',
+                  zIndex: 50,
+                  background: '#111',
+                  color: '#fff',
+                  padding: '8px 10px',
+                  borderRadius: 6,
+                  fontSize: 12,
+                  lineHeight: 1.4,
+                  maxWidth: '60vw',
+                  wordBreak: 'break-word',
+                  whiteSpace: 'pre-wrap',
+                  pointerEvents: 'auto',
+                  left: tooltip.left,
+                  top: tooltip.top,
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
+                }}
+              >
+                {tooltip.message}
+              </div>
+            )}
+          </div>
         </>
       )}
     </div>

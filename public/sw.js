@@ -8,7 +8,7 @@
  *  - Персональные данные клиентов, токены и результаты авторизованных запросов — НЕ кэшируются.
  */
 
-const CACHE_NAME = 'zoo-control-shell-v2';
+const CACHE_NAME = 'zoo-control-shell-v3';
 const SHELL_URLS = [
   '/ZOO_opt/',
   '/ZOO_opt/index.html',
