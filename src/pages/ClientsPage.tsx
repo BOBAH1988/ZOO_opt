@@ -333,13 +333,13 @@ export function ClientsPage() {
     <div>
       <h2 className="page-title">База клиентов</h2>
 
-      <div style={{ display: 'flex', gap: 10, marginBottom: 16, flexWrap: 'wrap' }}>
+      <div className="toolbar">
         <input
           className="form-input"
+          type="search"
           placeholder="Поиск по имени, email, компании"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          style={{ flex: 1, minWidth: 200 }}
         />
         <button className="btn btn-primary" onClick={() => { resetForm(); setEditingId('new'); }} disabled={!user}>
           + Добавить клиента
@@ -371,7 +371,7 @@ export function ClientsPage() {
       ) : (
         <div className="card" style={{ overflow: 'hidden' }}>
           <table
-            className="table"
+            className="table table--compact"
             style={{ width: '100%', borderCollapse: 'collapse' }}
           >
             <thead>

@@ -256,6 +256,21 @@ button:disabled {
   color: var(--color-text);
 }
 
+/* Панель инструментов: строка поиска + действие, выровнены по высоте. */
+.toolbar {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+  align-items: stretch;
+}
+
+.toolbar .form-input {
+  flex: 1;
+  min-width: 200px;
+  min-height: 44px;
+}
+
 .btn {
   display: inline-flex;
   align-items: center;
@@ -628,6 +643,13 @@ button:disabled {
   color: var(--color-text-secondary);
   text-transform: uppercase;
   letter-spacing: 0.4px;
+}
+
+/* Компактные строки: больше записей на экране (страница клиентов). */
+.table--compact th,
+.table--compact td {
+  padding: 4px 10px;
+  line-height: 1.25;
 }
 
 .table tr:last-child td {
