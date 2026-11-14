@@ -683,7 +683,7 @@ button:disabled {
   border-radius: var(--radius);
   background: var(--color-surface);
   color: var(--color-text);
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 500;
   text-decoration: none;
   min-height: 36px;
@@ -692,6 +692,7 @@ button:disabled {
 
 .footer-nav-label {
   min-width: 0;
+  font-weight: 600;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -834,7 +835,7 @@ button:disabled {
   }
 
   .footer-nav-btn {
-    font-size: 13px;
+    font-size: 14px;
     padding: 6px 6px;
     min-height: 36px;
   }
@@ -971,7 +972,7 @@ label {
   }
 
   .footer-nav-btn {
-    font-size: 12px;
+    font-size: 13px;
     padding: 5px 4px;
     min-height: 34px;
     gap: 3px;
