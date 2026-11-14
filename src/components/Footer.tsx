@@ -8,7 +8,7 @@ const NAV_ITEMS: NavItem[] = [
   { to: '/route', title: 'Маршрут', icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2.2 21.4 21.8 12 17.2 2.6 21.8Z" /></svg> },
   { to: '/run', title: 'Запуск', icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M6.8 3.4 20.6 12 6.8 20.6Z" /></svg> },
   { to: '/kpi', label: 'KPI' },
-  { to: '/clients', label: 'Клиенты' },
+  { to: '/clients', title: 'Клиенты', icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><ellipse cx="12" cy="6.6" rx="8.5" ry="2.8" /><path d="M3.5 8v4c0 1.55 3.8 2.8 8.5 2.8s8.5-1.25 8.5-2.8V8c0 1.55-3.8 2.8-8.5 2.8S3.5 9.55 3.5 8Z" /><path d="M3.5 13.4v4c0 1.55 3.8 2.8 8.5 2.8s8.5-1.25 8.5-2.8v-4c0 1.55-3.8 2.8-8.5 2.8S3.5 14.95 3.5 13.4Z" /></svg> },
 ];
 
 const START_YEAR = 2026;
