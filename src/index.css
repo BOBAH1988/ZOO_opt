@@ -698,6 +698,10 @@ button:disabled {
   white-space: nowrap;
 }
 
+.footer-nav-label--kpi {
+  font-weight: 700;
+}
+
 .footer-nav-btn svg {
   width: 24px;
   height: 24px;

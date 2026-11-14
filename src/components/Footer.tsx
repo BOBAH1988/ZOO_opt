@@ -30,7 +30,7 @@ export function Footer() {
             aria-label={item.label ?? item.title}
           >
             {item.label ? (
-              <span className="footer-nav-label">{item.label}</span>
+              <span className={`footer-nav-label${item.to === '/kpi' ? ' footer-nav-label--kpi' : ''}`}>{item.label}</span>
             ) : (
               <span className="menu-item-icon">{item.icon}</span>
             )}
