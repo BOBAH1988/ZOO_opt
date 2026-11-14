@@ -127,4 +127,4 @@ export function isApiConfigured(): boolean {
 }
 
 // Белый список workflow хранится только на сервере (server/index.js, server/cloudflare/src/index.js).
-//_CLIENT-сторона не хранит дубликат, чтобы списки не расходились.
+// Клиент не хранит дубликат, чтобы списки не расходились.

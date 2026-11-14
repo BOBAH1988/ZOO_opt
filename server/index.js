@@ -169,7 +169,20 @@ app.post('/run', async (req, res) => {
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     logEvent({ level: 'error', type: 'run_error', requestId, error: message });
-    // Не утекаем внутренний текст ошибки GitHub клиенту.
+
+    // Безопасные коды причин вместо утечки внутреннего текста GitHub.
+    if (err instanceof Error && err.name === 'AbortError') {
+      return res.status(504).json({ message: 'github_timeout', code: 'github_timeout' });
+    }
+    if (/GitHub dispatch failed: 401/.test(message)) {
+      return res.status(401).json({ message: 'github_auth_failed', code: 'github_auth_failed' });
+    }
+    if (/GitHub dispatch failed: 403/.test(message)) {
+      return res.status(403).json({ message: 'github_forbidden', code: 'github_forbidden' });
+    }
+    if (/GitHub dispatch failed: 404/.test(message)) {
+      return res.status(404).json({ message: 'github_not_found', code: 'github_not_found' });
+    }
     return res.status(500).json({ message: 'Internal server error' });
   }
 });

@@ -113,9 +113,10 @@ function parseUidList(value) {
   return (value || '').split(',').map((uid) => uid.trim()).filter(Boolean);
 }
 
+// Результат аутентификации: uid | 'missing_token' | 'unverified_email' | 'invalid_token'
 async function authenticate(request, projectId) {
   const match = (request.headers.get('Authorization') || '').match(/^Bearer (.+)$/);
-  if (!match) return null;
+  if (!match) return 'missing_token';
 
   try {
     const { payload } = await jwtVerify(match[1], FIREBASE_JWKS, {
@@ -123,10 +124,10 @@ async function authenticate(request, projectId) {
       audience: projectId,
       algorithms: ['RS256'],
     });
-    if (payload.email_verified !== true) return null;
-    return typeof payload.sub === 'string' && payload.sub ? payload.sub : null;
+    if (payload.email_verified !== true) return 'unverified_email';
+    return typeof payload.sub === 'string' && payload.sub ? payload.sub : 'invalid_token';
   } catch {
-    return null;
+    return 'invalid_token';
   }
 }
 
@@ -175,10 +176,9 @@ export default {
     const origin = request.headers.get('Origin');
 
     if (request.method === 'OPTIONS') {
-      if (origin !== env.APP_ORIGIN) {
-        const headers = corsHeaders(origin, env);
-        headers.set('Access-Control-Allow-Origin', origin || '*');
-        return new Response(null, { status: 403, headers });
+      if (origin && origin !== env.APP_ORIGIN) {
+        // Для чужого origin не отдаём ACAO — браузер заблокирует preflight.
+        return new Response(null, { status: 403 });
       }
       return new Response(null, { status: 204, headers: corsHeaders(origin, env) });
     }
@@ -217,10 +217,17 @@ export default {
       return jsonResponse({ message: 'Content-Type must be application/json' }, 415, origin, env);
     }
 
-    const uid = await authenticate(request, env.FIREBASE_PROJECT_ID);
-    if (!uid) {
-      return jsonResponse({ message: 'Необходима авторизация с подтверждённым email' }, 403, origin, env);
+    const authResult = await authenticate(request, env.FIREBASE_PROJECT_ID);
+    if (authResult === 'missing_token') {
+      return jsonResponse({ message: 'Требуется токен авторизации Firebase' }, 401, origin, env);
     }
+    if (authResult === 'unverified_email') {
+      return jsonResponse({ message: 'Email не подтверждён. Подтвердите почту в Firebase Auth.' }, 403, origin, env);
+    }
+    if (authResult === 'invalid_token' || !authResult) {
+      return jsonResponse({ message: 'Недействительный или истёкший токен Firebase' }, 403, origin, env);
+    }
+    const uid = authResult;
     if (!allowedUids.includes(uid)) {
       return jsonResponse({ message: 'User is not allowed to run workflows' }, 403, origin, env);
     }

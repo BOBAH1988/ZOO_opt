@@ -62,7 +62,7 @@ declare module 'firebase/firestore' {
     path: string,
     ...pathComponents: string[]
   ): DocumentReference<T>;
-  type WhereFilterOp = '<' | '<=' | '==' | '>=' | '>' | 'array-contains' | 'in' | 'array-contains-any';
+  type WhereFilterOp = '<' | '<=' | '==' | '>=' | '>' | '!=' | 'not-in' | 'array-contains' | 'in' | 'array-contains-any';
   type OrderByDirection = 'asc' | 'desc';
 
   export interface QueryConstraint {

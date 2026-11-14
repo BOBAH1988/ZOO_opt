@@ -10,15 +10,7 @@ service cloud.firestore {
       return isSignedIn() && request.auth.token.email_verified == true;
     }
 
-    function isOwner(uid) {
-      return isSignedIn() && request.auth.uid == uid;
-    }
-
-    function hasOnlyFields(data, allowedKeys) {
-      return !Object.keys(data).some((k) => !allowedKeys.has(k));
-    }
-
-    function validClient(data) {
+    function validClientCreate(data) {
       return data.name is string && data.name.size() > 0 && data.name.size() <= 200
         && data.email is string && data.email.size() > 0 && data.email.size() <= 320
         && data.ownerUid is string && data.ownerUid == request.auth.uid
@@ -36,19 +28,23 @@ service cloud.firestore {
         && (!('updatedAt' in data) || data.updatedAt == null || data.updatedAt is timestamp);
     }
 
+    function validClientUpdate(data, resource) {
+      return validClientCreate(data)
+        && (!('createdAt' in data) || data.createdAt == resource.createdAt || data.createdAt is timestamp)
+        && data.ownerUid == resource.ownerUid;
+    }
+
     match /clients/{clientId} {
-      allow read: if isSignedIn() && resource.data.ownerUid == request.auth.uid;
-      allow create: if isEmailVerified() && validClient(request.resource.data);
+      allow read: if isEmailVerified() && resource.data.ownerUid == request.auth.uid;
+      allow create: if isEmailVerified() && validClientCreate(request.resource.data);
       allow update: if isEmailVerified()
         && resource.data.ownerUid == request.auth.uid
-        && validClient(request.resource.data)
-        && request.resource.data.ownerUid == resource.data.ownerUid
-        && (!('createdAt' in request.resource.data) || request.resource.data.createdAt == resource.data.createdAt || request.resource.data.createdAt is timestamp);
-      allow delete: if isSignedIn() && resource.data.ownerUid == request.auth.uid;
+        && validClientUpdate(request.resource.data, resource.data);
+      allow delete: if isEmailVerified() && resource.data.ownerUid == request.auth.uid;
     }
 
     match /runLogs/{logId} {
-      allow read: if isSignedIn() && resource.data.requestedBy == request.auth.uid;
+      allow read: if isEmailVerified() && resource.data.requestedBy == request.auth.uid;
       allow create: if isEmailVerified()
         && request.resource.data.requestedBy == request.auth.uid
         && request.resource.data.workflowId is string

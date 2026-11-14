@@ -10,7 +10,7 @@ import { KpiPage } from '@/pages/KpiPage';
 import { ClientsPage } from '@/pages/ClientsPage';
 
 export default function App() {
-  const { initialized, loading, user } = useAuth();
+  const { initialized, loading, user, emailVerified } = useAuth();
 
   if (!initialized || loading) {
     return (
@@ -26,7 +26,7 @@ export default function App() {
         <Routes>
           <Route path="/login" element={<Login onLogin={() => {}} />} />
           <Route path="/" element={<Navigate to="/reports" replace />} />
-          <Route element={<ProtectedRoute />}>
+          <Route element={<ProtectedRoute emailVerified={emailVerified} />}>
             <Route element={<Layout />}>
               <Route path="reports" element={<ReportsPage />} />
               <Route path="route" element={<RoutePage />} />

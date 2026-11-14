@@ -124,14 +124,14 @@ export function Login({ onLogin }: LoginProps) {
       if (auth?.currentUser) {
         try {
           await sendEmailVerification(auth.currentUser);
-          setInfo('Аккаунт создан. Письмо для подтверждения email отправлено (если включено в Firebase).');
+          setInfo('Аккаунт создан. Письмо для подтверждения email отправлено. Подтвердите почту перед входом.');
         } catch {
           setInfo('Аккаунт создан. Подтвердите email в настройках аккаунта, если это требуется в вашем проекте.');
         }
       } else {
         setInfo('Аккаунт создан.');
       }
-      onLogin();
+      // Не пускаем в приложение без подтверждённого email — ProtectedRoute перенаправит.
     } catch (err: unknown) {
       setError(formatAuthError(err, 'регистрации'));
     } finally {
