@@ -83,6 +83,8 @@ SDK Firebase пытается открыть веб-канал (WebChannel) дл
 - валидировать входные данные и усиливать ограничения для реальных рассылок (`test_mode`, allowlist/роль, журнал);
 - хранить GitHub token/credentials только на сервере.
 
+Ответы об ошибках содержат машинный код причины в поле `code`, чтобы клиент не показывал внутренний текст GitHub: `github_timeout` (504), `github_auth_failed`, `github_forbidden`, `github_not_found` (502), а также `missing_token` (401), `invalid_token` (401), `unverified_email` (403), `uid_not_allowed` (403). Клиент переводит их в русские тексты через `ERROR_CODE_MAP` в `src/api.ts`.
+
 Пример реализации: `server/README.md`. Без настроенного API запуск не выполняется.
 Бесплатный вариант размещения — Cloudflare Workers; пошаговая настройка находится в `server/cloudflare/README.md`. Для работы нужны GitHub token в секрете Worker и URL Worker в GitHub Secret `VITE_API_BASE_URL`.
 
@@ -120,10 +122,15 @@ GitHub Pages: base `/ZOO_opt/`, HashRouter, workflow `.github/workflows/deploy.y
 | `net::ERR_CONNECTION_REFUSED` на `localhost:8787` | Локальный Express-сервер не запущен | `cd server && npm install && npm start`. Сервер должен слушать порт 8787. |
 | WebSocket HMR падает с `400` в dev (`ws://localhost:5173/ZOO_opt/...`) | Vite dev сервер не знает базовый путь `/ZOO_opt/` | В `vite.config.ts` добавьте `server.origin: 'http://localhost:5173'` (или `server.hmr.path: '/__vite_hmr'`). |
 | `502 Bad Gateway` / `Failed to dispatch GitHub Actions workflow` | `GITHUB_TOKEN` не задан в секретах Cloudflare Worker | `cd server/cloudflare && npx wrangler secret put GITHUB_TOKEN` → введите Fine-grained PAT с правом `Actions: Read and write` на `BOBAH1988/mail-automation` → `npx wrangler deploy --name zoo-opt-run-api`. |
-| `GitHub rejected the workflow dispatch request (403)` | Токену не хватает прав или отсутствует заголовок `User-Agent` | 1) В токене GitHub (Fine-grained) выберите репозиторий `BOBAH1988/mail-automation` и право `Repository permissions → Actions: Read and write`. 2) Убедитесь, что в `server/cloudflare/src/index.js` и `server/index.js` в запросе к GitHub API есть заголовок `User-Agent: zoo-opt-run-api`. |
+| `github_auth_failed` (502) | GitHub отклонил токен сервера (`GITHUB_TOKEN`) как недействительный | Обновите секрет `GITHUB_TOKEN` (Fine-grained PAT с правом `Actions: Read and write` на `BOBAH1988/mail-automation`), затем `npx wrangler secret put GITHUB_TOKEN` / обновите `server/.env`. |
+| `github_forbidden` (502) | Токену не хватает прав или отсутствует заголовок `User-Agent` | 1) В токене GitHub (Fine-grained) выберите репозиторий `BOBAH1988/mail-automation` и право `Repository permissions → Actions: Read and write`. 2) Заголовок `User-Agent: zoo-opt-run-api` уже отправляется в `server/cloudflare/src/index.js` и `server/index.js`. |
+| `github_not_found` (502) | Файл workflow не найден в репозитории | Проверьте `ALLOWED_WORKFLOWS` (`server/cloudflare/src/index.js` / `server/index.js`): файл должен существовать в `mail-automation` и содержать триггер `workflow_dispatch`. |
+| `github_timeout` (504) | GitHub не ответил за 15 секунд | Повторите запуск позже; проверьте доступность `api.github.com` и статус GitHub Actions. |
 | `Request forbidden by administrative rules... User-Agent header` | GitHub требует `User-Agent` на все запросы к REST API | Добавьте `'User-Agent': 'zoo-opt-run-api'` в заголовки `fetch` к `api.github.com` (уже исправлено в `server/cloudflare/src/index.js` и `server/index.js`). |
 | `Workflow is not allowed` | Указанный `workflowId` нет в серверном белом списке | Проверьте `ALLOWED_WORKFLOWS` в `server/cloudflare/src/index.js` / `server/index.js` — должен содержать запускаемый `workflowId` и соответствующий файл в репозитории `mail-automation` с триггером `workflow_dispatch`. |
 | `Real email sending is not enabled for this account` | `test_mode=false` для workflow с `realSendGuard`, но UID не в `REAL_SEND_UIDS` | Добавьте свой Firebase UID в secret `REAL_SEND_UIDS` сервера (воркера или Express), либо оставьте `test_mode=true`. |
-| `Invalid or missing Firebase ID token` | Пользователь не авторизован в Firebase | Войдите в приложение через Firebase Auth перед запуском. |
+| `Требуется токен авторизации Firebase` (401) | Запрос пришёл без `Authorization: Bearer <token>` | Войдите в приложение через Firebase Auth перед запуском. |
+| `Сессия истекла. Войдите заново.` (401, код `invalid_token`) | ID token истёк или повреждён | Перезайдите в приложение — токен обновится автоматически. |
+| `Email не подтверждён. Подтвердите почту в Firebase Auth.` (403, код `unverified_email`) | Аккаунт создан, но письмо подтверждения не открыто; правила Firestore и сервер запуска требуют `email_verified` | Откройте письмо подтверждения (кнопка «Отправить письмо ещё раз» на экране «Подтвердите email»), затем нажмите «Я подтвердил(а) — проверить». |
 | `400 (Bad Request)` на `google.firestore.v1.Firestore/Listen` (WebChannelConnection) | База данных Firestore не создана в консоли Firebase или API-ключ не валиден | Создайте базу Firestore (Firebase Console → Firestore Database → Create database, Native mode), опубликуйте правила из `firestore.rules`, проверьте `VITE_FIREBASE_*` в `.env` и пересоберите проект. См. раздел «Настройка Firestore в консоли Firebase». |
 

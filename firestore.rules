@@ -10,7 +10,17 @@ service cloud.firestore {
       return isSignedIn() && request.auth.token.email_verified == true;
     }
 
-    function validClientCreate(data) {
+    // Поля, которые клиент может записывать в документ клиента.
+    function hasOnlyClientFields(data) {
+      return data.keys().hasOnly([
+        'name', 'email', 'phone', 'company', 'address', 'day', 'mode',
+        'manager', 'notes', 'active', 'title', 'grade',
+        'createdAt', 'updatedAt', 'ownerUid'
+      ]);
+    }
+
+    // Валидация бизнес-полей без временных меток: общая для create и update.
+    function validClientFields(data) {
       return data.name is string && data.name.size() > 0 && data.name.size() <= 200
         && data.email is string && data.email.size() > 0 && data.email.size() <= 320
         && data.ownerUid is string && data.ownerUid == request.auth.uid
@@ -23,15 +33,24 @@ service cloud.firestore {
         && (!('manager' in data) || data.manager == null || (data.manager is string && data.manager.size() <= 100))
         && (!('active' in data) || data.active == null || data.active is boolean)
         && (!('title' in data) || data.title == null || (data.title is string && data.title.size() <= 200))
-        && (!('grade' in data) || data.grade == null || (data.grade is string && (data.grade == 'Gold' || data.grade == 'Silver' || data.grade == 'Bronze')))
-        && (!('createdAt' in data) || data.createdAt == null || data.createdAt is timestamp)
-        && (!('updatedAt' in data) || data.updatedAt == null || data.updatedAt is timestamp);
+        && (!('grade' in data) || data.grade == null || (data.grade is string && (data.grade == 'Gold' || data.grade == 'Silver' || data.grade == 'Bronze')));
     }
 
+    function validClientCreate(data) {
+      return hasOnlyClientFields(data)
+        && validClientFields(data)
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    // createdAt нельзя менять после создания — при обновлении он должен совпадать с существующим значением.
+    // updatedAt всегда должен быть timestamp либо совпадать с текущим значением.
     function validClientUpdate(data, resource) {
-      return validClientCreate(data)
-        && (!('createdAt' in data) || data.createdAt == resource.createdAt || data.createdAt is timestamp)
-        && data.ownerUid == resource.ownerUid;
+      return hasOnlyClientFields(data)
+        && validClientFields(data)
+        && data.ownerUid == resource.ownerUid
+        && (!('createdAt' in data) || data.createdAt == resource.createdAt)
+        && (!('updatedAt' in data) || data.updatedAt == resource.updatedAt || data.updatedAt is timestamp);
     }
 
     match /clients/{clientId} {
@@ -43,9 +62,17 @@ service cloud.firestore {
       allow delete: if isEmailVerified() && resource.data.ownerUid == request.auth.uid;
     }
 
+    function hasOnlyRunLogFields(data) {
+      return data.keys().hasOnly([
+        'workflowId', 'workflowName', 'status', 'message', 'inputs',
+        'runUrl', 'requestedBy', 'requestedByEmail', 'createdAt'
+      ]);
+    }
+
     match /runLogs/{logId} {
       allow read: if isEmailVerified() && resource.data.requestedBy == request.auth.uid;
       allow create: if isEmailVerified()
+        && hasOnlyRunLogFields(request.resource.data)
         && request.resource.data.requestedBy == request.auth.uid
         && request.resource.data.workflowId is string
         && request.resource.data.workflowId.size() > 0
@@ -59,7 +86,9 @@ service cloud.firestore {
         && request.resource.data.message.size() > 0
         && request.resource.data.message.size() <= 2000
         && request.resource.data.inputs is map
-        && request.resource.data.createdAt is timestamp
+        && request.resource.data.inputs.size() <= 20
+        // Время записи должно совпадать с серверным, а не приходить от клиента.
+        && request.resource.data.createdAt == request.time
         && (!('runUrl' in request.resource.data)
           || request.resource.data.runUrl == null
           || (request.resource.data.runUrl is string && request.resource.data.runUrl.size() <= 500))

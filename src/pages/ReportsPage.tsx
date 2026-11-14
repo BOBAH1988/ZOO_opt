@@ -1,10 +1,11 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { collection, onSnapshot, orderBy, query, where, type DocumentData, type QueryDocumentSnapshot } from 'firebase/firestore';
 import { db } from '@/firebase';
 import { isFirebaseConfigured } from '@/firebase.config';
 import { useAuth } from '@/context/AuthContext';
 import { EmptyState } from '@/components/EmptyState';
-import { toIsoString } from '@/lib/clientData';
+import { ProgressRing } from '@/components/ProgressRing';
+import { mapClientDoc, toIsoString } from '@/lib/clientData';
 import type { Client, RunLog } from '@/types';
 
 function docToLog(snap: QueryDocumentSnapshot<DocumentData>): RunLog | null {
@@ -134,26 +135,8 @@ export function ReportsPage() {
       (snapshot) => {
         const list: Client[] = [];
         snapshot.forEach((snap) => {
-          const data = snap.data() as unknown as Client & { ownerUid?: unknown };
-          if (typeof data.name !== 'string' || !data.name.trim()) return;
-          if (typeof data.email !== 'string' || !data.email.trim()) return;
-          if (typeof data.ownerUid !== 'string' || !data.ownerUid) return;
-          list.push({
-            id: snap.id,
-            name: data.name.trim(),
-            email: data.email.trim(),
-            phone: typeof data.phone === 'string' && data.phone.trim() ? data.phone.trim() : undefined,
-            company: typeof data.company === 'string' && data.company.trim() ? data.company.trim() : undefined,
-            address: typeof data.address === 'string' && data.address.trim() ? data.address.trim() : undefined,
-            day: typeof data.day === 'string' && data.day.trim() ? data.day.trim() : undefined,
-            mode: typeof data.mode === 'string' && data.mode.trim() ? data.mode.trim() : undefined,
-            manager: typeof data.manager === 'string' && data.manager.trim() ? data.manager.trim() : undefined,
-            notes: typeof data.notes === 'string' && data.notes.trim() ? data.notes.trim() : undefined,
-            active: typeof data.active === 'boolean' ? data.active : true,
-            createdAt: toIsoString(data.createdAt),
-            updatedAt: toIsoString(data.updatedAt),
-            ownerUid: data.ownerUid,
-          });
+          const mapped = mapClientDoc(snap);
+          if (mapped) list.push(mapped);
         });
         setClients(list);
         setClientsLoading(false);
@@ -164,6 +147,9 @@ export function ReportsPage() {
     );
     return () => unsub();
   }, [user]);
+
+  const activeCount = useMemo(() => clients.filter((c) => c.active).length, [clients]);
+  const activeShare = useMemo(() => (clients.length > 0 ? activeCount / clients.length : 0), [clients, activeCount]);
 
   if (!isFirebaseConfigured() || !db) {
     return (
@@ -179,51 +165,42 @@ export function ReportsPage() {
       {error && <div className="alert alert-danger">{error}</div>}
       {!clientsLoading && (
         <>
-          {/* Блок KPI */}
+          {/* Блок KPI:данные ещё не подключены (раздел в разработке). */}
           <div style={{ fontSize: 16, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px', color: 'var(--color-text)', marginBottom: 8 }}>KPI</div>
           <div className="card" style={{ marginTop: 12, marginBottom: 12, padding: 12 }}>
             <div style={{ display: 'flex', gap: 10, flexWrap: 'nowrap' }}>
-            <div style={{ flex: 1, minWidth: 0, padding: 10, background: 'var(--color-bg)', borderRadius: 8, textAlign: 'center' }}>
-              <div style={{ fontSize: 10, color: 'var(--color-text-secondary)', textTransform: 'uppercase', marginBottom: 4 }}>Общий план</div>
-              <div style={{ fontSize: 20, fontWeight: 700, color: 'var(--color-text)' }}>—</div>
-            </div>
-            <div style={{ flex: 1, minWidth: 0, padding: 10, background: 'var(--color-bg)', borderRadius: 8, textAlign: 'center' }}>
-              <div style={{ fontSize: 10, color: 'var(--color-text-secondary)', textTransform: 'uppercase', marginBottom: 4 }}>Ощий факт</div>
-              <div style={{ fontSize: 20, fontWeight: 700, color: 'var(--color-success)' }}>—</div>
-            </div>
-            <div style={{ flex: 1, minWidth: 0, padding: 10, background: 'var(--color-bg)', borderRadius: 8, textAlign: 'center' }}>
-              <div style={{ width: 56, height: 56, borderRadius: '50%', border: '4px solid var(--color-border)', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', margin: '0 auto' }}>
-                <svg width="48" height="48" viewBox="0 0 24 24" style={{ transform: 'rotate(-90deg)' }}>
-                  <circle cx="12" cy="12" r="10" stroke="var(--color-border)" strokeWidth="4" fill="none" />
-                  <circle cx="12" cy="12" r="10" stroke="#2563eb" strokeWidth="4" fill="none" strokeDasharray="62.8" strokeDashoffset="62.8" />
-                </svg>
-                <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', fontSize: 15, fontWeight: 700, color: 'var(--color-text)' }}>0%</div>
+              <div style={{ flex: 1, minWidth: 0, padding: 10, background: 'var(--color-bg)', borderRadius: 8, textAlign: 'center' }}>
+                <div style={{ fontSize: 10, color: 'var(--color-text-secondary)', textTransform: 'uppercase', marginBottom: 4 }}>Общий план</div>
+                <div style={{ fontSize: 20, fontWeight: 700, color: 'var(--color-text)' }}>—</div>
+              </div>
+              <div style={{ flex: 1, minWidth: 0, padding: 10, background: 'var(--color-bg)', borderRadius: 8, textAlign: 'center' }}>
+                <div style={{ fontSize: 10, color: 'var(--color-text-secondary)', textTransform: 'uppercase', marginBottom: 4 }}>Общий факт</div>
+                <div style={{ fontSize: 20, fontWeight: 700, color: 'var(--color-success)' }}>—</div>
+              </div>
+              <div style={{ flex: 1, minWidth: 0, padding: 10, background: 'var(--color-bg)', borderRadius: 8, textAlign: 'center' }}>
+                <ProgressRing percent={null} />
               </div>
             </div>
+            <div style={{ fontSize: 11, color: 'var(--color-text-secondary)', marginTop: 8, textAlign: 'center' }}>
+              Данные KPI появятся после запуска процесса «KPI Продажи».
+            </div>
           </div>
-          </div>
-          {/* Блок АКБ */}
+          {/* Блок АКБ (активная клиентская база) */}
           <div style={{ fontSize: 16, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px', color: 'var(--color-text)', marginBottom: 8 }}>АКБ</div>
           <div className="card" style={{ marginTop: 12, marginBottom: 12, padding: 12 }}>
             <div style={{ display: 'flex', gap: 10, flexWrap: 'nowrap' }}>
-            <div style={{ flex: 1, minWidth: 0, padding: 10, background: 'var(--color-bg)', borderRadius: 8, textAlign: 'center' }}>
-              <div style={{ fontSize: 10, color: 'var(--color-text-secondary)', textTransform: 'uppercase', marginBottom: 4 }}>Всего</div>
-              <div style={{ fontSize: 20, fontWeight: 700, color: 'var(--color-text)' }}>{clients.length}</div>
-            </div>
-            <div style={{ flex: 1, minWidth: 0, padding: 10, background: 'var(--color-bg)', borderRadius: 8, textAlign: 'center' }}>
-              <div style={{ fontSize: 10, color: 'var(--color-text-secondary)', textTransform: 'uppercase', marginBottom: 4 }}>Активных</div>
-              <div style={{ fontSize: 20, fontWeight: 700, color: 'var(--color-success)' }}>{clients.filter((c) => c.active).length}</div>
-            </div>
-            <div style={{ flex: 1, minWidth: 0, padding: 10, background: 'var(--color-bg)', borderRadius: 8, textAlign: 'center' }}>
-              <div style={{ width: 56, height: 56, borderRadius: '50%', border: '4px solid var(--color-border)', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', margin: '0 auto' }}>
-                <svg width="48" height="48" viewBox="0 0 24 24" style={{ transform: 'rotate(-90deg)' }}>
-                  <circle cx="12" cy="12" r="10" stroke="var(--color-border)" strokeWidth="4" fill="none" />
-                  <circle cx="12" cy="12" r="10" stroke="#2563eb" strokeWidth="4" fill="none" strokeDasharray="62.8" strokeDashoffset="0" />
-                </svg>
-                <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', fontSize: 15, fontWeight: 700, color: 'var(--color-text)' }}>{clients.length > 0 ? 100 : 0}%</div>
+              <div style={{ flex: 1, minWidth: 0, padding: 10, background: 'var(--color-bg)', borderRadius: 8, textAlign: 'center' }}>
+                <div style={{ fontSize: 10, color: 'var(--color-text-secondary)', textTransform: 'uppercase', marginBottom: 4 }}>Всего</div>
+                <div style={{ fontSize: 20, fontWeight: 700, color: 'var(--color-text)' }}>{clients.length}</div>
+              </div>
+              <div style={{ flex: 1, minWidth: 0, padding: 10, background: 'var(--color-bg)', borderRadius: 8, textAlign: 'center' }}>
+                <div style={{ fontSize: 10, color: 'var(--color-text-secondary)', textTransform: 'uppercase', marginBottom: 4 }}>Активных</div>
+                <div style={{ fontSize: 20, fontWeight: 700, color: 'var(--color-success)' }}>{activeCount}</div>
+              </div>
+              <div style={{ flex: 1, minWidth: 0, padding: 10, background: 'var(--color-bg)', borderRadius: 8, textAlign: 'center' }}>
+                <ProgressRing percent={activeShare} />
               </div>
             </div>
-          </div>
           </div>
         </>
       )}

@@ -27,3 +27,20 @@ npm start
 ```
 
 Сервер пишет JSON-журнал в stdout. В продакшене рекомендуется сохранять `runLogs` в Firestore через Admin SDK (доверенная запись).
+
+## Коды ошибок
+
+Ответы об ошибках содержат машинный код причины в поле `code`, чтобы клиент не показывал внутренний текст GitHub (перевод в русские тексты — `ERROR_CODE_MAP` в `src/api.ts`):
+
+| `code` | HTTP | Значение |
+|--------|------|----------|
+| `missing_token` | 401 | Нет заголовка `Authorization: Bearer` |
+| `invalid_token` | 401 | ID token истёк или повреждён — нужен перелогин |
+| `unverified_email` | 403 | Email не подтверждён |
+| `uid_not_allowed` | 403 | UID нет в `ALLOWED_UIDS` |
+| `github_auth_failed` | 502 | GitHub отклонил `GITHUB_TOKEN` |
+| `github_forbidden` | 502 | GitHub: недостаточно прав |
+| `github_not_found` | 502 | GitHub: файл workflow не найден |
+| `github_timeout` | 504 | GitHub не ответил за 15 секунд |
+
+Ошибки валидации запроса (`Workflow is not allowed`, `Unknown input`, `test_mode must be boolean` и т.п.) возвращаются с HTTP 400 без поля `code`.

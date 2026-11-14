@@ -12,7 +12,7 @@ import {
   createUserWithEmailAndPassword,
   signOut,
 } from 'firebase/auth';
-import { auth, initFirebase } from '@/firebase';
+import { auth, initFirebase, reloadUser, getIdToken } from '@/firebase';
 import { getFirebaseConfigIssues } from '@/firebase.config';
 
 export interface AuthContextType {
@@ -24,6 +24,8 @@ export interface AuthContextType {
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
+  /** Перечитывает пользователя из Firebase и возвращает актуальный emailVerified. */
+  refreshEmailVerification: () => Promise<boolean>;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -74,9 +76,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await signOut(auth);
   };
 
+  const refreshEmailVerification = async (): Promise<boolean> => {
+    const current = auth?.currentUser;
+    if (!current) return false;
+    await reloadUser(current);
+    const verified = Boolean(current.emailVerified);
+    if (verified) {
+      // Свежий токен, чтобы правила Firestore увидели email_verified без перелогина.
+      await getIdToken(current, true);
+    }
+    setEmailVerified(verified);
+    return verified;
+  };
+
   return (
     <AuthContext.Provider
-      value={{ user, emailVerified, loading, initialized, firebaseError, signIn, signUp, signOut: signOutFn }}
+      value={{
+        user,
+        emailVerified,
+        loading,
+        initialized,
+        firebaseError,
+        signIn,
+        signUp,
+        signOut: signOutFn,
+        refreshEmailVerification,
+      }}
     >
       {children}
     </AuthContext.Provider>

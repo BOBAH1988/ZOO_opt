@@ -6,6 +6,7 @@ import {
   createUserWithEmailAndPassword,
   signOut,
   onAuthStateChanged,
+  reload,
   User,
 } from 'firebase/auth';
 import {
@@ -92,6 +93,16 @@ export async function testFirestoreConnection(): Promise<{ ok: boolean; error: s
     firestoreError = `Ошибка подключения к Firestore: ${message}`;
     return { ok: false, error: firestoreError };
   }
+}
+
+/** Перечитывает профиль пользователя из Firebase Auth (обновляет emailVerified). */
+export async function reloadUser(user: User): Promise<void> {
+  await reload(user);
+}
+
+/** Возвращает ID token, принудительно обновляя его при forceRefresh=true. */
+export async function getIdToken(user: User, forceRefresh = false): Promise<string> {
+  return user.getIdToken(forceRefresh);
 }
 
 export { app, auth, db };

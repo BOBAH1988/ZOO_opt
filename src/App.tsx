@@ -2,6 +2,7 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { Layout } from '@/components/Layout';
 import { Login } from '@/components/Login';
+import { VerifyEmail } from '@/components/VerifyEmail';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { ReportsPage } from '@/pages/ReportsPage';
 import { RoutePage } from '@/pages/RoutePage';
@@ -20,13 +21,22 @@ export default function App() {
     );
   }
 
+  // Вошёл, но email не подтверждён — показываем понятный экран вместо приложения.
+  if (user && emailVerified === false) {
+    return (
+      <div className="app">
+        <VerifyEmail />
+      </div>
+    );
+  }
+
   return (
     <div className="app">
       {user ? (
         <Routes>
           <Route path="/login" element={<Login onLogin={() => {}} />} />
           <Route path="/" element={<Navigate to="/reports" replace />} />
-          <Route element={<ProtectedRoute emailVerified={emailVerified} />}>
+          <Route element={<ProtectedRoute />}>
             <Route element={<Layout />}>
               <Route path="reports" element={<ReportsPage />} />
               <Route path="route" element={<RoutePage />} />

@@ -20,6 +20,7 @@ declare module 'firebase/auth' {
   export function sendPasswordResetEmail(auth: Auth, email: string): Promise<void>;
   export function sendEmailVerification(user: User): Promise<void>;
   export function signOut(auth: Auth): Promise<void>;
+  export function reload(user: User): Promise<void>;
   export function onAuthStateChanged(auth: Auth, callback: (user: User | null) => void): () => void;
 }
 
