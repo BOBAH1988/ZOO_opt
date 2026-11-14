@@ -54,8 +54,11 @@ export function ReportsPage() {
   }, []);
 
   useEffect(() => {
-    setPage(0);
-  }, [logs.length]);
+    const maxPage = Math.max(0, Math.ceil(logs.length / PAGE_SIZE) - 1);
+    if (page > maxPage) {
+      setPage(maxPage);
+    }
+  }, [logs.length, page]);
 
   useEffect(() => {
     if (!tooltip || !tipRef.current) return;

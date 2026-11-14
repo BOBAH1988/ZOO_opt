@@ -7,7 +7,12 @@ import { initFirebase } from './firebase';
 import { AuthProvider } from './context/AuthContext';
 
 // Инициализация Firebase (если сконфигурирован).
-initFirebase();
+try {
+  initFirebase();
+} catch {
+  // Ошибка инициализации Firebase не должна ломать всё приложение;
+  // AuthProvider сам отобразит ошибку конфигурации.
+}
 
 // Регистрация Service Worker для PWA (только в production-сборке).
 if ('serviceWorker' in navigator && import.meta.env.PROD) {

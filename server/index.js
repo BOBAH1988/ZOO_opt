@@ -60,7 +60,7 @@ function validateInputs(workflowId, inputs) {
 
 async function dispatchWorkflow(workflowId, inputs) {
   const spec = ALLOWED_WORKFLOWS[workflowId];
-  const url = `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/actions/workflows/${encodeURIComponent(spec.path)}/dispatches`;
+  const url = `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/actions/workflows/${spec.path}/dispatches`;
   const res = await fetch(url, {
     method: 'POST',
     headers: {
@@ -135,7 +135,7 @@ app.post('/run', async (req, res) => {
     return res.json({
       accepted: true,
       message: 'Запрос на запуск принят сервером и передан в GitHub Actions.',
-      runUrl: `https://github.com/${GITHUB_OWNER}/${GITHUB_REPO}/actions/workflows/${encodeURIComponent(ALLOWED_WORKFLOWS[workflowId].path)}`,
+      runUrl: `https://github.com/${GITHUB_OWNER}/${GITHUB_REPO}/actions/workflows/${ALLOWED_WORKFLOWS[workflowId].path}`,
       runId: null,
     });
   } catch (err) {

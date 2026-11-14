@@ -8,6 +8,7 @@ declare module 'firebase/auth' {
   export interface User {
     uid: string;
     email: string | null;
+    emailVerified: boolean;
     getIdToken(forceRefresh?: boolean): Promise<string>;
   }
   export interface Auth {
@@ -28,19 +29,19 @@ declare module 'firebase/firestore' {
     toDate(): Date;
   }
   export const Timestamp: { now(): Timestamp; fromDate(date: Date): Timestamp };
-  export function serverTimestamp(): unknown;
+  export function serverTimestamp(): any;
   export function getFirestore(app?: import('firebase/app').FirebaseApp): Firestore;
-  export function collection(db: Firestore, path: string): unknown;
-  export function query(...args: unknown[]): unknown;
-  export function where(field: string, op: string, value: unknown): unknown;
-  export function orderBy(field: string, direction?: string): unknown;
-  export interface QuerySnapshot<T = DocumentData> { forEach(cb: (doc: QueryDocumentSnapshot<T>) => void): void; }
-  export function onSnapshot(query: unknown, next: (snap: QuerySnapshot) => void, error?: (err: Error) => void): () => void;
+  export function collection(db: Firestore, path: string): any;
+  export function query(...args: any[]): any;
+  export function where(field: string, op: string, value: any): any;
+  export function orderBy(field: string, direction?: string): any;
+  export interface QuerySnapshot<T = any> { forEach(cb: (doc: QueryDocumentSnapshot<T>) => void): void; }
+  export function onSnapshot(query: any, next: (snap: QuerySnapshot) => void, error?: (err: Error) => void): () => void;
   export function enableNetwork(db: Firestore): Promise<void>;
-  export function addDoc(ref: unknown, data: unknown): Promise<{ id: string }>;
-  export function updateDoc(ref: unknown, data: unknown): Promise<void>;
-  export function deleteDoc(ref: unknown): Promise<void>;
-  export function doc(db: Firestore, path: string, id?: string): unknown;
-  export type DocumentData = Record<string, unknown>;
-  export interface QueryDocumentSnapshot<T = DocumentData> { id: string; data(): T; }
+  export function addDoc(ref: any, data: any): Promise<{ id: string }>;
+  export function updateDoc(ref: any, data: any): Promise<void>;
+  export function deleteDoc(ref: any): Promise<void>;
+  export function doc(db: Firestore, path: string, id?: string): any;
+  export type DocumentData = Record<string, any>;
+  export interface QueryDocumentSnapshot<T = any> { id: string; data(): T; }
 }

@@ -294,6 +294,12 @@ export function RunProcessesPage() {
 
   const setInput = (scenarioId: string, key: string, value: boolean | string | string[]) => {
     setInputValues((prev) => ({ ...prev, [scenarioId]: { ...prev[scenarioId], [key]: value } }));
+    // Сбрасываем статус запуска при изменении настроек, чтобы кнопка «Запустить» снова стала доступна.
+    setRunStatus((prev) => {
+      const next = { ...prev };
+      delete next[scenarioId];
+      return next;
+    });
   };
 
   const resetSettings = () => {
@@ -575,11 +581,6 @@ export function RunProcessesPage() {
                   >
                     📋
                   </button>
-                </div>
-              )}
-              {scenario.warning && (
-                <div style={{ gridColumn: '1 / -1', padding: 4, background: '#fbf4e3', borderRadius: 6, fontSize: 11, color: '#92400e', overflowWrap: 'anywhere', wordBreak: 'break-word' }}>
-                  ⚠️ {scenario.warning}
                 </div>
               )}
             </div>

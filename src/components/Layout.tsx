@@ -21,8 +21,12 @@ export function Layout() {
   const [accountOpen, setAccountOpen] = useState(false);
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
     if (typeof window !== 'undefined') {
-      const stored = localStorage.getItem('theme');
-      if (stored === 'dark' || stored === 'light') return stored;
+      try {
+        const stored = localStorage.getItem('theme');
+        if (stored === 'dark' || stored === 'light') return stored;
+      } catch {
+        // localStorage недоступен (приватный режим / запрет хранилища)
+      }
     }
     return 'light';
   });
@@ -31,7 +35,11 @@ export function Layout() {
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
-    localStorage.setItem('theme', theme);
+    try {
+      localStorage.setItem('theme', theme);
+    } catch {
+      // localStorage недоступен — игнорируем
+    }
   }, [theme]);
 
   useEffect(() => {

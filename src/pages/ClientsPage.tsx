@@ -165,11 +165,11 @@ export function ClientsPage() {
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Ошибка создания клиента';
       setError(message);
-    } finally {
-      setSaving(false);
-      resetForm();
-      setEditingId(null);
+      return;
     }
+    setSaving(false);
+    resetForm();
+    setEditingId(null);
   };
 
   const handleUpdate = async (id: string, e: React.FormEvent) => {
@@ -198,11 +198,11 @@ export function ClientsPage() {
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Ошибка обновления клиента';
       setError(message);
-    } finally {
-      setSaving(false);
-      resetForm();
-      setEditingId(null);
+      return;
     }
+    setSaving(false);
+    resetForm();
+    setEditingId(null);
   };
 
   const handleDeleteConfirm = (id: string, name: string) => {
@@ -216,6 +216,7 @@ export function ClientsPage() {
     try {
       await deleteDoc(doc(db, 'clients', deleteTarget.id));
       setDeleteTarget(null);
+      setDeleteConfirmed(false);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Ошибка удаления клиента';
       setError(message);

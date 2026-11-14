@@ -14,7 +14,12 @@ export function PWAInstallPrompt() {
     const isIOS = /iPad|iPhone|iPod/.test(navigator.platform) ||
       (navigator.userAgent.includes('Mac') && 'ontouchend' in document);
     const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
-    const dismissed = localStorage.getItem('zoo-pwa-dismissed') === '1';
+    let dismissed = false;
+    try {
+      dismissed = localStorage.getItem('zoo-pwa-dismissed') === '1';
+    } catch {
+      // localStorage недоступен
+    }
 
     if (isIOS && !isStandalone && !dismissed) {
       setShow(true);
@@ -22,7 +27,11 @@ export function PWAInstallPrompt() {
   }, []);
 
   const dismiss = () => {
-    localStorage.setItem('zoo-pwa-dismissed', '1');
+    try {
+      localStorage.setItem('zoo-pwa-dismissed', '1');
+    } catch {
+      // localStorage недоступен
+    }
     setShow(false);
   };
 
