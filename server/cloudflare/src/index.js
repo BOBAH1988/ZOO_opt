@@ -6,7 +6,7 @@ const FIREBASE_JWKS = createRemoteJWKSet(
 
 // Допустимые значения для поля 'only' ( Projekты рассылки, совпадает с клиентом ).
 const PROJECT_ALLOWLIST = new Set([
-  'order', 'ukhta', 'veta', 'clients', 'payments', 'invoice', 'veles', 'lemur', 'dz', 'sety',
+  'order', 'ukhta', 'veta', 'clients', 'payments', 'invoice', 'veles', 'lemur', 'dz', 'sety', 'prusakova',
 ]);
 
 export const ALLOWED_WORKFLOWS = {
@@ -178,9 +178,10 @@ export default {
     if (origin && origin !== env.APP_ORIGIN) {
       const headers = corsHeaders(origin, env);
       headers.set('Access-Control-Allow-Origin', origin || '*');
+      headers.set('Content-Type', 'application/json; charset=utf-8');
       return new Response(JSON.stringify({ message: 'Origin is not allowed' }), {
         status: 403,
-        headers: { ...headers, 'Content-Type': 'application/json; charset=utf-8' },
+        headers,
       });
     }
 

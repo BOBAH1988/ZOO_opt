@@ -165,6 +165,7 @@ export function ClientsPage() {
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Ошибка создания клиента';
       setError(message);
+      setSaving(false);
       return;
     }
     setSaving(false);
@@ -198,6 +199,7 @@ export function ClientsPage() {
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Ошибка обновления клиента';
       setError(message);
+      setSaving(false);
       return;
     }
     setSaving(false);

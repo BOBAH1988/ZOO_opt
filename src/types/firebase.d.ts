@@ -29,19 +29,50 @@ declare module 'firebase/firestore' {
     toDate(): Date;
   }
   export const Timestamp: { now(): Timestamp; fromDate(date: Date): Timestamp };
-  export function serverTimestamp(): any;
+
+  // serverTimestamp() возвращает специальный маркер, а не произвольное значение.
+  // Присваивание результата в переменную с несовместимым типом будет ошибкой tsc.
+  export interface ServerTimestamp {
+    __serverTimestamp: true;
+  }
+  export function serverTimestamp(): ServerTimestamp;
+
+  export interface DocumentReference<T = DocumentData> {
+    id: string;
+  }
+  export interface CollectionReference<T = DocumentData> {
+    id: string;
+  }
+  export interface QueryDocumentSnapshot<T = DocumentData> {
+    id: string;
+    data(): T;
+  }
+  export interface QuerySnapshot<T = DocumentData> {
+    forEach(cb: (doc: QueryDocumentSnapshot<T>) => void): void;
+  }
+
   export function getFirestore(app?: import('firebase/app').FirebaseApp): Firestore;
-  export function collection(db: Firestore, path: string): any;
+  export function collection(
+    db: Firestore,
+    path: string,
+    ...pathComponents: string[]
+  ): CollectionReference;
+  export function doc<T = DocumentData>(
+    db: Firestore,
+    path: string,
+    ...pathComponents: string[]
+  ): DocumentReference<T>;
   export function query(...args: any[]): any;
   export function where(field: string, op: string, value: any): any;
   export function orderBy(field: string, direction?: string): any;
-  export interface QuerySnapshot<T = any> { forEach(cb: (doc: QueryDocumentSnapshot<T>) => void): void; }
-  export function onSnapshot(query: any, next: (snap: QuerySnapshot) => void, error?: (err: Error) => void): () => void;
+  export function onSnapshot(
+    query: any,
+    next: (snap: QuerySnapshot) => void,
+    error?: (err: Error) => void,
+  ): () => void;
   export function enableNetwork(db: Firestore): Promise<void>;
-  export function addDoc(ref: any, data: any): Promise<{ id: string }>;
+  export function addDoc(ref: any, data: any): Promise<DocumentReference>;
   export function updateDoc(ref: any, data: any): Promise<void>;
   export function deleteDoc(ref: any): Promise<void>;
-  export function doc(db: Firestore, path: string, id?: string): any;
   export type DocumentData = Record<string, any>;
-  export interface QueryDocumentSnapshot<T = any> { id: string; data(): T; }
 }

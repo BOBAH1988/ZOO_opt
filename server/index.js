@@ -65,24 +65,27 @@ async function dispatchWorkflow(workflowId, inputs) {
   const url = `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/actions/workflows/${spec.path}/dispatches`;
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), GITHUB_FETCH_TIMEOUT_MS);
-  const res = await fetch(url, {
-    method: 'POST',
-    headers: {
-      Accept: 'application/vnd.github+json',
-      Authorization: `Bearer ${GITHUB_TOKEN}`,
-      'X-GitHub-Api-Version': '2022-11-28',
-      'Content-Type': 'application/json',
-      'User-Agent': 'zoo-opt-run-api',
-    },
-    body: JSON.stringify({ ref: 'main', inputs: Object.fromEntries(Object.entries(inputs).map(([k, v]) => [k, String(v)])) }),
-    signal: controller.signal,
-  });
-  clearTimeout(timeoutId);
-  if (!res.ok) {
-    const text = await res.text();
-    throw new Error(`GitHub dispatch failed: ${res.status} ${text}`);
+  try {
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: {
+        Accept: 'application/vnd.github+json',
+        Authorization: `Bearer ${GITHUB_TOKEN}`,
+        'X-GitHub-Api-Version': '2022-11-28',
+        'Content-Type': 'application/json',
+        'User-Agent': 'zoo-opt-run-api',
+      },
+      body: JSON.stringify({ ref: 'main', inputs: Object.fromEntries(Object.entries(inputs).map(([k, v]) => [k, String(v)])) }),
+      signal: controller.signal,
+    });
+    if (!res.ok) {
+      const text = await res.text();
+      throw new Error(`GitHub dispatch failed: ${res.status} ${text}`);
+    }
+    return { accepted: true };
+  } finally {
+    clearTimeout(timeoutId);
   }
-  return { accepted: true };
 }
 
 const app = express();
@@ -125,13 +128,17 @@ app.post('/run', async (req, res) => {
 
     const spec = ALLOWED_WORKFLOWS[workflowId];
 
-    if (
-      spec.realSendGuard &&
-      validation.cleaned.test_mode === false &&
-      (REAL_SEND_UIDS.length === 0 || !REAL_SEND_UIDS.includes(uid))
-    ) {
-      logEvent({ level: 'warn', type: 'real_send_forbidden', requestId, uid, workflowId });
-      return res.status(403).json({ message: 'Real email sending is not enabled for this account' });
+    if (spec.realSendGuard) {
+      if (typeof validation.cleaned.test_mode !== 'boolean') {
+        return res.status(400).json({ message: 'test_mode must be boolean' });
+      }
+      if (
+        validation.cleaned.test_mode === false &&
+        (REAL_SEND_UIDS.length === 0 || !REAL_SEND_UIDS.includes(uid))
+      ) {
+        logEvent({ level: 'warn', type: 'real_send_forbidden', requestId, uid, workflowId });
+        return res.status(403).json({ message: 'Real email sending is not enabled for this account' });
+      }
     }
 
     logEvent({ level: 'info', type: 'run_request', requestId, uid, email, workflowId, inputs: validation.cleaned });

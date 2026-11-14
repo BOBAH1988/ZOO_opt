@@ -201,7 +201,7 @@ const ALL_SCRIPTS = [
 
 type InputValues = Record<string, Record<string, boolean | string | string[]>>;
 
-const SETTINGS_VERSION = 2;
+const SETTINGS_VERSION = 3;
 const STORAGE_KEY = 'zoo-opt-run-settings';
 
 function defaultInputs(scenario: WorkflowScenario): Record<string, boolean | string | string[]> {
@@ -310,6 +310,8 @@ export function RunProcessesPage() {
       // игнорируем ошибки очистки localStorage
     }
     setInputValues(loadSettings());
+    // Сброс настроек должен вернуть кнопку «Запустить» для всех сценариев.
+    setRunStatus({});
   };
 
   const toggleMultiselect = (scenarioId: string, key: string, value: string) => {
@@ -317,6 +319,12 @@ export function RunProcessesPage() {
       const cur = (prev[scenarioId]?.[key] as string[] | undefined) || [];
       const next = cur.includes(value) ? cur.filter((v) => v !== value) : [...cur, value];
       return { ...prev, [scenarioId]: { ...prev[scenarioId], [key]: next } };
+    });
+    // Смена множественного выбора должна вернуть кнопку «Запустить».
+    setRunStatus((prev) => {
+      const next = { ...prev };
+      delete next[scenarioId];
+      return next;
     });
   };
 
