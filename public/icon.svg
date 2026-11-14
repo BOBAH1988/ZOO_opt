@@ -1,17 +1,60 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
-  <title>ЗооКонтроль</title>
-  <desc>Иконка приложения ЗооКонтроль: белая лапа в щите.</desc>
-  <rect x="0" y="0" width="1024" height="1024" rx="192" ry="192" fill="#0F2A43"/>
-  <!-- Щит: растянут вниз, вершина на месте -->
-  <polygon points="512,120 770,250 770,560 512,870 254,560 254,250"
-           fill="none" stroke="#2E7D5B" stroke-width="28" stroke-linejoin="round"/>
-  <!-- Внутренняя обводка щита -->
-  <polygon points="512,170 730,280 730,540 512,820 292,540 292,280"
-           fill="none" stroke="#2E7D5B" stroke-width="8" stroke-linejoin="round"/>
-  <!-- Белая лапа внутри щита -->
-  <ellipse cx="512" cy="560" rx="120" ry="85" fill="#FFFFFF"/>
-  <circle cx="408" cy="420" r="44" fill="#FFFFFF"/>
-  <circle cx="496" cy="380" r="48" fill="#FFFFFF"/>
-  <circle cx="528" cy="380" r="48" fill="#FFFFFF"/>
-  <circle cx="616" cy="420" r="44" fill="#FFFFFF"/>
+<!-- Единый мастер-макет иконки. PNG/ICO генерируются scripts/generate_icons.py. -->
+<svg
+  xmlns="http://www.w3.org/2000/svg"
+  viewBox="0 0 1024 1024"
+  width="1024"
+  height="1024"
+  role="img"
+  aria-labelledby="zoo-icon-title zoo-icon-desc">
+  <title id="zoo-icon-title">ЗооКонтроль</title>
+  <desc id="zoo-icon-desc">Иконка приложения ЗооКонтроль: щит в щите с лапой животного.</desc>
+  <defs>
+    <!-- Глубокий фирменный фон -->
+    <linearGradient id="bg" x1="512" y1="0" x2="512" y2="1024" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#163F63"/>
+      <stop offset="0.55" stop-color="#0F2A43"/>
+      <stop offset="1" stop-color="#091C2E"/>
+    </linearGradient>
+    <!-- Мягкое изумрудное свечение за щитом -->
+    <radialGradient id="glow" cx="512" cy="340" r="560" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#34D399" stop-opacity="0.28"/>
+      <stop offset="0.55" stop-color="#34D399" stop-opacity="0.10"/>
+      <stop offset="1" stop-color="#34D399" stop-opacity="0"/>
+    </radialGradient>
+    <!-- Внешний щит -->
+    <linearGradient id="outer" x1="230" y1="160" x2="820" y2="900" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#4BE0A6"/>
+      <stop offset="0.5" stop-color="#23B183"/>
+      <stop offset="1" stop-color="#0C7154"/>
+    </linearGradient>
+    <!-- Внутренний щит -->
+    <linearGradient id="inner" x1="360" y1="260" x2="680" y2="820" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#0F2C46"/>
+      <stop offset="1" stop-color="#081A2B"/>
+    </linearGradient>
+    <!-- Лапа животного -->
+    <linearGradient id="paw" x1="512" y1="380" x2="512" y2="720" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FFFFFF"/>
+      <stop offset="1" stop-color="#E8FAF2"/>
+    </linearGradient>
+  </defs>
+  <!-- Подложка -->
+  <rect width="1024" height="1024" rx="224" fill="url(#bg)"/>
+  <rect width="1024" height="1024" rx="224" fill="url(#glow)"/>
+  <!-- Внешний щит -->
+  <path d="M512 92 L856 218 V520 C856 712 700 846 512 928 C324 846 168 712 168 520 V218 Z"
+        fill="url(#outer)"/>
+  <!-- Внутренний щит -->
+  <path d="M512 196 L792 296 V524 C792 678 658 788 512 856 C366 788 232 678 232 524 V296 Z"
+        fill="url(#inner)"/>
+  <path d="M512 232 L762 318 V522 C762 658 638 758 512 820 C386 758 262 658 262 522 V318 Z"
+        fill="none" stroke="#FFFFFF" stroke-opacity="0.16" stroke-width="6" stroke-linejoin="round"/>
+  <!-- Лапа животного -->
+  <g fill="url(#paw)">
+    <path d="M512 536 C572 536 647 568 647 622 C647 686 588 726 512 726 C436 726 377 686 377 622 C377 568 452 536 512 536 Z"/>
+    <ellipse cx="323" cy="462" rx="56" ry="54"/>
+    <ellipse cx="449" cy="424" rx="56" ry="56"/>
+    <ellipse cx="575" cy="424" rx="56" ry="56"/>
+    <ellipse cx="701" cy="462" rx="56" ry="54"/>
+  </g>
 </svg>

@@ -8,21 +8,23 @@
  *  - Персональные данные клиентов, токены и результаты авторизованных запросов — НЕ кэшируются.
  */
 
-const CACHE_NAME = 'zoo-control-shell-v4';
+const CACHE_NAME = 'zoo-control-shell-v5';
+// ?v=3 — единый набор иконок (щит в щите с лапой животного).
 const SHELL_URLS = [
   '/ZOO_opt/',
   '/ZOO_opt/index.html',
-  '/ZOO_opt/manifest.json',
-  '/ZOO_opt/favicon.svg',
-  '/ZOO_opt/favicon-16.png',
-  '/ZOO_opt/favicon-32.png',
-  '/ZOO_opt/favicon-48.png',
-  '/ZOO_opt/apple-touch-icon.png',
-  '/ZOO_opt/icon.svg',
-  '/ZOO_opt/icon-192.png',
-  '/ZOO_opt/icon-512.png',
-  '/ZOO_opt/maskable-icon-192.png',
-  '/ZOO_opt/maskable-icon-512.png',
+  '/ZOO_opt/manifest.json?v=3',
+  '/ZOO_opt/favicon.svg?v=3',
+  '/ZOO_opt/favicon.ico?v=3',
+  '/ZOO_opt/favicon-16.png?v=3',
+  '/ZOO_opt/favicon-32.png?v=3',
+  '/ZOO_opt/favicon-48.png?v=3',
+  '/ZOO_opt/apple-touch-icon.png?v=3',
+  '/ZOO_opt/icon.svg?v=3',
+  '/ZOO_opt/icon-192.png?v=3',
+  '/ZOO_opt/icon-512.png?v=3',
+  '/ZOO_opt/maskable-icon-192.png?v=3',
+  '/ZOO_opt/maskable-icon-512.png?v=3',
 ];
 
 // Firebase, API и внешние сервисы — никогда не кэшируем.

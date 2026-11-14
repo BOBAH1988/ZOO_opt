@@ -22,6 +22,73 @@ import type { Client, NewClientInput } from '@/types';
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
+type SortMode = 'default' | 'asc' | 'desc';
+
+const SORT_OPTIONS: Array<{ value: SortMode; label: string }> = [
+  { value: 'default', label: 'По умолчанию' },
+  { value: 'asc', label: 'По возрастанию' },
+  { value: 'desc', label: 'По убыванию' },
+];
+
+const SORT_LABELS: Record<SortMode, string> = {
+  default: 'по умолчанию',
+  asc: 'по возрастанию',
+  desc: 'по убыванию',
+};
+
+/** Ключ localStorage, в котором сохраняется выбранный порядок сортировки. */
+const SORT_STORAGE_KEY = 'zoo.clients.sortMode';
+
+/** Префикс ключа localStorage для сохранённого ручного порядка строк (на пользователя). */
+const MANUAL_ORDER_STORAGE_PREFIX = 'zoo.clients.manualOrder';
+
+/** Читает сохранённый порядок сортировки, чтобы он оставался значением по умолчанию. */
+function readSavedSortMode(): SortMode {
+  try {
+    const saved = window.localStorage.getItem(SORT_STORAGE_KEY);
+    if (saved === 'default' || saved === 'asc' || saved === 'desc') return saved;
+  } catch {
+    // localStorage может быть недоступен — используем значение по умолчанию
+  }
+  return 'default';
+}
+
+/** Читает сохранённый ручной порядок клиентов для пользователя. */
+function readSavedManualOrder(uid: string): string[] {
+  try {
+    const raw = window.localStorage.getItem(`${MANUAL_ORDER_STORAGE_PREFIX}.${uid}`);
+    if (!raw) return [];
+    const parsed: unknown = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    return parsed.filter((value): value is string => typeof value === 'string');
+  } catch {
+    return [];
+  }
+}
+
+/** Сохраняет ручной порядок клиентов как значение по умолчанию. */
+function saveManualOrder(uid: string, order: string[]): void {
+  try {
+    window.localStorage.setItem(`${MANUAL_ORDER_STORAGE_PREFIX}.${uid}`, JSON.stringify(order));
+  } catch {
+    // localStorage может быть недоступен — просто игнорируем
+  }
+}
+
+/** Применяет сохранённый ручной порядок; новые записи остаются в конце. */
+function applyManualOrder(list: Client[], order: string[]): Client[] {
+  if (order.length === 0) return list;
+  const rank = new Map(order.map((id, index) => [id, index]));
+  return [...list].sort((a, b) => {
+    const rankA = rank.get(a.id);
+    const rankB = rank.get(b.id);
+    if (rankA === undefined && rankB === undefined) return 0;
+    if (rankA === undefined) return 1;
+    if (rankB === undefined) return -1;
+    return rankA - rankB;
+  });
+}
+
 /** Копирует текст в буфер обмена, с запасным вариантом для небезопасных контекстов. */
 async function copyToClipboard(text: string): Promise<void> {
   if (navigator.clipboard && window.isSecureContext) {
@@ -90,6 +157,25 @@ function CheckIcon() {
   );
 }
 
+function FilterIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z" />
+    </svg>
+  );
+}
+
+function SortIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M7 20V4" />
+      <path d="M4 7l3-3 3 3" />
+      <path d="M17 4v16" />
+      <path d="M14 17l3 3 3-3" />
+    </svg>
+  );
+}
+
 /** Кнопка-иконка копирования значения в буфер обмена. */
 function CopyButton({ value, title = 'Копировать', className = '' }: { value?: string; title?: string; className?: string }) {
   const [copied, setCopied] = useState(false);
@@ -151,6 +237,10 @@ export function ClientsPage() {
   const [error, setError] = useState<string | null>(null);
   const [skippedCount, setSkippedCount] = useState(0);
   const [search, setSearch] = useState('');
+  const [sortMode, setSortMode] = useState<SortMode>(readSavedSortMode);
+  const [sortOpen, setSortOpen] = useState(false);
+  const [manualMode, setManualMode] = useState(false);
+  const [manualOrder, setManualOrder] = useState<string[]>([]);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [viewingClient, setViewingClient] = useState<Client | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
@@ -209,6 +299,52 @@ export function ClientsPage() {
     (c.address && c.address.toLowerCase().includes(search.toLowerCase())) ||
     (c.manager && c.manager.toLowerCase().includes(search.toLowerCase()))
   );
+
+  const sortedClients = sortMode === 'default'
+    ? applyManualOrder(filtered, manualOrder)
+    : [...filtered].sort((a, b) => {
+      const cmp = a.name.localeCompare(b.name, 'ru', { sensitivity: 'base' });
+      return sortMode === 'asc' ? cmp : -cmp;
+    });
+
+  // Загружаем сохранённый ручной порядок при смене пользователя.
+  useEffect(() => {
+    setManualOrder(user ? readSavedManualOrder(user.uid) : []);
+  }, [user]);
+
+  // Сохраняем выбранный порядок как значение по умолчанию для следующих визитов.
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(SORT_STORAGE_KEY, sortMode);
+    } catch {
+      // localStorage может быть недоступен — просто игнорируем
+    }
+  }, [sortMode]);
+
+  const handleSortSelect = (value: SortMode) => {
+    setSortMode(value);
+    setSortOpen(false);
+    setManualMode(false);
+  };
+
+  // Кнопка сортировки включает/выключает режим изменения порядка клиентов.
+  const toggleManualMode = () => {
+    setSortOpen(false);
+    if (!manualMode) setSortMode('default');
+    setManualMode(!manualMode);
+  };
+
+  // Меняет клиента местами с соседом сверху (-1) или снизу (1), как на странице «Маршрут».
+  const moveClient = (clientId: string, direction: -1 | 1) => {
+    const ids = applyManualOrder(clients, manualOrder).map((client) => client.id);
+    const index = ids.indexOf(clientId);
+    const target = index + direction;
+    if (index < 0 || target < 0 || target >= ids.length) return;
+
+    [ids[index], ids[target]] = [ids[target], ids[index]];
+    setManualOrder(ids);
+    if (user) saveManualOrder(user.uid, ids);
+  };
 
   const resetForm = () => {
     setForm({ name: '', email: '', phone: '', company: 'ИП', address: '', day: '', mode: '', manager: '', notes: '', active: true, title: '', grade: 'Gold' });
@@ -331,7 +467,52 @@ export function ClientsPage() {
 
   return (
     <div>
-      <h2 className="page-title">База клиентов</h2>
+      <div className="page-title-row">
+        <h2 className="page-title" style={{ margin: 0 }}>База клиентов</h2>
+        <div className="sort-menu">
+          <button
+            type="button"
+            className={`btn btn-outline btn-sm sort-btn${manualMode ? ' sort-btn--active' : ''}`}
+            onClick={toggleManualMode}
+            aria-pressed={manualMode}
+            aria-label={manualMode ? 'Завершить сортировку' : 'Изменить порядок клиентов'}
+            title={manualMode ? 'Завершить сортировку' : 'Изменить порядок клиентов'}
+          >
+            <SortIcon />
+          </button>
+          <button
+            type="button"
+            className={`btn btn-outline btn-sm sort-btn${sortMode !== 'default' ? ' sort-btn--active' : ''}`}
+            onClick={() => setSortOpen((open) => !open)}
+            aria-haspopup="menu"
+            aria-expanded={sortOpen}
+            aria-label={`Сортировка: ${SORT_LABELS[sortMode]}`}
+            title={`Сортировка: ${SORT_LABELS[sortMode]}`}
+          >
+            <FilterIcon />
+          </button>
+          {sortOpen && (
+            <>
+              <div className="sort-backdrop" onClick={() => setSortOpen(false)} />
+              <div className="sort-dropdown" role="menu">
+                {SORT_OPTIONS.map((option) => (
+                  <button
+                    key={option.value}
+                    type="button"
+                    role="menuitemradio"
+                    aria-checked={sortMode === option.value}
+                    className={`sort-option${sortMode === option.value ? ' sort-option--active' : ''}`}
+                    onClick={() => handleSortSelect(option.value)}
+                  >
+                    <span>{option.label}</span>
+                    {sortMode === option.value && <span aria-hidden="true">✓</span>}
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
+        </div>
+      </div>
 
       <div className="toolbar">
         <input
@@ -380,11 +561,16 @@ export function ClientsPage() {
                 <th style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>Форма</th>
                 <th style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>Клиент</th>
                 <th style={{ width: '80px', whiteSpace: 'nowrap', textAlign: 'center' }}>Грейд</th>
+                {manualMode && <th className="route-col-order">Порядок</th>}
               </tr>
             </thead>
             <tbody>
-              {filtered.map((client) => (
-                <tr key={client.id} onClick={() => setViewingClient(client)} style={{ cursor: 'pointer' }}>
+              {sortedClients.map((client, index) => (
+                <tr
+                  key={client.id}
+                  className={manualMode ? 'route-row-sorting' : 'route-row-clickable'}
+                  onClick={manualMode ? undefined : () => setViewingClient(client)}
+                >
                   <td style={{ width: '48px', whiteSpace: 'nowrap', textAlign: 'center' }}>{client.active ? '✅' : '❌'}</td>
                   <td style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{client.company || '—'}</td>
                   <td style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
@@ -393,6 +579,60 @@ export function ClientsPage() {
                   <td style={{ width: '80px', whiteSpace: 'nowrap', textAlign: 'center' }}>
                     <GradeStars grade={client.grade} />
                   </td>
+                  {manualMode && (
+                    <td className="route-col-order">
+                      <div className="route-move-buttons">
+                        <button
+                          type="button"
+                          className="route-move-btn"
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            moveClient(client.id, -1);
+                          }}
+                          disabled={index === 0}
+                          title="Переместить выше"
+                          aria-label={`Переместить выше: ${client.name}`}
+                        >
+                          <svg
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            aria-hidden="true"
+                            focusable="false"
+                          >
+                            <path d="m18 15-6-6-6 6" />
+                          </svg>
+                        </button>
+                        <button
+                          type="button"
+                          className="route-move-btn"
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            moveClient(client.id, 1);
+                          }}
+                          disabled={index === sortedClients.length - 1}
+                          title="Переместить ниже"
+                          aria-label={`Переместить ниже: ${client.name}`}
+                        >
+                          <svg
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            aria-hidden="true"
+                            focusable="false"
+                          >
+                            <path d="m6 9 6 6 6-6" />
+                          </svg>
+                        </button>
+                      </div>
+                    </td>
+                  )}
                 </tr>
               ))}
             </tbody>

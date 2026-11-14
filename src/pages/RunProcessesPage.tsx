@@ -414,22 +414,10 @@ export function RunProcessesPage() {
         <h2 className="page-title" style={{ margin: 0 }}>{'Автозапуск'}</h2>
         <button
           type="button"
-          className="btn btn-outline"
+          className="btn btn-outline btn-sm sort-btn"
           onClick={() => setHelpMenuOpen((prev) => !prev)}
           title="Справка по запускам"
           aria-label="Справка по запускам"
-          style={{
-            width: 36,
-            height: 36,
-            minHeight: 0,
-            padding: 0,
-            borderRadius: 6,
-            fontSize: 20,
-            fontWeight: 700,
-            lineHeight: 1,
-            background: 'transparent',
-            color: 'var(--color-text)',
-          }}
         >
           ?
         </button>
@@ -529,7 +517,7 @@ export function RunProcessesPage() {
       <div style={{ display: 'grid', gap: 6, gridTemplateColumns: '1fr' }}>
         {SCENARIOS.map((scenario) => {
           return (
-            <div key={scenario.id} className="card" style={{ display: 'grid', gridTemplateColumns: 'auto 1fr auto auto', gap: 8, alignItems: 'center' }}>
+            <div key={scenario.id} className="card run-scenario-row" style={{ display: 'grid', gridTemplateColumns: 'auto 1fr auto auto', gap: 8, alignItems: 'center' }}>
               <span style={{ fontSize: 15, color: '#94a3b8', whiteSpace: 'nowrap' }}>
                 {scenario.day}{scenario.time ? ` ${scenario.time}` : ''}
               </span>

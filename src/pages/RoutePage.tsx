@@ -20,6 +20,29 @@ const WEEK_DAYS = ['Понедельник', 'Вторник', 'Среда', 'Ч
 
 type WeekDay = (typeof WEEK_DAYS)[number];
 
+/** Номер дня недели в JS (0 — воскресенье) для каждого дня маршрута. */
+const WEEK_DAY_INDEX: Record<WeekDay, number> = {
+  Понедельник: 1,
+  Вторник: 2,
+  Среда: 3,
+  Четверг: 4,
+  Пятница: 5,
+};
+
+/** Ближайшая дата для дня недели: сегодня или следующая по календарю. */
+function getNearestDate(day: WeekDay, from: Date = new Date()): Date {
+  const diff = (WEEK_DAY_INDEX[day] - from.getDay() + 7) % 7;
+  return new Date(from.getFullYear(), from.getMonth(), from.getDate() + diff);
+}
+
+/** Форматирует дату как ДД.ММ.ГГ. */
+function formatShortDate(date: Date): string {
+  const day = String(date.getDate()).padStart(2, '0');
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const year = String(date.getFullYear()).slice(-2);
+  return `${day}.${month}.${year}`;
+}
+
 /** План перед визитом в точку: что сделать и текущий статус. */
 interface VisitPlan {
   planning: string;
@@ -99,6 +122,7 @@ function persistOrders(storageKey: string | null, orders: DayOrders) {
 
 interface DayRouteCardProps {
   day: WeekDay;
+  dateLabel: string;
   clients: Client[];
   visited: Record<string, boolean>;
   sorting: boolean;
@@ -118,6 +142,7 @@ interface DayRouteCardProps {
  */
 function DayRouteCard({
   day,
+  dateLabel,
   clients,
   visited,
   sorting,
@@ -132,11 +157,14 @@ function DayRouteCard({
   return (
     <section className="card route-day-card">
       <div className="route-day-header">
-        <h3 className="route-day-title">{day}</h3>
+        <h3 className="route-day-title">
+          {day}
+          <span className="route-day-date">{dateLabel}</span>
+        </h3>
         <div className="route-day-actions">
           <button
             type="button"
-            className={`route-sort-btn${sorting ? ' is-active' : ''}`}
+            className={`btn btn-outline btn-sm sort-btn${sorting ? ' sort-btn--active' : ''}`}
             onClick={() => onToggleSorting(day)}
             aria-pressed={sorting}
             title={sorting ? 'Завершить сортировку' : 'Изменить порядок клиентов'}
@@ -158,7 +186,7 @@ function DayRouteCard({
           </button>
           <button
             type="button"
-            className="btn btn-outline btn-sm route-reset-btn"
+            className="btn btn-outline btn-sm sort-btn"
             onClick={() => onResetVisited(day)}
             disabled={!hasVisited}
           >
@@ -514,6 +542,7 @@ export function RoutePage() {
           <DayRouteCard
             key={day}
             day={day}
+            dateLabel={formatShortDate(getNearestDate(day))}
             clients={clientsByDay[day]}
             visited={visited}
             sorting={sortingDay === day}
