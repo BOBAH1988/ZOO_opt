@@ -286,12 +286,12 @@ const GRADE_STARS: Record<'Bronze' | 'Silver' | 'Gold', { count: number; color: 
   Gold: { count: 3, color: '#f59e0b' },
 };
 
-/** Звёзды грейда: ☆ — не заполнен, ★ Bronze / ★★ Silver / ★★★ Gold. */
+/** Звёзды грейда: ☆☆☆ — не заполнен, ★ Bronze / ★★ Silver / ★★★ Gold. */
 function GradeStars({ grade }: { grade?: Client['grade'] }) {
   if (!grade || !GRADE_STARS[grade]) {
     return (
-      <span style={{ color: '#d1d5db', fontSize: 14 }} title="Грейд не заполнен">
-        ☆
+      <span style={{ color: '#d1d5db', fontSize: 14, letterSpacing: 1 }} title="Грейд не заполнен">
+        {'☆'.repeat(3)}
       </span>
     );
   }
