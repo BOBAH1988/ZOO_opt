@@ -1778,7 +1778,8 @@ label {
 
 /* Подвал с учётом безопасной зоны снизу (домашний индикатор iPhone) */
 .footer {
-  bottom: max(12px, env(safe-area-inset-bottom));
+  /* Прижат к нижней кромке экрана, отступ только под индикатор жеста */
+  bottom: 0;
   padding-bottom: calc(14px + env(safe-area-inset-bottom));
 }
 
