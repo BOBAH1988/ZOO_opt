@@ -89,8 +89,9 @@ button:disabled {
 .header {
   background: var(--color-surface);
   border-bottom: 1px solid var(--color-border);
-  padding: 0 20px;
-  height: 56px;
+  /* Высота по содержимому: кнопки 44px не выходят за нижнюю кромку */
+  padding: 8px 20px;
+  min-height: 60px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -1671,8 +1672,8 @@ button:disabled {
   }
 
   .header {
-    padding: 0 16px;
-    height: 52px;
+    padding: 6px 16px;
+    min-height: 56px;
   }
 
   .brand {
@@ -1774,6 +1775,7 @@ label {
 /* Шапка с учётом безопасной зоны сверху (ноут/остров iPhone) */
 .header {
   padding-top: calc(8px + max(0px, env(safe-area-inset-top)));
+  padding-bottom: 8px;
 }
 
 /* Подвал с учётом безопасной зоны снизу (домашний индикатор iPhone) */
@@ -1805,7 +1807,7 @@ label {
   }
 
   .header {
-    height: 50px;
+    min-height: 56px;
   }
 
   .brand {
