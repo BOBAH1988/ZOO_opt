@@ -42,6 +42,23 @@ export function formatClientName(name: string, company?: string): string {
 }
 
 /**
+ * Приводит режим работы к виду «10:00 - 21:00».
+ * Понимает «10:00-21:00», «10.00 - 21.00», «9:00 — 18:00» и т. п.
+ * Если распознать интервал не удалось, возвращает значение без изменений.
+ */
+export function formatWorkingHours(value?: string): string {
+  const trimmed = (value ?? '').trim();
+  if (!trimmed) return '';
+
+  const match = trimmed.match(/^(\d{1,2})\s*[:.]\s*(\d{2})\s*[-–—]\s*(\d{1,2})\s*[:.]\s*(\d{2})$/);
+  if (!match) return trimmed;
+
+  const [, h1, m1, h2, m2] = match;
+  const pad = (part: string) => part.padStart(2, '0');
+  return `${pad(h1)}:${m1} - ${pad(h2)}:${m2}`;
+}
+
+/**
  * Приводит адрес к виду «Город, улица дом».
  * Поддерживает старый формат с точкой: «Ухта. Заводская 6» → «Ухта, Заводская 6».
  */
@@ -73,6 +90,25 @@ export function formatClientAddress(address?: string): string {
 
   const rest = normalized.slice(commaIndex + 1).trim();
   return rest || normalized;
+}
+
+/**
+ * Форматирует дату/время в вид «13.11.26 11:05» (дд.ММ.гг чч:мм, локальное время).
+ * Пустое значение возвращает пустую строку, невалидное — исходное значение.
+ */
+export function formatClientDateTime(value?: string): string {
+  if (!value) return '';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+
+  const pad = (n: number) => String(n).padStart(2, '0');
+  const day = pad(date.getDate());
+  const month = pad(date.getMonth() + 1);
+  const year = pad(date.getFullYear() % 100);
+  const hours = pad(date.getHours());
+  const minutes = pad(date.getMinutes());
+
+  return `${day}.${month}.${year} ${hours}:${minutes}`;
 }
 
 export function toIsoString(value: unknown): string {
@@ -112,6 +148,10 @@ export function mapClientDoc(snap: QueryDocumentSnapshot<DocumentData>): Client 
       notes: typeof data.notes === 'string' && data.notes.trim() ? data.notes.trim() : undefined,
       active: typeof data.active === 'boolean' ? data.active : true,
       title: typeof data.title === 'string' && data.title.trim() ? data.title.trim() : undefined,
+      clientCode: typeof data.clientCode === 'string' && data.clientCode.trim()
+        ? data.clientCode.replace(/\D/g, '')
+        : undefined,
+      orders: typeof data.orders === 'string' && data.orders.trim() ? data.orders.trim() : undefined,
       grade: (data.grade === 'Gold' || data.grade === 'Silver' || data.grade === 'Bronze') ? data.grade : undefined,
       createdAt: toIsoString(data.createdAt),
       updatedAt: toIsoString(data.updatedAt),

@@ -3,7 +3,6 @@ import { sendPasswordResetEmail, sendEmailVerification } from 'firebase/auth';
 import { useAuth } from '@/context/AuthContext';
 import { auth } from '@/firebase';
 import { isFirebaseConfigured } from '@/firebase.config';
-import { Footer } from '@/components/Footer';
 
 /** Превращает ошибку Firebase Auth в понятное русское сообщение. */
 function formatAuthError(err: unknown, action: 'входа' | 'регистрации' | 'сброса пароля'): string {
@@ -69,7 +68,7 @@ export function Login({ onLogin }: LoginProps) {
   const [error, setError] = useState<string | null>(null);
   const [info, setInfo] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
-  const { signIn, signUp } = useAuth();
+  const { signIn, signUp, firebaseError } = useAuth();
 
   const validate = (): string | null => {
     if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return 'Введите корректный email';
@@ -175,6 +174,7 @@ export function Login({ onLogin }: LoginProps) {
       </div>
       <div className="card" style={{ maxWidth: 420, margin: '24px auto 0' }}>
         <h2 className="card-title">Вход в систему</h2>
+        {firebaseError && <div className="alert alert-warning">{firebaseError}</div>}
         {error && <div className="alert alert-danger">{error}</div>}
         {info && <div className="alert alert-info">{info}</div>}
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
@@ -220,7 +220,6 @@ export function Login({ onLogin }: LoginProps) {
           Доступ возможен только после авторизации.
         </p>
       </div>
-      <Footer />
     </div>
   );
 }

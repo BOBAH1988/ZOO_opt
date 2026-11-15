@@ -11,6 +11,10 @@ export interface Client {
   notes?: string;
   active?: boolean;
   title?: string;
+  /** Код клиента — только цифры. */
+  clientCode?: string;
+  /** Заказы клиента — произвольная текстовая строка. */
+  orders?: string;
   grade?: 'Gold' | 'Silver' | 'Bronze';
   createdAt: string;
   updatedAt: string;
@@ -29,6 +33,10 @@ export interface NewClientInput {
   notes?: string;
   active?: boolean;
   title?: string;
+  /** Код клиента — только цифры. */
+  clientCode?: string;
+  /** Заказы клиента — произвольная текстовая строка. */
+  orders?: string;
   grade?: 'Gold' | 'Silver' | 'Bronze';
 }
 
@@ -44,6 +52,10 @@ export interface UpdateClientInput {
   notes?: string;
   active?: boolean;
   title?: string;
+  /** Код клиента — только цифры. */
+  clientCode?: string;
+  /** Заказы клиента — произвольная текстовая строка. */
+  orders?: string;
   grade?: 'Gold' | 'Silver' | 'Bronze';
 }
 

@@ -199,6 +199,10 @@ const ALL_SCRIPTS = [
 
 type InputValues = Record<string, Record<string, boolean | string | string[]>>;
 
+// Кнопки действия в строке сценария («Запустить» / «Ок») должны быть одной ширины,
+// чтобы колонка не «прыгала» после успешного запуска.
+const ACTION_BUTTON_STYLE = { width: 112, justifyContent: 'center' } as const;
+
 const SETTINGS_VERSION = 4;
 const STORAGE_KEY = 'zoo-opt-run-settings';
 
@@ -250,6 +254,8 @@ export function RunProcessesPage() {
   const [inputValues, setInputValues] = useState<InputValues>(loadSettings);
 
   const apiConfigured = isApiConfigured();
+  // Режим выбранного сценария для полноэкранного подтверждения запуска.
+  const confirmIsTest = confirmOpen ? Boolean(inputValues[confirmOpen.id]?.test_mode) : false;
 
   // Сохраняем настройки при каждом изменении
   useEffect(() => {
@@ -271,6 +277,21 @@ export function RunProcessesPage() {
     document.addEventListener('mousedown', handler);
     return () => document.removeEventListener('mousedown', handler);
   }, [helpMenuOpen]);
+
+  // Полноэкранное подтверждение запуска: Esc закрывает окно, прокрутка страницы блокируется.
+  useEffect(() => {
+    if (!confirmOpen) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setConfirmOpen(null);
+    };
+    document.addEventListener('keydown', onKeyDown);
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.removeEventListener('keydown', onKeyDown);
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [confirmOpen]);
 
   function inputsEqual(
     a: Record<string, boolean | string | string[]>,
@@ -329,6 +350,16 @@ export function RunProcessesPage() {
       return { ...prev, [scenarioId]: { ...prev[scenarioId], [key]: next } };
     });
     // Смена множественного выбора должна вернуть кнопку «Запустить».
+    setRunStatus((prev) => {
+      const next = { ...prev };
+      delete next[scenarioId];
+      return next;
+    });
+  };
+
+  // Нажатие на «Ок» после успешного запуска возвращает кнопку «Запустить»,
+  // чтобы при необходимости можно было запустить сценарий повторно.
+  const dismissRunStatus = (scenarioId: string) => {
     setRunStatus((prev) => {
       const next = { ...prev };
       delete next[scenarioId];
@@ -524,9 +555,21 @@ export function RunProcessesPage() {
               </span>
               <h3 style={{ margin: 0, fontSize: 15, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0 }}>{scenario.name}</h3>
               {runStatus[scenario.id]?.status === 'ok' ? (
-                <span className="btn btn-success" style={{ width: '100%', padding: '6px 10px', fontSize: 13, textAlign: 'center', display: 'block' }}>Ок</span>
+                <button
+                  className="btn btn-success"
+                  style={ACTION_BUTTON_STYLE}
+                  onClick={() => dismissRunStatus(scenario.id)}
+                  title="Скрыть подтверждение и вернуть кнопку «Запустить»"
+                >
+                  Ок
+                </button>
               ) : (
-                <button className="btn btn-primary" onClick={() => handleRunClick(scenario)} disabled={running === scenario.id}>
+                <button
+                  className="btn btn-primary"
+                  style={ACTION_BUTTON_STYLE}
+                  onClick={() => handleRunClick(scenario)}
+                  disabled={running === scenario.id}
+                >
                   {running === scenario.id ? 'Запуск…' : 'Запустить'}
                 </button>
               )}
@@ -589,18 +632,31 @@ export function RunProcessesPage() {
 
 
       {confirmOpen && (
-        <div className="dialog-overlay" onClick={() => setConfirmOpen(null)}>
-          <div className="dialog" onClick={(e) => e.stopPropagation()}>
+        <div className="dialog-overlay confirm-overlay" onClick={() => setConfirmOpen(null)}>
+          <div
+            className="dialog confirm-dialog"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="confirm-dialog-title"
+            onClick={(e) => e.stopPropagation()}
+          >
             <DialogCloseButton onClick={() => setConfirmOpen(null)} label="Закрыть окно подтверждения" />
-            <div className="dialog-title">Точно запустить?</div>
-            <div className="dialog-body">
-              Вы собираетесь запустить <strong>{confirmOpen.name}</strong>.
-              <br />
-              Текущий режим: <strong>{(inputValues[confirmOpen.id]?.test_mode ?? false) ? 'тестовый (только вам)' : 'реальный — клиентам!'}</strong>.
-            </div>
-            <div className="dialog-actions">
-              <button className="btn btn-success" onClick={handleConfirm}>Да</button>
-              <button className="btn btn-danger" onClick={() => setConfirmOpen(null)}>Нет</button>
+            <div className="confirm-dialog__inner">
+              <div className={`confirm-dialog__icon ${confirmIsTest ? 'confirm-dialog__icon--test' : 'confirm-dialog__icon--real'}`} aria-hidden="true">
+                {confirmIsTest ? '🧪' : '⚠️'}
+              </div>
+              <div className="dialog-title confirm-dialog__title" id="confirm-dialog-title">Точно запустить?</div>
+              <p className="confirm-dialog__text">Вы собираетесь запустить сценарий:</p>
+              <div className="confirm-dialog__scenario">{confirmOpen.name}</div>
+              {confirmIsTest && (
+                <div className="confirm-dialog__mode confirm-dialog__mode--test">
+                  Тестовый режим — письма уйдут только вам
+                </div>
+              )}
+              <div className="dialog-actions confirm-dialog__actions">
+                <button className="btn btn-success confirm-dialog__btn" onClick={handleConfirm}>Да, запустить</button>
+                <button className="btn btn-outline confirm-dialog__btn" onClick={() => setConfirmOpen(null)}>Нет, отмена</button>
+              </div>
             </div>
           </div>
         </div>

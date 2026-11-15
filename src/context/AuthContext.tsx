@@ -13,7 +13,7 @@ import {
   signOut,
 } from 'firebase/auth';
 import { auth, initFirebase, reloadUser, getIdToken } from '@/firebase';
-import { getFirebaseConfigIssues } from '@/firebase.config';
+import { firebaseConfig, getFirebaseConfigIssues } from '@/firebase.config';
 
 export interface AuthContextType {
   user: User | null;
@@ -29,6 +29,27 @@ export interface AuthContextType {
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
+
+/** Через сколько миллисекунд прекращать «вечную загрузку», если Firebase не ответил. */
+const AUTH_INIT_TIMEOUT_MS = 8000;
+
+/**
+ * Читает сохранённого пользователя из localStorage Firebase Auth.
+ * Позволяет показать приложение сразу при обновлении страницы, не дожидаясь,
+ * пока SDK проверит токен по сети (на медленном соединении это занимает секунды).
+ */
+function readCachedAuthUser(apiKey: string): User | null {
+  if (!apiKey) return null;
+  try {
+    const raw = window.localStorage.getItem(`firebase:authUser:${apiKey}:[DEFAULT]`);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as { uid?: unknown };
+    if (typeof parsed?.uid !== 'string' || !parsed.uid) return null;
+    return parsed as unknown as User;
+  } catch {
+    return null;
+  }
+}
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
@@ -51,14 +72,46 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return;
     }
 
+    // Возвращающийся пользователь: показываем приложение сразу по данным из кэша,
+    // а реальное состояние из Firebase применим, когда SDK ответит.
+    const cachedUser = readCachedAuthUser(firebaseConfig.apiKey);
+    if (cachedUser) {
+      setUser(cachedUser);
+      setEmailVerified(cachedUser.emailVerified);
+      setInitialized(true);
+      setLoading(false);
+    }
+
+    // Если браузер явно offline, не ждём сетевой таймаут Firebase.
+    if (typeof navigator !== 'undefined' && navigator.onLine === false) {
+      setFirebaseError('Нет подключения к интернету. Проверьте сеть и обновите страницу.');
+      setInitialized(true);
+      setLoading(false);
+    }
+
+    // Страховка от бесконечной загрузки: если Firebase недоступен (нет сети/DNS),
+    // через несколько секунд показываем экран входа с понятным сообщением об ошибке.
+    const timeoutId = window.setTimeout(() => {
+      setFirebaseError((previous) =>
+        previous ?? 'Не удалось подключиться к Firebase. Проверьте интернет-соединение и повторите попытку.',
+      );
+      setInitialized(true);
+      setLoading(false);
+    }, AUTH_INIT_TIMEOUT_MS);
+
     const unsub = onAuthStateChanged(a, (u) => {
+      window.clearTimeout(timeoutId);
       setUser(u);
       setEmailVerified(u?.emailVerified ?? null);
+      setFirebaseError(null);
       setLoading(false);
       setInitialized(true);
     });
 
-    return () => unsub();
+    return () => {
+      window.clearTimeout(timeoutId);
+      unsub();
+    };
   }, []);
 
   const signIn = async (email: string, password: string) => {

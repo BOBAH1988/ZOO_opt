@@ -8,7 +8,7 @@
  *  - Персональные данные клиентов, токены и результаты авторизованных запросов — НЕ кэшируются.
  */
 
-const CACHE_NAME = 'zoo-control-shell-v5';
+const CACHE_NAME = 'zoo-control-shell-v6';
 // ?v=3 — единый набор иконок (щит в щите с лапой животного).
 const SHELL_URLS = [
   '/ZOO_opt/',
@@ -71,9 +71,15 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Никогда не кэшируем запросы к Firebase / API.
+  // Внешние (cross-origin) запросы не перехватываем: их обрабатывает браузер.
+  // Иначе неудачный fetch (например, при отсутствии сети) даёт
+  // "FetchEvent ... resulted in a network error response".
+  if (new URL(url).origin !== self.location.origin) {
+    return;
+  }
+
+  // Никогда не кэшируем и не перехватываем запросы к Firebase / API.
   if (isUncacheable(url)) {
-    event.respondWith(fetch(request));
     return;
   }
 
@@ -93,21 +99,23 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Статические ассеты — cache-first.
+  // Статические ассеты — cache-first с безопасным fallback при ошибке сети.
   event.respondWith(
     caches.match(request).then((cached) => {
       if (cached) return cached;
-      return fetch(request).then((response) => {
-        if (
-          response &&
-          response.status === 200 &&
-          new URL(url).origin === self.location.origin
-        ) {
-          const responseClone = response.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(request, responseClone));
-        }
-        return response;
-      });
+      return fetch(request)
+        .then((response) => {
+          if (response && response.status === 200) {
+            const responseClone = response.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(request, responseClone));
+          }
+          return response;
+        })
+        .catch(() =>
+          caches.match(request).then(
+            (fallback) => fallback || new Response('', { status: 504, statusText: 'Gateway Timeout' }),
+          ),
+        );
     }),
   );
 });

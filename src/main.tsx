@@ -20,13 +20,24 @@ try {
 }
 
 // Регистрация Service Worker для PWA (только в production-сборке).
-if ('serviceWorker' in navigator && import.meta.env.PROD) {
-  window.addEventListener('load', () => {
-    const swUrl = `${import.meta.env.BASE_URL}sw.js`;
-    navigator.serviceWorker.register(swUrl).catch(() => {
-      // Регистрация SW не критична для основной функциональности
+if ('serviceWorker' in navigator) {
+  if (import.meta.env.PROD) {
+    window.addEventListener('load', () => {
+      const swUrl = `${import.meta.env.BASE_URL}sw.js`;
+      navigator.serviceWorker.register(swUrl).catch(() => {
+        // Регистрация SW не критична для основной функциональности
+      });
     });
-  });
+  } else {
+    // В dev-режиме ранее зарегистрированный service worker может отдавать
+    // устаревшие HTML/JS из кэша и приводить к «вечной загрузке».
+    navigator.serviceWorker
+      .getRegistrations()
+      .then((registrations) => Promise.all(registrations.map((registration) => registration.unregister())))
+      .catch(() => {
+        // Игнорируем: очистка SW не критична
+      });
+  }
 }
 
 ReactDOM.createRoot(document.getElementById('root')!).render(

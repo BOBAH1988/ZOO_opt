@@ -18,7 +18,7 @@ import { isFirebaseConfigured } from '@/firebase.config';
 import { useAuth } from '@/context/AuthContext';
 import { DialogCloseButton } from '@/components/DialogCloseButton';
 import { EmptyState } from '@/components/EmptyState';
-import { formatClientName, mapClientDoc, normalizeAddress } from '@/lib/clientData';
+import { formatClientDateTime, formatClientName, formatWorkingHours, mapClientDoc, normalizeAddress } from '@/lib/clientData';
 import type { Client, NewClientInput } from '@/types';
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
@@ -116,11 +116,13 @@ function buildClientCardText(data: NewClientInput): string {
     ['Почта', data.email?.trim() || '—'],
     ['Телефон', data.phone?.trim() || '—'],
     ['День посещения', data.day?.trim() || '—'],
-    ['Режим работы', data.mode?.trim() || '—'],
+    ['Режим работы', formatWorkingHours(data.mode) || '—'],
     ['Управляющий', data.manager?.trim() || '—'],
     ['Примечания', data.notes?.trim() || '—'],
     ['Название', data.title?.trim() || '—'],
+    ['Код клиента', data.clientCode?.trim() || '—'],
     ['Грейд', data.grade || '—'],
+    ['Заказы', data.orders?.trim() || '—'],
     ['Активный', data.active ? 'Да' : 'Нет'],
   ];
   return rows.map(([label, value]) => `${label}: ${value}`).join('\n');
@@ -231,7 +233,7 @@ export function ClientsPage() {
   const [viewingClient, setViewingClient] = useState<Client | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
   const [deleteConfirmed, setDeleteConfirmed] = useState(false);
-  const [form, setForm] = useState<NewClientInput>({ name: '', email: '', phone: '', company: 'ИП', address: '', day: '', mode: '', manager: '', notes: '', active: true, title: '', grade: 'Gold' });
+  const [form, setForm] = useState<NewClientInput>({ name: '', email: '', phone: '', company: 'ИП', address: '', day: '', mode: '', manager: '', notes: '', active: true, title: '', clientCode: '', orders: '', grade: 'Gold' });
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -333,7 +335,7 @@ export function ClientsPage() {
   };
 
   const resetForm = () => {
-    setForm({ name: '', email: '', phone: '', company: 'ИП', address: '', day: '', mode: '', manager: '', notes: '', active: true, title: '', grade: 'Gold' });
+    setForm({ name: '', email: '', phone: '', company: 'ИП', address: '', day: '', mode: '', manager: '', notes: '', active: true, title: '', clientCode: '', orders: '', grade: 'Gold' });
   };
 
   const handleCreate = async (e: React.FormEvent) => {
@@ -355,11 +357,13 @@ export function ClientsPage() {
         company: form.company?.trim() || null,
         address: address || null,
         day: form.day?.trim() || null,
-        mode: form.mode?.trim() || null,
+        mode: formatWorkingHours(form.mode) || null,
         manager: form.manager?.trim() || null,
         notes: form.notes?.trim() || null,
         active: form.active ?? true,
         title: form.title?.trim() || null,
+        clientCode: form.clientCode?.replace(/\D/g, '') || null,
+        orders: form.orders?.trim() || null,
         grade: form.grade ?? null,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
@@ -397,11 +401,13 @@ export function ClientsPage() {
         company: form.company?.trim() || null,
         address: address || null,
         day: form.day?.trim() || null,
-        mode: form.mode?.trim() || null,
+        mode: formatWorkingHours(form.mode) || null,
         manager: form.manager?.trim() || null,
         notes: form.notes?.trim() || null,
         active: form.active ?? true,
         title: form.title?.trim() || null,
+        clientCode: form.clientCode?.replace(/\D/g, '') || null,
+        orders: form.orders?.trim() || null,
         grade: form.grade ?? null,
         updatedAt: serverTimestamp(),
       };
@@ -538,15 +544,16 @@ export function ClientsPage() {
       ) : (
         <div className="card" style={{ overflow: 'hidden' }}>
           <table
-            className="table table--compact"
+            className="table table--compact clients-table"
             style={{ width: '100%', borderCollapse: 'collapse' }}
           >
             <thead>
               <tr>
-                <th style={{ width: '48px', whiteSpace: 'nowrap' }}>Активный</th>
-                <th style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>Форма</th>
-                <th style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>Клиент</th>
-                <th style={{ width: '80px', whiteSpace: 'nowrap', textAlign: 'center' }}>Грейд</th>
+                <th className="clients-col-number">№</th>
+                <th className="clients-col-active">Акт.</th>
+                <th>Форма</th>
+                <th>Клиент</th>
+                <th className="clients-col-grade">Грейд</th>
                 {manualMode && <th className="route-col-order">Порядок</th>}
               </tr>
             </thead>
@@ -557,12 +564,13 @@ export function ClientsPage() {
                   className={manualMode ? 'route-row-sorting' : 'route-row-clickable'}
                   onClick={manualMode ? undefined : () => setViewingClient(client)}
                 >
-                  <td style={{ width: '48px', whiteSpace: 'nowrap', textAlign: 'center' }}>{client.active ? '✅' : '❌'}</td>
-                  <td style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{client.company || '—'}</td>
-                  <td style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  <td className="clients-col-number">{index + 1}</td>
+                  <td className="clients-col-active">{client.active ? '✓' : '✕'}</td>
+                  <td>{client.company || '—'}</td>
+                  <td>
                     <strong>{formatClientName(client.name, client.company)}</strong>
                   </td>
-                  <td style={{ width: '80px', whiteSpace: 'nowrap', textAlign: 'center' }}>
+                  <td className="clients-col-grade">
                     <GradeStars grade={client.grade} />
                   </td>
                   {manualMode && (
@@ -658,8 +666,8 @@ export function ClientsPage() {
                 <select className="form-input"
                   value={form.active ? 'active' : 'inactive'}
                   onChange={(e) => setForm({ ...form, active: e.target.value === 'active' })}>
-                  <option value="active">✅ Активный</option>
-                  <option value="inactive">❌ Не активный</option>
+                  <option value="active">✓ Активный</option>
+                  <option value="inactive">✕ Не активный</option>
                 </select>
               </div>
               <div className="form-group">
@@ -703,6 +711,14 @@ export function ClientsPage() {
                 </select>
               </div>
               <div className="form-group">
+                <label className="form-label">Режим работы</label>
+                <input className="form-input" placeholder="10:00 - 21:00"
+                  value={form.mode ?? ''}
+                  onChange={(e) => setForm({ ...form, mode: e.target.value })}
+                  onBlur={(e) => setForm({ ...form, mode: formatWorkingHours(e.target.value) })} />
+                <div className="form-hint">Формат: 10:00 - 21:00</div>
+              </div>
+              <div className="form-group">
                 <label className="form-label">Примечания</label>
                 <input className="form-input"
                   value={form.notes ?? ''} onChange={(e) => setForm({ ...form, notes: e.target.value })} />
@@ -713,6 +729,12 @@ export function ClientsPage() {
                   value={form.title ?? ''} onChange={(e) => setForm({ ...form, title: e.target.value })} />
               </div>
               <div className="form-group">
+                <label className="form-label">Код клиента</label>
+                <input className="form-input" inputMode="numeric" pattern="[0-9]*" placeholder="Только цифры"
+                  value={form.clientCode ?? ''}
+                  onChange={(e) => setForm({ ...form, clientCode: e.target.value.replace(/\D/g, '') })} />
+              </div>
+              <div className="form-group">
                 <label className="form-label">Грейд</label>
                 <select className="form-input"
                   value={form.grade ?? 'Gold'}
@@ -721,6 +743,11 @@ export function ClientsPage() {
                   <option value="Silver">Silver</option>
                   <option value="Bronze">Bronze</option>
                 </select>
+              </div>
+              <div className="form-group">
+                <label className="form-label">Заказы</label>
+                <input className="form-input" placeholder="Текст"
+                  value={form.orders ?? ''} onChange={(e) => setForm({ ...form, orders: e.target.value })} />
               </div>
               <div className="form-group">
                 <label className="form-label">Телефон</label>
@@ -756,7 +783,7 @@ export function ClientsPage() {
             <div className="dialog-body" style={{ flex: 1, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, fontSize: 13, overflowY: 'auto' }}>
               <div>
                 <label className="form-label" style={{ fontSize: 11, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 2, display: 'block' }}>Активный</label>
-                <div style={{ marginBottom: 10 }}>{viewingClient.active ? '✅ Активный' : '❌ Не активный'}</div>
+                <div style={{ marginBottom: 10 }}>{viewingClient.active ? '✓ Активный' : '✕ Не активный'}</div>
               </div>
               <div>
                 <label className="form-label" style={{ fontSize: 11, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 2, display: 'block' }}>Клиент</label>
@@ -780,7 +807,7 @@ export function ClientsPage() {
               </div>
               <div>
                 <label className="form-label" style={{ fontSize: 11, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 2, display: 'block' }}>Режим работы</label>
-                <div style={{ marginBottom: 10 }}>{viewingClient.mode || '—'}</div>
+                <div style={{ marginBottom: 10 }}>{formatWorkingHours(viewingClient.mode) || '—'}</div>
               </div>
               <div>
                 <label className="form-label" style={{ fontSize: 11, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 2, display: 'block' }}>Телефон</label>
@@ -799,16 +826,24 @@ export function ClientsPage() {
                 <div style={{ marginBottom: 10 }}>{viewingClient.title || '—'}</div>
               </div>
               <div>
+                <label className="form-label" style={{ fontSize: 11, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 2, display: 'block' }}>Код клиента</label>
+                <div style={{ marginBottom: 10 }}>{viewingClient.clientCode || '—'}</div>
+              </div>
+              <div>
                 <label className="form-label" style={{ fontSize: 11, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 2, display: 'block' }}>Грейд</label>
                 <div style={{ marginBottom: 10 }}>{viewingClient.grade || '—'}</div>
               </div>
               <div>
+                <label className="form-label" style={{ fontSize: 11, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 2, display: 'block' }}>Заказы</label>
+                <div style={{ marginBottom: 10 }}>{viewingClient.orders || '—'}</div>
+              </div>
+              <div>
                 <label className="form-label" style={{ fontSize: 11, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 2, display: 'block' }}>Создан</label>
-                <div style={{ marginBottom: 10 }}>{viewingClient.createdAt || '—'}</div>
+                <div style={{ marginBottom: 10 }}>{formatClientDateTime(viewingClient.createdAt) || '—'}</div>
               </div>
               <div>
                 <label className="form-label" style={{ fontSize: 11, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 2, display: 'block' }}>Обновлён</label>
-                <div style={{ marginBottom: 0 }}>{viewingClient.updatedAt || '—'}</div>
+                <div style={{ marginBottom: 0 }}>{formatClientDateTime(viewingClient.updatedAt) || '—'}</div>
               </div>
             </div>
             <div className="dialog-actions">
@@ -828,6 +863,8 @@ export function ClientsPage() {
                     notes: viewingClient.notes ?? '',
                     active: viewingClient.active ?? true,
                     title: viewingClient.title ?? '',
+                    clientCode: viewingClient.clientCode ?? '',
+                    orders: viewingClient.orders ?? '',
                     grade: viewingClient.grade ?? 'Gold',
                   });
                   setEditingId(viewingClient.id);

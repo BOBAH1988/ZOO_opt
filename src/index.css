@@ -319,9 +319,20 @@ button:disabled {
   height: 18px;
 }
 
-/* Иконка подсвечивается, когда выбран режим сортировки, отличный от «По умолчанию». */
-.sort-btn--active {
+/*
+ * Кнопка подсвечивается голубым фоном, когда включён режим сортировки.
+ * Селекторы усилены классами .btn/.btn-outline, иначе фон из .btn-outline
+ * (объявлен ниже в файле) перекрывает подсветку.
+ */
+.btn.sort-btn--active {
   color: var(--color-primary);
+  border-color: var(--color-primary);
+  background: color-mix(in srgb, #38bdf8 25%, transparent);
+}
+
+.btn.sort-btn--active:not(:disabled):hover,
+.btn.sort-btn--active:not(:disabled):active {
+  background: color-mix(in srgb, #38bdf8 35%, transparent);
   border-color: var(--color-primary);
 }
 
@@ -785,6 +796,76 @@ button:disabled {
   line-height: 1.25;
 }
 
+/*
+ * Таблица клиентов: фиксированная раскладка, чтобы при включении режима
+ * сортировки (колонка «Порядок») таблица не выходила за ширину экрана,
+ * а строки оставались одной высоты.
+ */
+.clients-table {
+  table-layout: fixed;
+  width: 100%;
+}
+
+.clients-table th,
+.clients-table td {
+  /* Минимальные горизонтальные отступы между столбцами «Акт.», «Форма», «Клиент». */
+  padding-left: 3px;
+  padding-right: 3px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Колонка «№»: минимальная ширина под двузначный номер. */
+.clients-col-number {
+  width: 28px;
+  text-align: center;
+}
+
+.clients-col-active {
+  width: 48px;
+  text-align: center;
+}
+
+/* Колонка «Форма» — по ширине значений (ИП/ООО), чтобы не растягивать таблицу. */
+.clients-table th:nth-child(3),
+.clients-table td:nth-child(3) {
+  width: 72px;
+}
+
+.clients-col-grade {
+  width: 56px;
+  text-align: center;
+}
+
+/* Колонка «Порядок» в таблице клиентов: компактные кнопки без роста высоты строки. */
+.clients-table .route-col-order {
+  width: 72px;
+  min-width: 0;
+  padding-left: 4px;
+  padding-right: 4px;
+}
+
+.clients-table .route-move-buttons {
+  /* flex вместо inline-flex убирает базовую линию и лишнюю высоту строки */
+  display: flex;
+  justify-content: center;
+  gap: 2px;
+}
+
+.clients-table .route-move-btn {
+  /* 17px — не выше строки текста (14px × 1.25), поэтому высота строки не меняется */
+  width: 17px;
+  height: 17px;
+  min-height: 17px;
+  border-radius: 4px;
+}
+
+.clients-table .route-move-btn svg {
+  width: 11px;
+  height: 11px;
+}
+
 .table tr:last-child td {
   border-bottom: none;
 }
@@ -835,10 +916,19 @@ button:disabled {
 }
 
 /* Компактные строки маршрута: больше клиентов помещается на экран. */
+.route-table {
+  table-layout: fixed;
+  width: 100%;
+}
+
 .route-table th,
 .route-table td {
-  padding: 3px 10px;
+  /* Минимальные горизонтальные отступы между столбцами. */
+  padding: 3px 3px;
   line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .route-table .route-checkbox {
@@ -846,15 +936,36 @@ button:disabled {
   height: 16px;
 }
 
+/* Компактные кнопки порядка: не выше строки текста, чтобы высота строк не менялась. */
 .route-table .route-move-btn {
-  width: 24px;
-  height: 24px;
-  min-height: 24px;
+  width: 16px;
+  height: 16px;
+  min-height: 16px;
+  border-radius: 4px;
+}
+
+.route-table .route-move-btn svg {
+  width: 10px;
+  height: 10px;
+}
+
+.route-table .route-move-buttons {
+  /* flex вместо inline-flex убирает базовую линию и лишнюю высоту строки */
+  display: flex;
+  justify-content: center;
+  gap: 2px;
+}
+
+.route-table .route-col-order {
+  width: 76px;
+  min-width: 0;
+  padding-left: 4px;
+  padding-right: 4px;
 }
 
 .route-col-check {
-  width: 48px;
-  min-width: 48px;
+  width: 36px;
+  min-width: 36px;
   text-align: center;
   white-space: nowrap;
 }
@@ -877,20 +988,20 @@ button:disabled {
 }
 
 .route-col-number {
-  width: 48px;
-  min-width: 48px;
+  width: 32px;
+  min-width: 32px;
   text-align: center;
   white-space: nowrap;
 }
 
-.route-col-client {
-  min-width: 140px;
-  overflow-wrap: anywhere;
-}
-
+/* Клиент и адрес всегда в одну строку; длинный текст обрезается многоточием. */
+.route-col-client,
 .route-col-address {
-  min-width: 160px;
-  overflow-wrap: anywhere;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  overflow-wrap: normal;
+  word-break: normal;
 }
 
 .route-row-clickable {
@@ -1128,13 +1239,13 @@ button:disabled {
 
   .route-table th,
   .route-table td {
-    padding: 3px 8px;
+    padding: 3px 2px;
     font-size: 13px;
   }
 
   .route-col-check {
-    width: 40px;
-    min-width: 40px;
+    width: 32px;
+    min-width: 32px;
   }
 
   .route-col-order {
@@ -1153,8 +1264,8 @@ button:disabled {
   }
 
   .route-col-number {
-    width: 36px;
-    min-width: 36px;
+    width: 28px;
+    min-width: 28px;
   }
 
   .route-checklist-row {
@@ -1287,6 +1398,142 @@ button:disabled {
 .dialog-actions button {
   flex: 1;
   width: auto;
+}
+
+/* ---------- Компактное подтверждение запуска сценария ----------
+   Небольшое окно по центру экрана: не перекрывает интерфейс целиком
+   и аккуратно масштабируется под телефон, планшет и десктоп. */
+.dialog-overlay.confirm-overlay {
+  padding: 16px;
+  background: rgba(15, 23, 42, 0.6);
+  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
+}
+
+.dialog.confirm-dialog {
+  width: 100%;
+  max-width: 420px;
+  min-width: 0;
+  height: auto;
+  max-height: calc(100dvh - 32px);
+  margin: 0;
+  border-radius: calc(var(--radius) + 6px);
+  box-shadow: 0 20px 45px -12px rgba(15, 23, 42, 0.35), 0 4px 12px rgba(15, 23, 42, 0.12);
+  overflow-y: auto;
+  padding: clamp(18px, 3vw, 26px);
+}
+
+/* Крестик — компактный, но достаточно крупный для тапа. */
+.confirm-dialog .dialog-close {
+  top: 6px;
+  right: 6px;
+  width: 34px;
+  height: 34px;
+  min-height: 34px;
+}
+
+.confirm-dialog__inner {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 10px;
+}
+
+.confirm-dialog__icon {
+  width: clamp(44px, 7vw, 56px);
+  height: clamp(44px, 7vw, 56px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  font-size: clamp(20px, 3vw, 26px);
+  line-height: 1;
+}
+
+.confirm-dialog__icon--test {
+  background: rgba(29, 78, 216, 0.12);
+}
+
+.confirm-dialog__icon--real {
+  background: rgba(185, 28, 28, 0.12);
+}
+
+.confirm-dialog .confirm-dialog__title {
+  margin: 0;
+  padding: 0 28px;
+  font-size: clamp(18px, 2.6vw, 22px);
+  font-weight: 700;
+  line-height: 1.25;
+  color: var(--color-text);
+}
+
+.confirm-dialog__text {
+  margin: 0;
+  font-size: clamp(13px, 1.5vw, 14px);
+  color: var(--color-text-secondary);
+}
+
+.confirm-dialog__scenario {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-bg);
+  font-size: clamp(14px, 1.7vw, 16px);
+  font-weight: 600;
+  line-height: 1.35;
+  color: var(--color-text);
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.confirm-dialog__mode {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  max-width: 100%;
+  padding: 5px 12px;
+  border-radius: 999px;
+  font-size: clamp(11.5px, 1.3vw, 12.5px);
+  font-weight: 600;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+
+.confirm-dialog__mode--test {
+  background: rgba(29, 78, 216, 0.12);
+  color: var(--color-info);
+}
+
+.confirm-dialog .confirm-dialog__actions {
+  width: 100%;
+  margin-top: 6px;
+  gap: 10px;
+  flex-direction: row;
+}
+
+.confirm-dialog .confirm-dialog__btn {
+  flex: 1 1 0;
+  width: auto;
+  min-height: 44px;
+  padding: 0 14px;
+  font-size: clamp(13.5px, 1.5vw, 15px);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* Совсем узкие экраны: кнопки в столбик, чтобы подписи не обрезались. */
+@media (max-width: 380px) {
+  .confirm-dialog .confirm-dialog__actions {
+    flex-direction: column;
+  }
+
+  .confirm-dialog .confirm-dialog__btn {
+    flex: 0 0 auto;
+    width: 100%;
+  }
 }
 
 .footer {
