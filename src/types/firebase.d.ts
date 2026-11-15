@@ -44,6 +44,12 @@ declare module 'firebase/firestore' {
   export interface CollectionReference<T = DocumentData> {
     id: string;
   }
+  export interface WriteBatch {
+    set(ref: DocumentReference, data: DocumentData): WriteBatch;
+    update(ref: DocumentReference, data: Partial<DocumentData>): WriteBatch;
+    delete(ref: DocumentReference): WriteBatch;
+    commit(): Promise<void>;
+  }
   export interface QueryDocumentSnapshot<T = DocumentData> {
     id: string;
     data(): T;
@@ -83,5 +89,6 @@ declare module 'firebase/firestore' {
   export function addDoc(ref: CollectionReference, data: DocumentData): Promise<DocumentReference>;
   export function updateDoc(ref: DocumentReference, data: Partial<DocumentData>): Promise<void>;
   export function deleteDoc(ref: DocumentReference): Promise<void>;
+  export function writeBatch(db: Firestore): WriteBatch;
   export type DocumentData = Record<string, any>;
 }

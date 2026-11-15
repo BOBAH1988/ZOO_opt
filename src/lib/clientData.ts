@@ -133,15 +133,16 @@ export function mapClientDoc(snap: QueryDocumentSnapshot<DocumentData>): Client 
   try {
     const data = snap.data() as unknown as Client & { ownerUid?: unknown; createdAt?: unknown; updatedAt?: unknown };
     if (typeof data.name !== 'string' || !data.name.trim()) return null;
-    if (typeof data.email !== 'string' || !data.email.trim()) return null;
     if (typeof data.ownerUid !== 'string' || !data.ownerUid) return null;
     return {
       id: snap.id,
       name: data.name.trim(),
-      email: data.email.trim(),
+      email: typeof data.email === 'string' ? data.email.trim() : '',
       phone: typeof data.phone === 'string' && data.phone.trim() ? data.phone.trim() : undefined,
       company: typeof data.company === 'string' && data.company.trim() ? data.company.trim() : undefined,
       address: typeof data.address === 'string' && data.address.trim() ? normalizeAddress(data.address) : undefined,
+      city: typeof data.city === 'string' && data.city.trim() ? data.city.trim() : undefined,
+      street: typeof data.street === 'string' && data.street.trim() ? data.street.trim() : undefined,
       day: typeof data.day === 'string' && data.day.trim() ? data.day.trim() : undefined,
       mode: typeof data.mode === 'string' && data.mode.trim() ? data.mode.trim() : undefined,
       manager: typeof data.manager === 'string' && data.manager.trim() ? data.manager.trim() : undefined,
@@ -149,7 +150,7 @@ export function mapClientDoc(snap: QueryDocumentSnapshot<DocumentData>): Client 
       active: typeof data.active === 'boolean' ? data.active : true,
       title: typeof data.title === 'string' && data.title.trim() ? data.title.trim() : undefined,
       clientCode: typeof data.clientCode === 'string' && data.clientCode.trim()
-        ? data.clientCode.replace(/\D/g, '')
+        ? data.clientCode.trim().toUpperCase()
         : undefined,
       orders: typeof data.orders === 'string' && data.orders.trim() ? data.orders.trim() : undefined,
       grade: (data.grade === 'Gold' || data.grade === 'Silver' || data.grade === 'Bronze') ? data.grade : undefined,

@@ -22,6 +22,7 @@ import {
   updateDoc,
   deleteDoc,
   doc,
+  writeBatch,
   serverTimestamp,
   Timestamp,
   DocumentData,
@@ -121,6 +122,7 @@ export {
   updateDoc,
   deleteDoc,
   doc,
+  writeBatch,
   serverTimestamp,
   Timestamp,
 };

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   collection,
   query,
@@ -9,6 +9,7 @@ import {
   updateDoc,
   deleteDoc,
   doc,
+  writeBatch,
   serverTimestamp,
   type DocumentData,
   type QueryDocumentSnapshot,
@@ -19,6 +20,7 @@ import { useAuth } from '@/context/AuthContext';
 import { DialogCloseButton } from '@/components/DialogCloseButton';
 import { EmptyState } from '@/components/EmptyState';
 import { formatClientDateTime, formatClientName, formatWorkingHours, mapClientDoc, normalizeAddress } from '@/lib/clientData';
+import { buildClientIndex, findExistingClient, parseSalesWorkbook, type ImportedClient } from '@/lib/salesImport';
 import type { Client, NewClientInput } from '@/types';
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
@@ -107,12 +109,85 @@ async function copyToClipboard(text: string): Promise<void> {
   document.body.removeChild(textarea);
 }
 
+/** Оборачивает промис таймаутом, чтобы интерфейс не зависал при проблемах с сетью. */
+function withTimeout<T>(promise: Promise<T>, ms: number, message: string): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const timer = window.setTimeout(() => reject(new Error(message)), ms);
+    promise.then(
+      (value) => {
+        window.clearTimeout(timer);
+        resolve(value);
+      },
+      (error: unknown) => {
+        window.clearTimeout(timer);
+        reject(error);
+      },
+    );
+  });
+}
+
+/** Уникальный ID нового документа клиента. */
+function createClientId(): string {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return crypto.randomUUID();
+  }
+  return `c${Date.now().toString(36)}${Math.random().toString(36).slice(2, 10)}`;
+}
+
+/** Данные нового клиента из строки Excel. */
+function buildNewClientData(row: ImportedClient, ownerUid: string): Record<string, unknown> {
+  return {
+    name: row.name.trim(),
+    email: row.email?.trim() || null,
+    phone: row.phone?.trim() || null,
+    company: row.company?.trim() || null,
+    address: row.address?.trim() || null,
+    city: row.city?.trim() || null,
+    street: row.street?.trim() || null,
+    title: row.title?.trim() || null,
+    clientCode: row.clientCode?.trim().toUpperCase() || null,
+    active: row.active ?? true,
+    grade: row.grade ?? null,
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
+    ownerUid,
+  };
+}
+
+/** Данные для обновления существующего клиента: контакты и заметки не трогаем. */
+function buildClientUpdateData(row: ImportedClient): Record<string, unknown> {
+  return {
+    name: row.name.trim(),
+    company: row.company?.trim() || null,
+    address: row.address?.trim() || null,
+    city: row.city?.trim() || null,
+    street: row.street?.trim() || null,
+    title: row.title?.trim() || null,
+    clientCode: row.clientCode?.trim().toUpperCase() || null,
+    updatedAt: serverTimestamp(),
+  };
+}
+
+/** Превращает ошибку Firestore в понятное пользователю сообщение. */
+function describeImportError(error: unknown): string {
+  const message = error instanceof Error ? error.message : String(error ?? '');
+  if (/permission|insufficient|denied/i.test(message)) {
+    return 'Firestore отклонил запись. Задеплойте обновлённые правила: firebase deploy --only firestore:rules.';
+  }
+  if (/timeout|timed out|network|unavailable|offline/i.test(message)) {
+    return 'Нет ответа от Firestore. Проверьте интернет и повторите загрузку.';
+  }
+  return message || 'Ошибка загрузки клиентов';
+}
+
 /** Формирует текстовое представление карточки клиента для копирования. */
 function buildClientCardText(data: NewClientInput): string {
   const rows: Array<[string, string]> = [
     ['Клиент', data.name?.trim() || '—'],
     ['Форма', data.company?.trim() || '—'],
     ['Адрес', data.address?.trim() || '—'],
+    ['Город', data.city?.trim() || '—'],
+    ['Улица', data.street?.trim() || '—'],
     ['Почта', data.email?.trim() || '—'],
     ['Телефон', data.phone?.trim() || '—'],
     ['День посещения', data.day?.trim() || '—'],
@@ -160,6 +235,16 @@ function SortIcon() {
       <path d="M4 7l3-3 3 3" />
       <path d="M17 4v16" />
       <path d="M14 17l3 3 3-3" />
+    </svg>
+  );
+}
+
+function UploadIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+      <path d="M17 8l-5-5-5 5" />
+      <path d="M12 3v12" />
     </svg>
   );
 }
@@ -233,8 +318,18 @@ export function ClientsPage() {
   const [viewingClient, setViewingClient] = useState<Client | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
   const [deleteConfirmed, setDeleteConfirmed] = useState(false);
-  const [form, setForm] = useState<NewClientInput>({ name: '', email: '', phone: '', company: 'ИП', address: '', day: '', mode: '', manager: '', notes: '', active: true, title: '', clientCode: '', orders: '', grade: 'Gold' });
+  const [form, setForm] = useState<NewClientInput>({ name: '', email: '', phone: '', company: 'ИП', address: '', city: '', street: '', day: '', mode: '', manager: '', notes: '', active: true, title: '', clientCode: '', orders: '', grade: 'Gold' });
   const [saving, setSaving] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [importPreview, setImportPreview] = useState<{
+    fileName: string;
+    newRows: ImportedClient[];
+    updateRows: Array<{ id: string; row: ImportedClient }>;
+    total: number;
+  } | null>(null);
+  const [importing, setImporting] = useState(false);
+  const [importMessage, setImportMessage] = useState<string | null>(null);
+  const [importError, setImportError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!isFirebaseConfigured() || !db) {
@@ -282,9 +377,11 @@ export function ClientsPage() {
 
   const filtered = clients.filter((c) =>
     c.name.toLowerCase().includes(search.toLowerCase()) ||
-    c.email.toLowerCase().includes(search.toLowerCase()) ||
+    (c.email ?? '').toLowerCase().includes(search.toLowerCase()) ||
     (c.company && c.company.toLowerCase().includes(search.toLowerCase())) ||
     (c.address && c.address.toLowerCase().includes(search.toLowerCase())) ||
+    (c.city && c.city.toLowerCase().includes(search.toLowerCase())) ||
+    (c.street && c.street.toLowerCase().includes(search.toLowerCase())) ||
     (c.manager && c.manager.toLowerCase().includes(search.toLowerCase()))
   );
 
@@ -294,6 +391,14 @@ export function ClientsPage() {
       const cmp = a.name.localeCompare(b.name, 'ru', { sensitivity: 'base' });
       return sortMode === 'asc' ? cmp : -cmp;
     });
+
+  // Строки для предпросмотра импорта: новые и обновляемые.
+  const importRows = importPreview
+    ? [
+      ...importPreview.newRows.map((row) => ({ row, isUpdate: false })),
+      ...importPreview.updateRows.map(({ row }) => ({ row, isUpdate: true })),
+    ]
+    : [];
 
   // Загружаем сохранённый ручной порядок при смене пользователя.
   useEffect(() => {
@@ -335,34 +440,38 @@ export function ClientsPage() {
   };
 
   const resetForm = () => {
-    setForm({ name: '', email: '', phone: '', company: 'ИП', address: '', day: '', mode: '', manager: '', notes: '', active: true, title: '', clientCode: '', orders: '', grade: 'Gold' });
+    setForm({ name: '', email: '', phone: '', company: 'ИП', address: '', city: '', street: '', day: '', mode: '', manager: '', notes: '', active: true, title: '', clientCode: '', orders: '', grade: 'Gold' });
   };
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!db || !user) return;
-    const email = form.email.trim();
-    if (!EMAIL_PATTERN.test(email)) {
+    const email = form.email?.trim() ?? '';
+    if (email && !EMAIL_PATTERN.test(email)) {
       setError('Почта должна быть в формате name@example.com');
       return;
     }
-    const address = normalizeAddress(form.address ?? '');
+    const city = form.city?.trim() ?? '';
+    const street = form.street?.trim() ?? '';
+    const address = normalizeAddress(form.address?.trim() || [city, street].filter(Boolean).join(', '));
     setSaving(true);
     setError(null);
     try {
       const data: Record<string, unknown> = {
         name: form.name.trim(),
-        email,
+        email: email || null,
         phone: form.phone?.trim() || null,
         company: form.company?.trim() || null,
         address: address || null,
+        city: city || null,
+        street: street || null,
         day: form.day?.trim() || null,
         mode: formatWorkingHours(form.mode) || null,
         manager: form.manager?.trim() || null,
         notes: form.notes?.trim() || null,
         active: form.active ?? true,
         title: form.title?.trim() || null,
-        clientCode: form.clientCode?.replace(/\D/g, '') || null,
+        clientCode: form.clientCode?.trim().toUpperCase() || null,
         orders: form.orders?.trim() || null,
         grade: form.grade ?? null,
         createdAt: serverTimestamp(),
@@ -385,28 +494,32 @@ export function ClientsPage() {
   const handleUpdate = async (id: string, e: React.FormEvent) => {
     e.preventDefault();
     if (!db || !user) return;
-    const email = form.email.trim();
-    if (!EMAIL_PATTERN.test(email)) {
+    const email = form.email?.trim() ?? '';
+    if (email && !EMAIL_PATTERN.test(email)) {
       setError('Почта должна быть в формате name@example.com');
       return;
     }
-    const address = normalizeAddress(form.address ?? '');
+    const city = form.city?.trim() ?? '';
+    const street = form.street?.trim() ?? '';
+    const address = normalizeAddress(form.address?.trim() || [city, street].filter(Boolean).join(', '));
     setSaving(true);
     setError(null);
     try {
       const data: Record<string, unknown> = {
         name: form.name.trim(),
-        email,
+        email: email || null,
         phone: form.phone?.trim() || null,
         company: form.company?.trim() || null,
         address: address || null,
+        city: city || null,
+        street: street || null,
         day: form.day?.trim() || null,
         mode: formatWorkingHours(form.mode) || null,
         manager: form.manager?.trim() || null,
         notes: form.notes?.trim() || null,
         active: form.active ?? true,
         title: form.title?.trim() || null,
-        clientCode: form.clientCode?.replace(/\D/g, '') || null,
+        clientCode: form.clientCode?.trim().toUpperCase() || null,
         orders: form.orders?.trim() || null,
         grade: form.grade ?? null,
         updatedAt: serverTimestamp(),
@@ -444,6 +557,99 @@ export function ClientsPage() {
     }
   };
 
+  /** Читает выбранный Excel-файл и готовит список новых клиентов к импорту. */
+  const handleImportFile = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    if (!file) return;
+
+    setError(null);
+    setImportMessage(null);
+    setImportError(null);
+    try {
+      const buffer = await file.arrayBuffer();
+      const parsed = await parseSalesWorkbook(buffer);
+      if (parsed.length === 0) {
+        setError('В выбранном файле не найдены строки с данными клиентов.');
+        return;
+      }
+
+      const index = buildClientIndex(clients);
+      const newRows: ImportedClient[] = [];
+      const updateRows: Array<{ id: string; row: ImportedClient }> = [];
+      const seenUpdates = new Set<string>();
+
+      for (const row of parsed) {
+        const existing = findExistingClient(row, index);
+        if (existing) {
+          // Один и тот же клиент может встретиться в файле несколько раз.
+          if (!seenUpdates.has(existing.id)) {
+            seenUpdates.add(existing.id);
+            updateRows.push({ id: existing.id, row });
+          }
+        } else {
+          newRows.push(row);
+        }
+      }
+
+      if (newRows.length === 0 && updateRows.length === 0) {
+        setImportMessage(`Все найденные клиенты (${parsed.length}) уже есть в базе.`);
+        return;
+      }
+
+      setImportPreview({ fileName: file.name, newRows, updateRows, total: parsed.length });
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Не удалось прочитать Excel-файл';
+      setError(message);
+    }
+  };
+
+  /** Записывает подтверждённых клиентов в Firestore. */
+  const handleImportConfirm = async () => {
+    if (!db || !user || !importPreview) return;
+    setImporting(true);
+    setError(null);
+    setImportError(null);
+    const preview = importPreview;
+    const database = db;
+    const ownerUid = user.uid;
+    try {
+      const operations: Array<{ id?: string; data: Record<string, unknown> }> = [
+        ...preview.newRows.map((row) => ({ data: buildNewClientData(row, ownerUid) })),
+        ...preview.updateRows.map(({ id, row }) => ({ id, data: buildClientUpdateData(row) })),
+      ];
+
+      // Firestore принимает не более 500 операций в одном пакете.
+      const batchSize = 450;
+      for (let start = 0; start < operations.length; start += batchSize) {
+        const batch = writeBatch(database);
+        for (const operation of operations.slice(start, start + batchSize)) {
+          if (operation.id) {
+            batch.update(doc(database, 'clients', operation.id), operation.data);
+          } else {
+            batch.set(doc(database, 'clients', createClientId()), operation.data);
+          }
+        }
+        await withTimeout(
+          batch.commit(),
+          30000,
+          'timeout: Firestore не ответил за 30 секунд',
+        );
+      }
+
+      setImportMessage(
+        `Добавлено: ${preview.newRows.length}, обновлено: ${preview.updateRows.length}.`,
+      );
+      setImportPreview(null);
+    } catch (err: unknown) {
+      const message = describeImportError(err);
+      setImportError(message);
+      setError(message);
+    } finally {
+      setImporting(false);
+    }
+  };
+
   if (!isFirebaseConfigured() || !db) {
     return (
       <div className="card">
@@ -462,6 +668,23 @@ export function ClientsPage() {
       <div className="page-title-row">
         <h2 className="page-title" style={{ margin: 0 }}>База клиентов</h2>
         <div className="sort-menu">
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".xlsx,.xls,.csv"
+            style={{ display: 'none' }}
+            onChange={handleImportFile}
+          />
+          <button
+            type="button"
+            className="btn btn-outline btn-sm sort-btn"
+            onClick={() => fileInputRef.current?.click()}
+            aria-label="Загрузить клиентов из Excel"
+            title="Загрузить клиентов из Excel"
+            disabled={!user}
+          >
+            <UploadIcon />
+          </button>
           <button
             type="button"
             className={`btn btn-outline btn-sm sort-btn${manualMode ? ' sort-btn--active' : ''}`}
@@ -520,6 +743,7 @@ export function ClientsPage() {
       </div>
 
       {error && <div className="alert alert-danger">{error}</div>}
+      {importMessage && <div className="alert alert-info">{importMessage}</div>}
       {skippedCount > 0 && (
         <div className="alert alert-warning">
           Пропущено записей с некорректной структурой: {skippedCount}. Проверьте данные в Firestore.
@@ -687,15 +911,26 @@ export function ClientsPage() {
                 <label className="form-label">Адрес</label>
                 <input className="form-input" placeholder="Город, улица дом"
                   value={form.address ?? ''} onChange={(e) => setForm({ ...form, address: e.target.value })} />
-                <div className="form-hint">Формат: Город, улица дом</div>
+                <div className="form-hint">Формат: Город, улица дом. Если не заполнен, собирается из города и улицы.</div>
+              </div>
+              <div className="form-group">
+                <label className="form-label">Город</label>
+                <input className="form-input" placeholder="Ухта"
+                  value={form.city ?? ''} onChange={(e) => setForm({ ...form, city: e.target.value })} />
+              </div>
+              <div className="form-group">
+                <label className="form-label">Улица</label>
+                <input className="form-input" placeholder="ул. Ленина, д. 1"
+                  value={form.street ?? ''} onChange={(e) => setForm({ ...form, street: e.target.value })} />
               </div>
               <div className="form-group">
                 <label className="form-label">Почта</label>
                 <div className="input-with-action">
-                  <input className="form-input" type="email" required placeholder="name@example.com"
+                  <input className="form-input" type="email" placeholder="name@example.com"
                     value={form.email ?? ''} onChange={(e) => setForm({ ...form, email: e.target.value })} />
                   <CopyButton value={form.email} title="Скопировать почту" />
                 </div>
+                <div className="form-hint">Необязательно — у клиентов из Excel почты может не быть.</div>
               </div>
               <div className="form-group">
                 <label className="form-label">День посещения</label>
@@ -725,14 +960,15 @@ export function ClientsPage() {
               </div>
               <div className="form-group">
                 <label className="form-label">Название</label>
-                <input className="form-input"
+                <input className="form-input" placeholder="Котопес"
                   value={form.title ?? ''} onChange={(e) => setForm({ ...form, title: e.target.value })} />
+                <div className="form-hint">Только название магазина, без адреса и кавычек.</div>
               </div>
               <div className="form-group">
                 <label className="form-label">Код клиента</label>
-                <input className="form-input" inputMode="numeric" pattern="[0-9]*" placeholder="Только цифры"
+                <input className="form-input" placeholder="06031 или Б2902"
                   value={form.clientCode ?? ''}
-                  onChange={(e) => setForm({ ...form, clientCode: e.target.value.replace(/\D/g, '') })} />
+                  onChange={(e) => setForm({ ...form, clientCode: e.target.value.toUpperCase() })} />
               </div>
               <div className="form-group">
                 <label className="form-label">Грейд</label>
@@ -798,8 +1034,16 @@ export function ClientsPage() {
                 <div style={{ marginBottom: 10 }}>{viewingClient.address || '—'}</div>
               </div>
               <div>
+                <label className="form-label" style={{ fontSize: 11, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 2, display: 'block' }}>Город</label>
+                <div style={{ marginBottom: 10 }}>{viewingClient.city || '—'}</div>
+              </div>
+              <div>
+                <label className="form-label" style={{ fontSize: 11, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 2, display: 'block' }}>Улица</label>
+                <div style={{ marginBottom: 10 }}>{viewingClient.street || '—'}</div>
+              </div>
+              <div>
                 <label className="form-label" style={{ fontSize: 11, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 2, display: 'block' }}>Почта</label>
-                <div style={{ marginBottom: 10 }}>{viewingClient.email}</div>
+                <div style={{ marginBottom: 10 }}>{viewingClient.email || '—'}</div>
               </div>
               <div>
                 <label className="form-label" style={{ fontSize: 11, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 2, display: 'block' }}>День посещения</label>
@@ -857,6 +1101,8 @@ export function ClientsPage() {
                     phone: viewingClient.phone ?? '',
                     company: viewingClient.company ?? 'ИП',
                     address: viewingClient.address ?? '',
+                    city: viewingClient.city ?? '',
+                    street: viewingClient.street ?? '',
                     day: viewingClient.day ?? '',
                     mode: viewingClient.mode ?? '',
                     manager: viewingClient.manager ?? '',
@@ -880,6 +1126,100 @@ export function ClientsPage() {
                 Удалить
               </button>
               <button className="btn btn-outline" onClick={() => setViewingClient(null)}>Закрыть</button>
+            </div>
+          </div>
+        </div>
+      )}
+      {importPreview && (
+        <div
+          className="dialog-overlay"
+          onClick={() => {
+            if (!importing) setImportPreview(null);
+          }}
+        >
+          <div
+            className="dialog"
+            onClick={(e) => e.stopPropagation()}
+            style={{ maxHeight: '85vh', overflowY: 'auto', display: 'flex', flexDirection: 'column' }}
+          >
+            <DialogCloseButton
+              onClick={() => {
+                if (!importing) setImportPreview(null);
+              }}
+              label="Закрыть окно импорта"
+            />
+            <div className="dialog-title">Загрузка клиентов из Excel</div>
+            <div className="dialog-body" style={{ flex: 1, overflowY: 'auto' }}>
+              <p style={{ marginTop: 0 }}>
+                Файл: <strong>{importPreview.fileName}</strong>
+              </p>
+              <p>
+                Найдено клиентов: <strong>{importPreview.total}</strong>. Новых: <strong>{importPreview.newRows.length}</strong>.
+                {' '}Обновить: <strong>{importPreview.updateRows.length}</strong>.
+              </p>
+              <p className="form-hint" style={{ marginTop: 0 }}>
+                У существующих клиентов обновятся название, адрес, город, улица и код.
+                Почта, телефон, заметки и другие ручные данные сохранятся.
+              </p>
+              {importError && (
+                <div className="alert alert-danger" style={{ marginBottom: 12 }}>
+                  {importError}
+                </div>
+              )}
+              <div
+                style={{
+                  maxHeight: 280,
+                  overflowY: 'auto',
+                  border: '1px solid var(--color-border)',
+                  borderRadius: 'var(--radius)',
+                }}
+              >
+                <table className="table table--compact" style={{ width: '100%', borderCollapse: 'collapse' }}>
+                  <thead>
+                    <tr>
+                      <th>Код</th>
+                      <th>Клиент</th>
+                      <th>Форма</th>
+                      <th>Город</th>
+                      <th>Улица</th>
+                      <th>Действие</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {importRows.slice(0, 50).map(({ row, isUpdate }, index) => (
+                      <tr key={`${row.clientCode ?? row.name}-${index}`}>
+                        <td>{row.clientCode || '—'}</td>
+                        <td>{row.name}</td>
+                        <td>{row.company || '—'}</td>
+                        <td>{row.city || '—'}</td>
+                        <td>{row.street || '—'}</td>
+                        <td>{isUpdate ? 'Обновить' : 'Новый'}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              {importRows.length > 50 && (
+                <div className="form-hint">Показаны первые 50 записей из {importRows.length}.</div>
+              )}
+            </div>
+            <div className="dialog-actions">
+              <button
+                className="btn btn-outline"
+                type="button"
+                onClick={() => setImportPreview(null)}
+                disabled={importing}
+              >
+                Отмена
+              </button>
+              <button
+                className="btn btn-primary"
+                type="button"
+                onClick={handleImportConfirm}
+                disabled={importing}
+              >
+                {importing ? 'Загрузка…' : `Загрузить ${importRows.length}`}
+              </button>
             </div>
           </div>
         </div>

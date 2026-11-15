@@ -5,13 +5,17 @@ export interface Client {
   phone?: string;
   company?: string;
   address?: string;
+  /** Город из адреса клиента. */
+  city?: string;
+  /** Улица, дом, корпус из адреса клиента. */
+  street?: string;
   day?: string;
   mode?: string;
   manager?: string;
   notes?: string;
   active?: boolean;
   title?: string;
-  /** Код клиента — только цифры. */
+  /** Код клиента: цифры или буквенно-цифровой код (например, «Б2902»). */
   clientCode?: string;
   /** Заказы клиента — произвольная текстовая строка. */
   orders?: string;
@@ -23,17 +27,21 @@ export interface Client {
 
 export interface NewClientInput {
   name: string;
-  email: string;
+  email?: string;
   phone?: string;
   company?: string;
   address?: string;
+  /** Город из адреса клиента. */
+  city?: string;
+  /** Улица, дом, корпус из адреса клиента. */
+  street?: string;
   day?: string;
   mode?: string;
   manager?: string;
   notes?: string;
   active?: boolean;
   title?: string;
-  /** Код клиента — только цифры. */
+  /** Код клиента: цифры или буквенно-цифровой код (например, «Б2902»). */
   clientCode?: string;
   /** Заказы клиента — произвольная текстовая строка. */
   orders?: string;
@@ -46,13 +54,17 @@ export interface UpdateClientInput {
   phone?: string;
   company?: string;
   address?: string;
+  /** Город из адреса клиента. */
+  city?: string;
+  /** Улица, дом, корпус из адреса клиента. */
+  street?: string;
   day?: string;
   mode?: string;
   manager?: string;
   notes?: string;
   active?: boolean;
   title?: string;
-  /** Код клиента — только цифры. */
+  /** Код клиента: цифры или буквенно-цифровой код (например, «Б2902»). */
   clientCode?: string;
   /** Заказы клиента — произвольная текстовая строка. */
   orders?: string;
