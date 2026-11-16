@@ -70,7 +70,7 @@ export function KpiPage() {
 
     const q = query(
       collection(db, 'kpi_reports'),
-      where('ownerUid', '==', user.uid),
+      where('ownerUid', '==', user.email),
       orderBy('createdAt', 'desc'),
     );
 
