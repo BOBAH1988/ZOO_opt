@@ -130,7 +130,8 @@ class InvoiceProject(ProjectBase):
         # даст дубль получателю. Счёт Прусакова пересылается один раз —
         # письмо помечается прочитанным после отправки, и на следующей
         # проверке больше не подхватится.
-        matched = find_messages(imap, SENDER_INVOICE, subject_matches)
+        matched = find_messages(imap, SENDER_INVOICE, subject_matches,
+                                since_days=7, max_letters=10)
         # ВАЖНО: только НЕПРОЧИТАННЫЕ письма. Раньше здесь был fallback к
         # недавно прочитанным за 7 дней (на случай, если человек открыл письмо
         # в почтовом клиенте), но он приводил к повторной отправке старых счетов

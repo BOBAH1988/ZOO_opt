@@ -62,7 +62,8 @@ class VelesProject(ProjectBase):
         try:
             recipients = resolve_recipients([self.RECIPIENT], self.test_mode, what="письма")
             imap = imap_connect()
-            letters = find_messages(imap, self.SENDER, extensions=VELES_EXTENSIONS)
+            letters = find_messages(imap, self.SENDER, extensions=VELES_EXTENSIONS,
+                                    since_days=7, max_letters=10)
 
             if not letters:
                 imap_safe_logout(imap)

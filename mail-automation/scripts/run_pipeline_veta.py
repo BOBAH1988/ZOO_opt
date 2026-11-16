@@ -58,7 +58,7 @@ class VetaProject(ProjectBase):
         """Основная логика: поиск письма ВЕТА и пересылка."""
         try:
             imap = imap_connect()
-            all_letters = find_messages(imap, self.SENDER)
+            all_letters = find_messages(imap, self.SENDER, since_days=7, max_letters=10)
 
             if not all_letters:
                 imap_safe_logout(imap)

@@ -365,6 +365,7 @@ def fetch_debt_attachment() -> str | None:
         imap, SENDER_DEBT,
         lambda s: subjects_equal(s, DEBT_SUBJECT_TRIGGER),
         extensions=None, newest_first=True,
+        since_days=7, max_letters=10,
     )
 
     # Вложение любого типа — файл дебиторки приходит как .xls.

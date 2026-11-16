@@ -294,7 +294,7 @@ class OrderProject(ProjectBase):
 
         imap = imap_connect()
 
-        messages = find_messages(imap, SENDER_ORDER)
+        messages = find_messages(imap, SENDER_ORDER, since_days=7, max_letters=10)
 
         if not messages:
             self._missing_details = f"Непрочитанных писем от {SENDER_ORDER} не найдено."

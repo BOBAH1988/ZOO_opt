@@ -161,7 +161,7 @@ class DebtProject(ProjectBase):
 
         imap = imap_connect()
 
-        all_letters = find_messages(imap, SENDER_DEBT)
+        all_letters = find_messages(imap, SENDER_DEBT, since_days=7, max_letters=10)
 
         if not all_letters:
             imap_safe_logout(imap)

@@ -123,14 +123,16 @@ class PaymentsProject(ProjectBase):
         for client in CLIENTS_PAYMENT:
             matcher = lambda s, c=client: subject_matches(c, s)  # noqa: E731
             matched = find_messages(imap, client["sender"], matcher,
-                                    extensions=PAYMENT_EXTENSIONS)
+                                    extensions=PAYMENT_EXTENSIONS,
+                                    since_days=7, max_letters=10)
 
             # Диагностика: если есть непрочитанные письма от этого клиента,
             # но тема не подошла — запоминаем для уведомления. Без этого
             # письмо с неправильной темой тихо игнорируется.
             all_unread = find_messages(imap, client["sender"],
                                        subject_matcher=None,
-                                       extensions=PAYMENT_EXTENSIONS)
+                                       extensions=PAYMENT_EXTENSIONS,
+                                       since_days=7, max_letters=10)
             if all_unread and not matched:
                 subjects = [letter["subject"] for letter in all_unread]
                 unrecognized_senders[client["sender"]] = subjects

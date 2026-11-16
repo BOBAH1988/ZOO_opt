@@ -131,7 +131,8 @@ class ClientsInvoiceProject(ProjectBase):
         # find_messages по умолчанию ищет ТОЛЬКО непрочитанные письма.
         # Это НЕЛЬЗЯ менять на unseen_only=False: прочитанные письма могли
         # быть уже пересланы вручную, и повторная пересылка даст дубль клиенту.
-        all_unread = find_messages(imap, SENDER_CLIENTS, subject_matcher=None)
+        all_unread = find_messages(imap, SENDER_CLIENTS, subject_matcher=None,
+                                   since_days=7, max_letters=10)
         letters = [letter for letter in all_unread if match_client(letter["subject"]) is not None]
 
         if not letters:
