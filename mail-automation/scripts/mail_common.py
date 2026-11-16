@@ -565,6 +565,14 @@ def mark_seen(imap: ImapConn, uid: bytes) -> None:
     imap.uid("store", uid, "+FLAGS", "\\Seen")
 
 
+def is_seen(imap: ImapConn, uid: bytes) -> bool:
+    """True, если письмо уже помечено прочитанным (\\Seen)."""
+    status, data = imap.uid("fetch", uid, "(FLAGS)")
+    if status != "OK" or not data:
+        return True
+    return "\\Seen" in str(data)
+
+
 def mark_seen_with_retry(imap: ImapConn, uid: bytes, login: str | None = None,
                          app_password: str | None = None) -> ImapConn:
     """Помечает письмо прочитанным, переподключаясь при обрыве связи.

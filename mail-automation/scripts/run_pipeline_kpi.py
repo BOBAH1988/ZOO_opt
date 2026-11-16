@@ -2,25 +2,27 @@
 Проект 12: KPI «Продажи» (docs/TZ.md).
 
 Логика:
-1. По запросу (ручной запуск) ищем НЕпрочитанные письма от
-   yuriy.novikov1980@mail.ru с темой ровно «Продажи» и вложением
-   «Проекция объема продаж.xlsx». Письмо приходит 2–3 раза в неделю —
-   если сегодня его нет, тихо завершаемся, ничего не делаем.
-2. Месяц и прошедшие отгрузки в шапке считаем от ДАТЫ письма (заголовок
+1. Ищем ВСЕ письма от yuriy.novikov1980@mail.ru с темой ровно «Продажи»
+   и вложением «Проекция объема продаж.xlsx» (и прочитанные, и нет).
+2. Берём самое свежее НЕпрочитанное письмо. Если последнее письмо уже
+   прочитано (открыто в почтовом клиенте), ищем следующее непрочитанное.
+   Если непрочитанных нет — тихо завершаемся.
+3. Месяц и прошедшие отгрузки в шапке считаем от ДАТЫ письма (заголовок
    Date, МСК): B1 вложения может не обновляться, и раньше шапка уходила
    в прошлый месяц. Из вложения берём блок менеджера
    «Соколов Владимир (Ухта)»: имя в якоре объединённой ячейки столбца A,
    под ним строки направлений в столбце B; факт = H, план = I.
-3. Считаем ступени по kpi_config.py: % — достигнутая НИЖНЯЯ граница
+4. Считаем ступени по kpi_config.py: % — достигнутая НИЖНЯЯ граница
    (факт 83% → пишем «80%»), «>>%» — следующая ступень,
    Осталось — до следующей границы; всё перевыполнено → 0. Для Общего
    при ≥100% остаток считается до 105% от плана (как N6 в
    «Скрипте обработки»).
-4. Письмо с темой «Выполнение KPI» отправляется ТОЛЬКО вам — личные
+5. Письмо с темой «Выполнение KPI» отправляется ТОЛЬКО вам — личные
    данные, поэтому отдельного тестового режима здесь нет.
-5. Обработанное письмо помечается прочитанным (несколько непрочитанных —
-   берём самое свежее и гасим все). Если файл не того формата / менеджер
-   не найден — уведомление об ошибке, входящее остаётся для ручного разбора.
+6. Обработанное письмо помечается прочитанным. Все остальные подходящие
+   письма тоже помечаются прочитанными, чтобы не обработать повторно.
+   Если файл не того формата / менеджер не найден — уведомление об ошибке,
+   входящее остаётся для ручного разбора.
 
 Требуются переменные окружения:
     MAILRU_LOGIN, MAILRU_APP_PASSWORD, NOTIFY_EMAIL
@@ -38,6 +40,7 @@ from mail_common import (
     get_notify_email,
     imap_connect,
     imap_safe_logout,
+    is_seen,
     mark_seen_with_retry,
     normalize_subject,
     send_html_mail,
@@ -77,24 +80,44 @@ class KpiProject(ProjectBase):
 
         imap = imap_connect()
 
+        # Ищем ВСЕ письма от Юрия с темой "Продажи" (и прочитанные, и нет),
+        # самые свежие первыми. unread_only=False — нужно, чтобы найти
+        # письмо, которое пользователь уже открыл в почтовом клиенте, но
+        # ещё не обработал скриптом.
+        all_messages = find_messages(
+            imap, SENDER_KPI, subject_matches,
+            unseen_only=False, newest_first=True,
+        )
+
+        # Оставляем только письма с нужным вложением.
         matched = []
-        for letter in find_messages(imap, SENDER_KPI, subject_matches):
+        for letter in all_messages:
             att = next((f for f in letter["attachments"]
                         if _norm(f[0]).lower() == ATTACHMENT_NAME), None)
-            if att is None:
-                continue
-            matched.append((letter["uid"], letter["msg"], att))
+            if att is not None:
+                matched.append(letter)
 
         if not matched:
             imap_safe_logout(imap)
-            # Тут нормально быть «тихим»: у отправителя бывают и другие письма
-            # (например «Мотивация» с файлом Зоологистик), которые мы намеренно
-            # не обрабатываем. Работаем строго по условиям: тема ровно
-            # «Продажи» + вложение «Проекция объема продаж.xlsx».
-            self.logger.info("Письмо «Продажи» с нужным вложением сегодня не найдено — ничего не делаем.")
+            self.logger.info("Письмо «Продажи» с нужным вложением не найдено — ничего не делаем.")
             return RESULT_RETRY
 
-        uid, msg, (fname, payload) = matched[-1]
+        # Берём самое свежее НЕпрочитанное письмо.
+        target = None
+        for letter in matched:
+            if not is_seen(imap, letter["uid"]):
+                target = letter
+                break
+
+        if target is None:
+            imap_safe_logout(imap)
+            self.logger.info("Все письма «Продажи» с нужным вложением уже прочитаны — ничего не делаем.")
+            return RESULT_RETRY
+
+        uid = target["uid"]
+        msg = target["msg"]
+        fname, payload = next(f for f in target["attachments"]
+                              if _norm(f[0]).lower() == ATTACHMENT_NAME)
 
         try:
             # Шапка (месяц, отгрузки) — от даты получения письма, а не от
@@ -113,8 +136,11 @@ class KpiProject(ProjectBase):
         send_html_mail(recipients, LETTER_SUBJECT,
                        build_html(**result), plain_body=build_body(**result))
         imap = mark_seen_with_retry(imap, uid)
-        for extra_uid, _, _ in matched[:-1]:
-            imap = mark_seen_with_retry(imap, extra_uid)
+        # Все остальные подходящие письма тоже помечаем прочитанными,
+        # чтобы не обработать их повторно на следующем запуске.
+        for letter in matched:
+            if letter["uid"] != uid:
+                imap = mark_seen_with_retry(imap, letter["uid"])
         imap_safe_logout(imap)
 
         self.logger.info(f"«Выполнение KPI» отправлено: {', '.join(recipients)}")
