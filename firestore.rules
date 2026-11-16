@@ -102,6 +102,19 @@ service cloud.firestore {
       allow update, delete: if false;
     }
 
+    function hasOnlyKpiReportFields(data) {
+      return data.keys().hasOnly([
+        'ownerUid', 'createdAt', 'letterDate', 'result', 'html', 'plain', 'subject'
+      ]);
+    }
+
+    match /kpi_reports/{reportId} {
+      allow read: if isEmailVerified() && resource.data.ownerUid == request.auth.uid;
+      // Создаётся только через Firebase Admin SDK (GitHub Actions), клиент не пишет напрямую.
+      allow create: if false;
+      allow update, delete: if false;
+    }
+
     match /{document=**} {
       allow read, write: if false;
     }

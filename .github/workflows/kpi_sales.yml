@@ -37,4 +37,5 @@ jobs:
           MAILRU_LOGIN: ${{ secrets.MAILRU_LOGIN }}
           MAILRU_APP_PASSWORD: ${{ secrets.MAILRU_APP_PASSWORD }}
           NOTIFY_EMAIL: ${{ secrets.NOTIFY_EMAIL }}
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
         run: python run_all.py --only kpi
