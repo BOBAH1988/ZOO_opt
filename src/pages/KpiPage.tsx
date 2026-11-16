@@ -152,24 +152,18 @@ export function KpiPage() {
       <div className="card">
         <h2 className="card-title">KPI задачи</h2>
         <div style={{ fontSize: 13, color: '#6b7280', marginBottom: 12 }}>
-          Последний отчёт: {fmtDate(latest.createdAt)} · данные из письма от {fmtDate(latest.letterDate)}
+          Последний отчёт: {fmtDate(latest.createdAt)}
         </div>
 
-        <div className="stats-row">
-          <div className="stat-tile">
-            <div className="stat-label">Шапка отчёта</div>
-            <div className="stat-value" style={{ fontSize: 13, lineHeight: 1.4, wordBreak: 'break-word' }}>
-              {latest.result.header}
-            </div>
+        <div style={{ marginBottom: 12, fontSize: 13, lineHeight: 1.4, wordBreak: 'break-word' }}>
+          {latest.result.header}
+        </div>
+
+        {totalRow && (
+          <div style={{ fontSize: 13, fontWeight: 600, color: '#14532d' }}>
+            Итого {cell(totalRow.accrued).replace(/ с$/, '')}
           </div>
-          {totalRow && (
-            <div className="stat-tile">
-              <div className="stat-label">Итого начислено</div>
-              <div className="stat-value stat-value--success">{cell(totalRow.accrued)}</div>
-            </div>
-          )}
-        </div>
-
+        )}
         <div style={{ marginTop: 12, overflowX: 'auto' }}>
           <table className="table">
             <thead>
