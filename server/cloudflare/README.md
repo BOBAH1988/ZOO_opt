@@ -4,7 +4,7 @@ This Worker is a free-tier hosting option for the protected `POST /run` API. It 
 
 ## 1. Create a GitHub token
 
-Create a fine-grained personal access token for `BOBAH1988/mail-automation` with **Actions: Read and write** permission. Do not send the token in chat or add it to the repository.
+Create a fine-grained personal access token for `BOBAH1988/ZOO_opt` with **Actions: Read and write** permission. Do not send the token in chat or add it to the repository.
 
 ## 2. Install and log in
 

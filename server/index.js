@@ -8,14 +8,13 @@ import admin from 'firebase-admin';
 
 const PORT = process.env.PORT || 8787;
 const GITHUB_OWNER = process.env.GITHUB_OWNER || 'BOBAH1988';
-const GITHUB_REPO = process.env.GITHUB_REPO || 'mail-automation';
+const GITHUB_REPO = process.env.GITHUB_REPO || 'ZOO_opt';
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN || '';
 const ALLOWED_UIDS = (process.env.ALLOWED_UIDS || '').split(',').map((s) => s.trim()).filter(Boolean);
 const REAL_SEND_UIDS = (process.env.REAL_SEND_UIDS || '').split(',').map((s) => s.trim()).filter(Boolean);
 const APP_ORIGIN = process.env.APP_ORIGIN || '';
 
 const ALLOWED_WORKFLOWS = {
-  tests: { path: '.github/workflows/tests.yml', inputs: {} },
   kpi_sales: { path: '.github/workflows/kpi_sales.yml', inputs: {} },
   weekly_fri: { path: '.github/workflows/weekly_fri.yml', inputs: { test_mode: 'boolean', only: 'string', ignore_window: 'boolean' }, realSendGuard: true },
   weekly_mon_tue: { path: '.github/workflows/weekly_mon_tue.yml', inputs: { test_mode: 'boolean', only: 'string', ignore_window: 'boolean' }, realSendGuard: true },

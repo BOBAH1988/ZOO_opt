@@ -10,7 +10,6 @@ const PROJECT_ALLOWLIST = new Set([
 ]);
 
 export const ALLOWED_WORKFLOWS = {
-  tests: { file: 'tests.yml', inputs: {} },
   kpi_sales: { file: 'kpi_sales.yml', inputs: {} },
   weekly_fri: {
     file: 'weekly_fri.yml',
