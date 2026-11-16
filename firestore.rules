@@ -109,7 +109,7 @@ service cloud.firestore {
     }
 
     match /kpi_reports/{reportId} {
-      allow read: if isEmailVerified() && resource.data.ownerUid == request.auth.email;
+      allow read: if resource.data.ownerUid == request.auth.email;
       // Создаётся только через Firebase Admin SDK (GitHub Actions), клиент не пишет напрямую.
       allow create: if false;
       allow update, delete: if false;
