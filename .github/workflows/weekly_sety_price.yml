@@ -1,0 +1,62 @@
+name: "Прайсы сети + ИП Мамедов (ZOO_opt)"
+
+concurrency:
+  group: zoo-opt-mail
+  cancel-in-progress: false
+
+on:
+  workflow_dispatch:
+    inputs:
+      test_mode:
+        description: 'Тестовый режим (прайс уйдёт только вам, не сетям). По умолчанию выключен — прайс уйдёт реальным сетям'
+        type: boolean
+        default: false
+      skip_if_sent:
+        description: 'Не дублировать рассылку: пропустить отправку, если прайс уже уходил сегодня'
+        type: boolean
+        default: true
+
+jobs:
+  send-sety-price:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: pip install -r mail-automation/requirements.txt
+
+      - name: Check secrets format
+        working-directory: mail-automation/scripts
+        env:
+          MAILRU_LOGIN: ${{ secrets.MAILRU_LOGIN }}
+          MAILRU_APP_PASSWORD: ${{ secrets.MAILRU_APP_PASSWORD }}
+        run: python check_secrets.py
+
+      - name: Run pipeline (Сети Ухта)
+        working-directory: mail-automation/scripts
+        env:
+          MAILRU_LOGIN: ${{ secrets.MAILRU_LOGIN }}
+          MAILRU_APP_PASSWORD: ${{ secrets.MAILRU_APP_PASSWORD }}
+          NOTIFY_EMAIL: ${{ secrets.NOTIFY_EMAIL }}
+          TEST_MODE: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.test_mode || 'false' }}
+          SKIP_IF_SENT: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.skip_if_sent || 'true' }}
+          MANUAL_RUN: ${{ github.event_name == 'workflow_dispatch' }}
+        run: python run_all.py --only sety
+
+      - name: Run pipeline (ИП Мамедов)
+        working-directory: mail-automation/scripts
+        env:
+          MAILRU_LOGIN: ${{ secrets.MAILRU_LOGIN }}
+          MAILRU_APP_PASSWORD: ${{ secrets.MAILRU_APP_PASSWORD }}
+          NOTIFY_EMAIL: ${{ secrets.NOTIFY_EMAIL }}
+          TEST_MODE: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.test_mode || 'false' }}
+          SKIP_IF_SENT: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.skip_if_sent || 'true' }}
+          MANUAL_RUN: ${{ github.event_name == 'workflow_dispatch' }}
+        run: python run_all.py --only mamedov

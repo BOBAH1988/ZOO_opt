@@ -1,0 +1,56 @@
+name: "Рекомендации к заказу (ZOO_opt)"
+
+concurrency:
+  group: zoo-opt-mail
+  cancel-in-progress: false
+
+on:
+  workflow_dispatch:
+    inputs:
+      test_mode:
+        description: 'Тестовый режим: отчёт уходит только на ваш NOTIFY_EMAIL. По умолчанию выключен'
+        type: boolean
+        default: false
+
+jobs:
+  build-order:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: pip install -r mail-automation/requirements.txt
+
+      - name: Check secrets format
+        working-directory: mail-automation/scripts
+        env:
+          MAILRU_LOGIN: ${{ secrets.MAILRU_LOGIN }}
+          MAILRU_APP_PASSWORD: ${{ secrets.MAILRU_APP_PASSWORD }}
+        run: python check_secrets.py
+
+      - name: Run pipeline (residues)
+        working-directory: mail-automation/scripts
+        env:
+          MAILRU_LOGIN: ${{ secrets.MAILRU_LOGIN }}
+          MAILRU_APP_PASSWORD: ${{ secrets.MAILRU_APP_PASSWORD }}
+          NOTIFY_EMAIL: ${{ secrets.NOTIFY_EMAIL }}
+          RESIDUES_CC: ${{ secrets.RESIDUES_CC }}
+          TEST_MODE: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.test_mode || 'false' }}
+          RESIDUES_SKIP_DUPLICATE_CHECK: 'true'
+        run: python run_all.py --only residues
+
+      - name: Сохранить отчёт как артефакт
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: order-report-${{ github.run_id }}
+          path: mail-automation/scripts/project residues/output/
+          if-no-files-found: ignore
+          retention-days: 30

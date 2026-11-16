@@ -1,0 +1,63 @@
+name: "Прайсы Ухта и Лемур, дебиторка, счет Вета (ZOO_opt)"
+
+concurrency:
+  group: zoo-opt-mail
+  cancel-in-progress: false
+
+on:
+  workflow_dispatch:
+    inputs:
+      test_mode:
+        description: 'Тестовый режим (всё уйдёт только вам, не клиентам). По умолчанию выключен'
+        type: boolean
+        default: false
+      only:
+        description: 'Один проект (можно любой, даже из другой группы): order/ukhta/veta/debt_ukhta/clients/payments/invoice/veles/lemur/dz/sety. Пусто = вся группа'
+        type: string
+        default: ''
+      ignore_window:
+        description: 'Запустить независимо от текущего времени и дня недели'
+        type: boolean
+        default: true
+
+jobs:
+  run-mail-jobs:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: pip install -r mail-automation/requirements.txt
+
+      - name: Check secrets format
+        working-directory: mail-automation/scripts
+        env:
+          MAILRU_LOGIN: ${{ secrets.MAILRU_LOGIN }}
+          MAILRU_APP_PASSWORD: ${{ secrets.MAILRU_APP_PASSWORD }}
+        run: python check_secrets.py
+
+      - name: Run dispatcher
+        working-directory: mail-automation/scripts
+        env:
+          MAILRU_LOGIN: ${{ secrets.MAILRU_LOGIN }}
+          MAILRU_APP_PASSWORD: ${{ secrets.MAILRU_APP_PASSWORD }}
+          MAIL_RECIPIENTS: ${{ secrets.MAIL_RECIPIENTS }}
+          NOTIFY_EMAIL: ${{ secrets.NOTIFY_EMAIL }}
+          TEST_MODE: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.test_mode || 'false' }}
+        run: |
+          ARGS="--group mon_tue"
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            if [ -n "${{ github.event.inputs.only }}" ]; then
+              ARGS="--only ${{ github.event.inputs.only }}"
+            elif [ "${{ github.event.inputs.ignore_window }}" = "true" ]; then
+              ARGS="$ARGS --ignore-window"
+            fi
+          fi
+          python run_all.py $ARGS

@@ -1,0 +1,40 @@
+name: "KPI Продажи (ZOO_opt)"
+
+concurrency:
+  group: zoo-opt-mail
+  cancel-in-progress: false
+
+on:
+  workflow_dispatch:
+
+jobs:
+  run-kpi:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: pip install -r mail-automation/requirements.txt
+
+      - name: Check secrets format
+        working-directory: mail-automation/scripts
+        env:
+          MAILRU_LOGIN: ${{ secrets.MAILRU_LOGIN }}
+          MAILRU_APP_PASSWORD: ${{ secrets.MAILRU_APP_PASSWORD }}
+        run: python check_secrets.py
+
+      - name: Run pipeline (KPI sales)
+        working-directory: mail-automation/scripts
+        env:
+          MAILRU_LOGIN: ${{ secrets.MAILRU_LOGIN }}
+          MAILRU_APP_PASSWORD: ${{ secrets.MAILRU_APP_PASSWORD }}
+          NOTIFY_EMAIL: ${{ secrets.NOTIFY_EMAIL }}
+        run: python run_all.py --only kpi

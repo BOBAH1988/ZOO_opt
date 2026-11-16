@@ -1,0 +1,35 @@
+[project]
+name = "mail-automation"
+version = "2.5"
+description = "Автоматизация почтовых рассылок (прайсы, заказы, KPI, дебиторка)"
+requires-python = ">=3.11"
+
+[tool.ruff]
+line-length = 120
+target-version = "py311"
+
+[tool.ruff.lint]
+# E/F/W — базовый pylint-стиль, I — порядок импортов, UP — современный
+# синтаксис (Optional[X] -> X | None), B — типовые баги, SIM/PIE —
+# упрощения, RUF — питон-специфичное.
+select = ["E", "F", "W", "I", "UP", "B", "SIM", "PIE", "RUF"]
+ignore = [
+    # Широкие except Exception — осознанный стиль этого проекта: сбой
+    # вспомогательной проверки не должен ронять рассылку (fail-open).
+    # Правила BLE/S/DTZ не выбраны по той же причине.
+    #
+    # RUF001/002/003 ("неоднозначные" буквы) несовместимы с русскоязычным
+    # проектом: кириллические «е», «о», «с» в строках и докстрингах —
+    # это не опечатки, а нормальный текст.
+    "RUF001",
+    "RUF002",
+    "RUF003",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+# Добавить scripts/ в sys.path через conftest.py
+addopts = "-v --tb=short"
