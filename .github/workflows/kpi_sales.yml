@@ -1,4 +1,4 @@
-name: "KPI Продажи (ZOO_opt)"
+name: "KPI Продажи"
 
 concurrency:
   group: zoo-opt-mail

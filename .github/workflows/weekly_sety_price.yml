@@ -1,4 +1,4 @@
-name: "Прайсы сети + ИП Мамедов (ZOO_opt)"
+name: "Прайсы сети + ИП Мамедов"
 
 concurrency:
   group: zoo-opt-mail

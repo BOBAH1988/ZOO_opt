@@ -1,4 +1,4 @@
-name: "Счёта Прусакова и Велес (ZOO_opt)"
+name: "Счёта Прусакова и Велес"
 
 concurrency:
   group: zoo-opt-mail

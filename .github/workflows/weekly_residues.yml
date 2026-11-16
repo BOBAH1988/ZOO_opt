@@ -1,4 +1,4 @@
-name: "Рекомендации к заказу (ZOO_opt)"
+name: "Рекомендации к заказу"
 
 concurrency:
   group: zoo-opt-mail

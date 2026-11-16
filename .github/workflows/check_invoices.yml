@@ -1,4 +1,4 @@
-name: "Проверка счетов (ZOO_opt)"
+name: "Проверка счетов"
 
 concurrency:
   group: zoo-opt-mail

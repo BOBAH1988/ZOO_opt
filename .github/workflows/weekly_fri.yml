@@ -1,4 +1,4 @@
-name: "Прайс Лемур, ответ по ДЗ (ZOO_opt)"
+name: "Прайс Лемур, ответ по ДЗ"
 
 concurrency:
   group: zoo-opt-mail
