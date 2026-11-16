@@ -13,7 +13,7 @@ test('accepts a known workflow and valid inputs', () => {
 });
 
 test('accepts workflows that have no inputs', () => {
-  const result = validateWorkflowRequest({ workflowId: 'tests' });
+  const result = validateWorkflowRequest({ workflowId: 'kpi_sales' });
 
   assert.equal(result.ok, true);
   assert.deepEqual(result.inputs, {});
