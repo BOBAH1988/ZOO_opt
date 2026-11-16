@@ -23,6 +23,7 @@ const ALLOWED_WORKFLOWS = {
   weekly_residues: { path: '.github/workflows/weekly_residues.yml', inputs: { test_mode: 'boolean' }, realSendGuard: true },
   weekly_sety_price: { path: '.github/workflows/weekly_sety_price.yml', inputs: { test_mode: 'boolean', skip_if_sent: 'boolean' }, realSendGuard: true },
   weekly_tue: { path: '.github/workflows/weekly_tue.yml', inputs: { test_mode: 'boolean', only: 'string', ignore_window: 'boolean' }, realSendGuard: true },
+  git_check_invoices: { path: '.github/workflows/git_check_invoices.yml', inputs: { test_mode: 'boolean' } },
 };
 
 function initFirebaseAdmin() {

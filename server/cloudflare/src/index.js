@@ -42,6 +42,10 @@ export const ALLOWED_WORKFLOWS = {
     inputs: { test_mode: 'boolean', only: 'string', ignore_window: 'boolean' },
     realSendGuard: true,
   },
+  git_check_invoices: {
+    file: 'git_check_invoices.yml',
+    inputs: { test_mode: 'boolean' },
+  },
 };
 
 const MAX_BODY_BYTES = 16 * 1024;

@@ -51,16 +51,6 @@ const SCENARIOS: WorkflowScenario[] = [
     ],
   },
   {
-    id: 'weekly_residues',
-    name: 'Рекомендации к заказу по остаткам',
-    day: 'пн',
-    time: '10:00',
-    description: 'Проект 13. Сверяет полный прайс с остатком на складе и продажами за три месяца, собирает список того, что заказать. Считает автоматически и показывает только проверяемые цифры. Запускает пакет residues и присылает результат на почту.',
-    inputs: [
-      { key: 'test_mode', label: 'Тестовый режим (только вам)', type: 'boolean', defaultValue: false, description: '', required: false },
-    ],
-  },
-  {
     id: 'weekly_sety_price',
     name: 'Прайсы Сети + ИП Мамедов',
     day: 'пн',
@@ -69,6 +59,16 @@ const SCENARIOS: WorkflowScenario[] = [
     inputs: [
       { key: 'test_mode', label: 'Тестовый режим (только вам, не сетям)', type: 'boolean', defaultValue: false, description: '', required: false },
       { key: 'skip_if_sent', label: 'Не дублировать рассылку', type: 'boolean', defaultValue: true, description: '', required: false },
+    ],
+  },
+  {
+    id: 'weekly_residues',
+    name: 'Рекомендации к заказу по остаткам',
+    day: 'пн',
+    time: '10:00',
+    description: 'Проект 13. Сверяет полный прайс с остатком на складе и продажами за три месяца, собирает список того, что заказать. Считает автоматически и показывает только проверяемые цифры. Запускает пакет residues и присылает результат на почту.',
+    inputs: [
+      { key: 'test_mode', label: 'Тестовый режим (только вам)', type: 'boolean', defaultValue: false, description: '', required: false },
     ],
   },
   {
@@ -113,6 +113,15 @@ const SCENARIOS: WorkflowScenario[] = [
     day: '',
     description: 'Проект 12. Личный мотивационный отчёт Владимира Соколова (Ухта) по выполнению плана направлений. Разбирает файл «Проекция объема продаж.xlsx», считает достижение ступеней мотивации, начисления и проекцию. Письмо с темой «Выполнение KPI» уходит только на NOTIFY_EMAIL.',
     inputs: [],
+  },
+  {
+    id: 'git_check_invoices',
+    name: 'Проверка счетов',
+    day: 'вт',
+    description: 'Проверка счетов через репозиторий mail-automation (GitHub Actions workflow). Сверяет актуальность счетов и уведомляет о расхождениях.',
+    inputs: [
+      { key: 'test_mode', label: 'Тестовый режим', type: 'boolean', defaultValue: false, description: '', required: false },
+    ],
   },
 ];
 
@@ -194,6 +203,12 @@ const ALL_SCRIPTS = [
     name: 'Рекомендации к заказу по остаткам',
     description: 'Сверяет полный прайс с остатком на складе и продажами за три месяца, собирает список того, что заказать. Запускает пакет residues и присылает результат на почту.',
     schedule: 'пн — 10:00 МСК',
+  },
+  {
+    id: 'git_check_invoices',
+    name: 'Проверка счетов',
+    description: 'Проверка счетов через GitHub Actions workflow в репозитории mail-automation. Сверяет актуальность счетов и уведомляет о расхождениях.',
+    schedule: 'по требованию',
   },
 ];
 
