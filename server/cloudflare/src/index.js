@@ -44,7 +44,7 @@ export const ALLOWED_WORKFLOWS = {
   },
   git_check_invoices: {
     file: 'git_check_invoices.yml',
-    inputs: { test_mode: 'boolean' },
+    inputs: { test_mode: 'boolean', project: 'string' },
   },
 };
 
