@@ -6,7 +6,8 @@ const FIREBASE_JWKS = createRemoteJWKSet(
 
 // Допустимые значения для поля 'only' ( Projekты рассылки, совпадает с клиентом ).
 const PROJECT_ALLOWLIST = new Set([
-  'order', 'ukhta', 'veta', 'clients', 'payments', 'invoice', 'veles', 'lemur', 'dz', 'sety', 'prusakova',
+  'order', 'ukhta', 'veta', 'clients', 'payments', 'invoice', 'veles',
+  'lemur', 'dz', 'sety', 'debt_ukhta', 'mamedov',
 ]);
 
 export const ALLOWED_WORKFLOWS = {
@@ -309,7 +310,7 @@ export default {
     return jsonResponse({
       accepted: true,
       message: 'Запрос на запуск принят сервером и передан в GitHub Actions.',
-      runUrl: `https://github.com/${env.GITHUB_OWNER}/${env.GITHUB_REPO}/actions/workflows/${validation.workflow.file}`,
+      runUrl: `https://github.com/${env.GITHUB_OWNER}/${env.GITHUB_REPO}/actions/workflows/.github/workflows/${validation.workflow.file}`,
       runId: null,
     }, 200, origin, env);
   },

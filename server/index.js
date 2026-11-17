@@ -15,14 +15,14 @@ const REAL_SEND_UIDS = (process.env.REAL_SEND_UIDS || '').split(',').map((s) => 
 const APP_ORIGIN = process.env.APP_ORIGIN || '';
 
 const ALLOWED_WORKFLOWS = {
-  kpi_sales: { path: '.github/workflows/kpi_sales.yml', inputs: {} },
-  weekly_fri: { path: '.github/workflows/weekly_fri.yml', inputs: { test_mode: 'boolean', only: 'string', ignore_window: 'boolean' }, realSendGuard: true },
-  weekly_mon_tue: { path: '.github/workflows/weekly_mon_tue.yml', inputs: { test_mode: 'boolean', only: 'string', ignore_window: 'boolean' }, realSendGuard: true },
-  weekly_wed: { path: '.github/workflows/weekly_wed.yml', inputs: { test_mode: 'boolean', only: 'string', ignore_window: 'boolean' }, realSendGuard: true },
-  weekly_residues: { path: '.github/workflows/weekly_residues.yml', inputs: { test_mode: 'boolean' }, realSendGuard: true },
-  weekly_sety_price: { path: '.github/workflows/weekly_sety_price.yml', inputs: { test_mode: 'boolean', skip_if_sent: 'boolean' }, realSendGuard: true },
-  weekly_tue: { path: '.github/workflows/weekly_tue.yml', inputs: { test_mode: 'boolean', only: 'string', ignore_window: 'boolean' }, realSendGuard: true },
-  git_check_invoices: { path: '.github/workflows/git_check_invoices.yml', inputs: { test_mode: 'boolean' } },
+  kpi_sales: { path: 'kpi_sales.yml', inputs: {} },
+  weekly_fri: { path: 'weekly_fri.yml', inputs: { test_mode: 'boolean', only: 'string', ignore_window: 'boolean' }, realSendGuard: true },
+  weekly_mon_tue: { path: 'weekly_mon_tue.yml', inputs: { test_mode: 'boolean', only: 'string', ignore_window: 'boolean' }, realSendGuard: true },
+  weekly_wed: { path: 'weekly_wed.yml', inputs: { test_mode: 'boolean', only: 'string', ignore_window: 'boolean' }, realSendGuard: true },
+  weekly_residues: { path: 'weekly_residues.yml', inputs: { test_mode: 'boolean' }, realSendGuard: true },
+  weekly_sety_price: { path: 'weekly_sety_price.yml', inputs: { test_mode: 'boolean', skip_if_sent: 'boolean' }, realSendGuard: true },
+  weekly_tue: { path: 'weekly_tue.yml', inputs: { test_mode: 'boolean', only: 'string', ignore_window: 'boolean' }, realSendGuard: true },
+  git_check_invoices: { path: 'git_check_invoices.yml', inputs: { test_mode: 'boolean' } },
 };
 
 function initFirebaseAdmin() {
@@ -40,12 +40,12 @@ function logEvent(event) {
 }
 
 // Допустимые значения для поля 'only' ( Projekты рассылки, совпадает с клиентом и воркере ).
-const PROJECT_ALLOWLIST = new Set([
+export const PROJECT_ALLOWLIST = new Set([
   'order', 'ukhta', 'veta', 'clients', 'payments', 'invoice', 'veles',
   'lemur', 'dz', 'sety', 'debt_ukhta', 'mamedov',
 ]);
 
-function validateInputs(workflowId, inputs) {
+export function validateInputs(workflowId, inputs) {
   const spec = ALLOWED_WORKFLOWS[workflowId];
   if (!spec) return { ok: false, error: 'Workflow is not allowed' };
   if (!inputs || typeof inputs !== 'object' || Array.isArray(inputs)) return { ok: false, error: 'inputs must be an object' };
@@ -170,7 +170,7 @@ app.post('/run', async (req, res) => {
     return res.json({
       accepted: true,
       message: 'Запрос на запуск принят сервером и передан в GitHub Actions.',
-      runUrl: `https://github.com/${GITHUB_OWNER}/${GITHUB_REPO}/actions/workflows/${ALLOWED_WORKFLOWS[workflowId].path}`,
+      runUrl: `https://github.com/${GITHUB_OWNER}/${GITHUB_REPO}/actions/workflows/.github/workflows/${ALLOWED_WORKFLOWS[workflowId].path}`,
       runId: null,
     });
   } catch (err) {
@@ -195,4 +195,6 @@ app.post('/run', async (req, res) => {
   }
 });
 
-app.listen(PORT, () => logEvent({ level: 'info', type: 'server_start', port: Number(PORT) }));
+if (import.meta.main) {
+  app.listen(PORT, () => logEvent({ level: 'info', type: 'server_start', port: Number(PORT) }));
+}
