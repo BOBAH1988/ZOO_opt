@@ -32,9 +32,12 @@ jobs:
 
       - name: Commit updated sales report
         if: success()
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           git config user.name "GitHub Actions"
           git config user.email "actions@github.com"
+          git remote set-url origin "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
           git add "mail-automation/project residues/Весь ассортимент за 3 мес.xlsx"
           git commit -m "chore: обновить отчёт о продажах за 3 мес." || echo "Нет изменений для коммита"
           git push
