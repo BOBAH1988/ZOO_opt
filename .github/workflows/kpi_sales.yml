@@ -16,6 +16,8 @@ on:
         description: 'Тестовый режим (всё уйдёт только вам, не клиентам). По умолчанию выключен'
         type: boolean
         default: false
+
+jobs:
   run-kpi:
     runs-on: ubuntu-latest
     timeout-minutes: 15
