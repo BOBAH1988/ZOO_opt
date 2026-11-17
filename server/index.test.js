@@ -108,3 +108,9 @@ test('git_check_invoices rejects project not in clients/payments', () => {
   assert.equal(result.ok, false);
   assert.equal(result.error, 'Unknown project: residues');
 });
+
+test('git_check_invoices empty project runs both clients and payments', () => {
+  const result = validateInputs('git_check_invoices', { project: '' });
+  assert.equal(result.ok, true);
+  assert.deepEqual(result.cleaned, { project: 'clients,payments' });
+});

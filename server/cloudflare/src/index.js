@@ -82,10 +82,13 @@ export function validateWorkflowRequest(body) {
       }
       cleaned[key] = projects.join(',');
     } else if (key === 'project' && body.workflowId === 'git_check_invoices') {
-      if (!['clients', 'payments'].includes(value)) {
+      if (value === '') {
+        cleaned[key] = 'clients,payments';
+      } else if (!['clients', 'payments'].includes(value)) {
         return { ok: false, error: `Unknown project: ${value}` };
+      } else {
+        cleaned[key] = value;
       }
-      cleaned[key] = value;
     } else {
       cleaned[key] = value;
     }

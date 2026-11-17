@@ -8,13 +8,10 @@ on:
   workflow_dispatch:
     inputs:
       project:
-        description: "Какой проект запустить"
-        type: choice
-        required: true
-        options:
-          - clients
-          - payments
-        default: clients
+        description: "Какой проект запустить (clients, payments или clients,payments — пусто = оба)"
+        type: string
+        required: false
+        default: "clients,payments"
       test_mode:
         description: "Тестовый режим (письма уйдут только вам, не клиентам/оператору)"
         type: boolean
@@ -22,7 +19,7 @@ on:
 
 jobs:
   run-project-9:
-    if: ${{ github.event.inputs.project == 'clients' }}
+    if: ${{ contains(github.event.inputs.project, 'clients') }}
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -54,7 +51,7 @@ jobs:
         run: python run_all.py --only clients
 
   run-project-11:
-    if: ${{ github.event.inputs.project == 'payments' }}
+    if: ${{ contains(github.event.inputs.project, 'payments') }}
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
