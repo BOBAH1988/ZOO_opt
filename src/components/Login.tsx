@@ -68,7 +68,7 @@ export function Login({ onLogin }: LoginProps) {
   const [error, setError] = useState<string | null>(null);
   const [info, setInfo] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
-  const { signIn, signUp, firebaseError } = useAuth();
+  const { signIn, signUp, firebaseError, retry } = useAuth();
 
   const validate = (): string | null => {
     if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return 'Введите корректный email';
@@ -174,7 +174,19 @@ export function Login({ onLogin }: LoginProps) {
       </div>
       <div className="card" style={{ maxWidth: 420, margin: '24px auto 0' }}>
         <h2 className="card-title">Вход в систему</h2>
-        {firebaseError && <div className="alert alert-warning">{firebaseError}</div>}
+        {firebaseError && (
+          <div className="alert alert-warning" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
+            {firebaseError}
+            <button
+              type="button"
+              className="btn btn-outline btn-sm"
+              onClick={retry}
+              style={{ padding: '4px 10px', fontSize: 12 }}
+            >
+              Повторить
+            </button>
+          </div>
+        )}
         {error && <div className="alert alert-danger">{error}</div>}
         {info && <div className="alert alert-info">{info}</div>}
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>

@@ -2,6 +2,7 @@ import {
   createContext,
   useContext,
   useEffect,
+  useRef,
   useState,
   ReactNode,
 } from 'react';
@@ -21,6 +22,7 @@ export interface AuthContextType {
   initialized: boolean;
   firebaseError: string | null;
   emailVerified: boolean | null;
+  retry: () => void;
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
@@ -31,7 +33,7 @@ export interface AuthContextType {
 const AuthContext = createContext<AuthContextType | null>(null);
 
 /** Через сколько миллисекунд прекращать «вечную загрузку», если Firebase не ответил. */
-const AUTH_INIT_TIMEOUT_MS = 8000;
+const AUTH_INIT_TIMEOUT_MS = 15000;
 
 /**
  * Читает сохранённого пользователя из localStorage Firebase Auth.
@@ -58,7 +60,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [initialized, setInitialized] = useState(false);
   const [firebaseError, setFirebaseError] = useState<string | null>(null);
 
-  useEffect(() => {
+  const timeoutRef = useRef<number | null>(null);
+
+  const clearTimeoutRef = () => {
+    if (timeoutRef.current !== null) {
+      window.clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
+    }
+  };
+
+  const initAuth = () => {
+    clearTimeoutRef();
+    setLoading(true);
+    setInitialized(false);
+    setFirebaseError(null);
+
     const { auth: a } = initFirebase();
     if (!a) {
       const missing = getFirebaseConfigIssues();
@@ -91,7 +107,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     // Страховка от бесконечной загрузки: если Firebase недоступен (нет сети/DNS),
     // через несколько секунд показываем экран входа с понятным сообщением об ошибке.
-    const timeoutId = window.setTimeout(() => {
+    timeoutRef.current = window.setTimeout(() => {
       setFirebaseError((previous) =>
         previous ?? 'Не удалось подключиться к Firebase. Проверьте интернет-соединение и повторите попытку.',
       );
@@ -100,7 +116,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }, AUTH_INIT_TIMEOUT_MS);
 
     const unsub = onAuthStateChanged(a, (u) => {
-      window.clearTimeout(timeoutId);
+      clearTimeoutRef();
       setUser(u);
       setEmailVerified(u?.emailVerified ?? null);
       setFirebaseError(null);
@@ -108,9 +124,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setInitialized(true);
     });
 
+    return () => unsub();
+  };
+
+  const retry = () => {
+    initAuth();
+  };
+
+  useEffect(() => {
+    initAuth();
     return () => {
-      window.clearTimeout(timeoutId);
-      unsub();
+      clearTimeoutRef();
     };
   }, []);
 
@@ -150,6 +174,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         loading,
         initialized,
         firebaseError,
+        retry,
         signIn,
         signUp,
         signOut: signOutFn,
