@@ -129,9 +129,10 @@ class PaymentsProject(ProjectBase):
             # Диагностика: если есть непрочитанные письма от этого клиента,
             # но тема не подошла — запоминаем для уведомления. Без этого
             # письмо с неправильной темой тихо игнорируется.
+            # extensions не фильтруем здесь: хотим видеть все письма от
+            # отправителя, в т.ч. без вложений, чтобы не пропустить их.
             all_unread = find_messages(imap, client["sender"],
                                        subject_matcher=None,
-                                       extensions=PAYMENT_EXTENSIONS,
                                        since_days=7, max_letters=10)
             if all_unread and not matched:
                 subjects = [letter["subject"] for letter in all_unread]
@@ -177,6 +178,13 @@ class PaymentsProject(ProjectBase):
 
         if processed == 0:
             self.logger.info("Подходящих писем ни у одного клиента не найдено — ничего не делаем.")
+            if not unrecognized_senders:
+                send_notification(
+                    "ℹ️ Платёжки не найдены",
+                    "Не найдено непрочитанных писем от платёжных клиентов за "
+                    "последние 7 дней (INBOX). Проверьте отправителей и папку "
+                    "Входящие — возможно, письма ещё не пришли или уже прочитаны.",
+                )
 
         # Если были непрочитанные письма, но ни одно не подошло по теме —
         # уведомляем оператора, иначе платёжка потеряется в тишине.

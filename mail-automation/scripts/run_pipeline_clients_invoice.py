@@ -136,8 +136,18 @@ class ClientsInvoiceProject(ProjectBase):
         letters = [letter for letter in all_unread if match_client(letter["subject"]) is not None]
 
         if not letters:
-            # Игнорируем письма, не подходящие ни под одного клиента из CLIENTS.
-            # Уведомления не отправляем — проверяем только то, что требует правила.
+            # Письма есть, но ни одна тема не совпала со списком клиентов —
+            # уведомляем, иначе запуск выглядит мёртвым (скрипт отработал,
+            # письма не прочитаны, а сообщений нет).
+            if all_unread:
+                subjects = ", ".join(letter["subject"] for letter in all_unread)
+                send_notification(
+                    "⚠️ Счета клиентам не распознаны",
+                    f"Найдено {len(all_unread)} непрочитанных писем от {SENDER_CLIENTS}, "
+                    f"но ни одна тема не совпала со списком клиентов (проект 9).\n\n"
+                    f"Темы: {subjects}\n\n"
+                    f"Проверьте ключи тем в run_pipeline_clients_invoice.py (CLIENTS).",
+                )
             imap_safe_logout(imap)
             self.logger.info("Подходящих писем нет — ничего не делаем.")
             return RESULT_SUCCESS
