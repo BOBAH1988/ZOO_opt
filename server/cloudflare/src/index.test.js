@@ -188,3 +188,13 @@ test('kpi_sales accepts empty owner_uid', () => {
   assert.equal(result.ok, true);
   assert.deepEqual(result.inputs, {});
 });
+
+test('update_sales_report accepts no inputs', () => {
+  const result = validateWorkflowRequest({
+    workflowId: 'update_sales_report',
+    inputs: {},
+  });
+
+  assert.equal(result.ok, true);
+  assert.deepEqual(result.inputs, {});
+});

@@ -162,3 +162,9 @@ test('kpi_sales accepts empty owner_uid', () => {
   assert.equal(result.ok, true);
   assert.deepEqual(result.cleaned, {});
 });
+
+test('update_sales_report accepts no inputs', () => {
+  const result = validateInputs('update_sales_report', {});
+  assert.equal(result.ok, true);
+  assert.deepEqual(result.cleaned, {});
+});

@@ -137,6 +137,13 @@ const SCENARIOS: WorkflowScenario[] = [
       ] },
     ],
   },
+  {
+    id: 'update_sales_report',
+    name: 'Обновить отчёт за 3 мес.',
+    day: '',
+    description: 'Проект 13. Ищет на почте письмо от yuriy.novikov1980@mail.ru за последние 7 дней с темой, содержащей «отчет по продажам», и вложением «Весь ассортимент за 3 мес.xls». Сохраняет вложение как mail-automation/project residues/Весь ассортимент за 3 мес.xlsx для проекта рекомендаций к заказу.',
+    inputs: [],
+  },
 ];
 
 const ALL_SCRIPTS = [

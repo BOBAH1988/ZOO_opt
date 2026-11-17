@@ -46,6 +46,7 @@ export const ALLOWED_WORKFLOWS = {
     file: 'git_check_invoices.yml',
     inputs: { test_mode: 'boolean', project: 'string' },
   },
+  update_sales_report: { file: 'update_sales_report.yml', inputs: {} },
 };
 
 const MAX_BODY_BYTES = 16 * 1024;
