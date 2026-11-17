@@ -54,8 +54,8 @@ mail-automation/.env
 .env
 
 # Данные клиентов ( персональные данные — не коммитить )
-mail-automation/scripts/recipients_ukhta.txt
 mail-automation/scripts/recipients_sety_ukhta.txt
 mail-automation/scripts/clients_debt_ukhta.txt
 mail-automation/scripts/*recipients*.txt
 mail-automation/scripts/*clients_debt*.txt
+!mail-automation/scripts/recipients_ukhta.txt

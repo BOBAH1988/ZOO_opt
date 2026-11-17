@@ -19,7 +19,6 @@
 
 
 import logging
-import os
 from pathlib import Path
 
 from convert_xls import convert_to_xlsx
@@ -64,21 +63,16 @@ def subject_matcher(subject: str) -> bool:
 
 def load_recipients() -> list[str]:
     path = Path(RECIPIENTS_FILE)
-    if path.exists():
-        lines = path.read_text(encoding="utf-8").splitlines()
-        recipients = [line.strip() for line in lines if line.strip() and not line.strip().startswith("#")]
-        if recipients:
-            return recipients
+    if not path.exists():
+        raise RuntimeError(f"Файл со списком получателей не найден: {path}")
 
-    # Фолбэк на переменную окружения (GitHub Actions: файл в .gitignore,
-    # а получатели передаются через секрет MAIL_RECIPIENTS).
-    recipients_raw = os.environ.get("MAIL_RECIPIENTS", "")
-    if recipients_raw:
-        recipients = [r.strip() for r in recipients_raw.split(",") if r.strip()]
-        if recipients:
-            return recipients
+    lines = path.read_text(encoding="utf-8").splitlines()
+    recipients = [line.strip() for line in lines if line.strip() and not line.strip().startswith("#")]
 
-    raise RuntimeError(f"Список получателей не найден: ни файла {path}, ни переменной MAIL_RECIPIENTS")
+    if not recipients:
+        raise RuntimeError(f"Список получателей пуст: {path}")
+
+    return recipients
 
 
 def notify_missing() -> None:
