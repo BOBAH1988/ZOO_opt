@@ -96,8 +96,10 @@ DEADLINE_TIME = (11, 0)
 # при каждой последующей проверке.
 DEADLINE_END = (11, 30)
 
-INPUT_FILE = "downloaded_debt.xls"
-CLIENTS_FILE = "clients_debt_ukhta.txt"
+SCRIPT_DIR = Path(__file__).resolve().parent
+
+INPUT_FILE = SCRIPT_DIR / "downloaded_debt.xls"
+CLIENTS_FILE = SCRIPT_DIR / "clients_debt_ukhta.txt"
 
 # Закрытые/технические счета — исключаются целиком (копеечные исторические
 # хвосты, не реальная задолженность). Сверено со списком в макросе

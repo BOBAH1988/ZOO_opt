@@ -73,6 +73,8 @@ from send_email import send_file
 SEND_FROM = (9, 0)
 SEND_UNTIL = (12, 0)
 
+SCRIPT_DIR = Path(__file__).resolve().parent
+
 
 def fmt_hm(hm: tuple[int, int]) -> str:
     return f"{hm[0]:02d}:{hm[1]:02d}"
@@ -81,8 +83,8 @@ def fmt_hm(hm: tuple[int, int]) -> str:
 class SetyProject(ProjectBase):
     """Проект: Прайс Сети Ухта."""
 
-    PRICE_FILE = "price_files/Прайс Зоо Логистик сетям.xlsx"
-    RECIPIENTS_FILE = "recipients_sety_ukhta.txt"
+    PRICE_FILE = SCRIPT_DIR / "price_files/Прайс Зоо Логистик сетям.xlsx"
+    RECIPIENTS_FILE = SCRIPT_DIR / "recipients_sety_ukhta.txt"
     SUBJECT = 'Здравствуйте, прайс от ООО "ЗОО Логистик"'
     BODY = "Заказ принимаем до вторника 15-00, минимальный заказ 5000р. Доставка в чт."
 

@@ -63,12 +63,14 @@ from notify import send_notification
 from project_base import RESULT_ERROR, RESULT_SUCCESS, ProjectBase
 from send_email import send_file
 
+SCRIPT_DIR = Path(__file__).resolve().parent
+
 
 class MamedovProject(ProjectBase):
     """Проект: сокращённый прайс для ИП Мамедов."""
 
     # Файл лежит в репозитории и обновляется вручную через Upload files.
-    PRICE_FILE = "price_files/Сокращенный прайс.xlsx"
+    PRICE_FILE = SCRIPT_DIR / "price_files/Сокращенный прайс.xlsx"
     # Получатели: клиент ИП Мамедов + владелец (чтобы видеть, что уходит
     # клиенту). Файл со списком не нужен: адреса редко меняются, и жёсткая
     # привязка в коде не даёт им «расползтись» правкой файла.
