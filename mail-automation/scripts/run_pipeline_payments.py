@@ -57,7 +57,9 @@ PAYMENT_EXTENSIONS = (".xls", ".xlsx", ".pdf")
 
 # Для каждого клиента: "sender" — от кого ждём письмо, "subject_mode" —
 # "exact" (тема ровно subject_key) или "prefix" (тема начинается с
-# subject_key), "forward_subject" — тема письма оператору,
+# subject_key), "subject_keys" — опциональный список альтернативных ключей
+# (например, фамилия клиента, когда оператор шлет тему без слова
+# "платёжное поручение"), "forward_subject" — тема письма оператору,
 # "notify_subject" — тема уведомления себе. Сравнение темы — без учёта
 # регистра и лишних пробелов по краям.
 CLIENTS_PAYMENT = [
@@ -65,6 +67,7 @@ CLIENTS_PAYMENT = [
         "sender": "lerika.17@mail.ru",
         "subject_mode": "prefix",
         "subject_key": "платёжное поручение",
+        "subject_keys": ["платёжное поручение", "солодовник"],
         "forward_subject": "Платежка от Солодовник",
         "notify_subject": "Платежка Солодовник передана оператору",
     },
@@ -86,6 +89,7 @@ CLIENTS_PAYMENT = [
         "sender": "tessi777@list.ru",
         "subject_mode": "prefix",
         "subject_key": "платёжное поручение",
+        "subject_keys": ["платёжное поручение", "смирнов"],
         "forward_subject": "Платежка от Смирнов",
         "notify_subject": "Платежка Смирнов передана оператору",
     },
@@ -96,10 +100,10 @@ def subject_matches(client: dict, subject: str) -> bool:
     # Сравнение после нормализации: устойчиво к регистру и опечаткам
     # в пробелах ('Платёжное поручение .xls' найдётся как обычное).
     s = normalize_subject(subject)
-    key = normalize_subject(client["subject_key"])
+    keys = client.get("subject_keys") or [client["subject_key"]]
     if client["subject_mode"] == "exact":
-        return s == key
-    return s.startswith(key)
+        return any(normalize_subject(k) == s for k in keys)
+    return any(s.startswith(normalize_subject(k)) for k in keys)
 
 
 class PaymentsProject(ProjectBase):
