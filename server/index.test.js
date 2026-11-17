@@ -55,3 +55,26 @@ test('PROJECT_ALLOWLIST contains invoice (not prusakova)', () => {
   assert.equal(PROJECT_ALLOWLIST.has('debt_ukhta'), true);
   assert.equal(PROJECT_ALLOWLIST.has('mamedov'), true);
 });
+
+test('git_check_invoices accepts valid inputs', () => {
+  const result = validateInputs('git_check_invoices', { test_mode: true });
+  assert.equal(result.ok, true);
+  assert.deepEqual(result.cleaned, { test_mode: true });
+});
+
+test('git_check_invoices accepts no inputs', () => {
+  const result = validateInputs('git_check_invoices', {});
+  assert.equal(result.ok, true);
+  assert.deepEqual(result.cleaned, {});
+});
+
+test('git_check_invoices rejects test_mode with wrong type', () => {
+  const result = validateInputs('git_check_invoices', { test_mode: 'true' });
+  assert.equal(result.ok, false);
+  assert.equal(result.error, 'test_mode must be boolean');
+});
+
+test('git_check_invoices rejects unknown input', () => {
+  const result = validateInputs('git_check_invoices', { arbitrary: 'value' });
+  assert.equal(result.ok, false);
+});

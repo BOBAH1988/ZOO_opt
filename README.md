@@ -115,6 +115,15 @@ npm run test     # tsc --noEmit (базовая автоматическая п�
 npm run build
 ```
 
+### Тесты сервера (`/server`)
+
+```bash
+cd server
+npm install
+npm test   # node --test — проверка validateInputs и PROJECT_ALLOWLIST
+```
+
+
 GitHub Pages: base `/ZOO_opt/`, HashRouter, workflow `.github/workflows/deploy.yml`. Включите Pages (GitHub Actions) и задайте секреты.
 
 ### PWA
