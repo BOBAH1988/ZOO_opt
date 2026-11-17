@@ -1,4 +1,4 @@
-name: "Прайс Ухта, счета, платежки"
+name: "Прайс Ухта"
 
 concurrency:
   group: zoo-opt-mail
