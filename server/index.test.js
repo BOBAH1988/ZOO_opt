@@ -114,3 +114,45 @@ test('git_check_invoices empty project runs both clients and payments', () => {
   assert.equal(result.ok, true);
   assert.deepEqual(result.cleaned, { project: 'clients,payments' });
 });
+
+test('weekly_mon_tue accepts test_mode, only, ignore_window', () => {
+  const result = validateInputs('weekly_mon_tue', { test_mode: true, only: 'clients,payments', ignore_window: true });
+  assert.equal(result.ok, true);
+  assert.deepEqual(result.cleaned, { test_mode: true, only: 'clients,payments', ignore_window: true });
+});
+
+test('weekly_tue accepts test_mode, only, ignore_window', () => {
+  const result = validateInputs('weekly_tue', { test_mode: false, only: 'ukhta', ignore_window: false });
+  assert.equal(result.ok, true);
+  assert.deepEqual(result.cleaned, { test_mode: false, only: 'ukhta', ignore_window: false });
+});
+
+test('weekly_wed accepts test_mode, only, ignore_window', () => {
+  const result = validateInputs('weekly_wed', { test_mode: true, only: 'invoice', ignore_window: true });
+  assert.equal(result.ok, true);
+  assert.deepEqual(result.cleaned, { test_mode: true, only: 'invoice', ignore_window: true });
+});
+
+test('weekly_fri accepts test_mode, only, ignore_window', () => {
+  const result = validateInputs('weekly_fri', { test_mode: false, only: 'lemur', ignore_window: false });
+  assert.equal(result.ok, true);
+  assert.deepEqual(result.cleaned, { test_mode: false, only: 'lemur', ignore_window: false });
+});
+
+test('weekly_sety_price accepts test_mode and skip_if_sent', () => {
+  const result = validateInputs('weekly_sety_price', { test_mode: true, skip_if_sent: false });
+  assert.equal(result.ok, true);
+  assert.deepEqual(result.cleaned, { test_mode: true, skip_if_sent: false });
+});
+
+test('weekly_residues accepts test_mode', () => {
+  const result = validateInputs('weekly_residues', { test_mode: true });
+  assert.equal(result.ok, true);
+  assert.deepEqual(result.cleaned, { test_mode: true });
+});
+
+test('kpi_sales accepts no inputs', () => {
+  const result = validateInputs('kpi_sales', {});
+  assert.equal(result.ok, true);
+  assert.deepEqual(result.cleaned, {});
+});

@@ -108,3 +108,73 @@ test('git_check_invoices empty project runs both clients and payments', () => {
   assert.equal(result.ok, true);
   assert.deepEqual(result.inputs, { project: 'clients,payments' });
 });
+
+test('weekly_mon_tue accepts test_mode, only, ignore_window', () => {
+  const result = validateWorkflowRequest({
+    workflowId: 'weekly_mon_tue',
+    inputs: { test_mode: true, only: 'clients,payments', ignore_window: true },
+  });
+
+  assert.equal(result.ok, true);
+  assert.deepEqual(result.inputs, { test_mode: true, only: 'clients,payments', ignore_window: true });
+});
+
+test('weekly_tue accepts test_mode, only, ignore_window', () => {
+  const result = validateWorkflowRequest({
+    workflowId: 'weekly_tue',
+    inputs: { test_mode: false, only: 'ukhta', ignore_window: false },
+  });
+
+  assert.equal(result.ok, true);
+  assert.deepEqual(result.inputs, { test_mode: false, only: 'ukhta', ignore_window: false });
+});
+
+test('weekly_wed accepts test_mode, only, ignore_window', () => {
+  const result = validateWorkflowRequest({
+    workflowId: 'weekly_wed',
+    inputs: { test_mode: true, only: 'invoice', ignore_window: true },
+  });
+
+  assert.equal(result.ok, true);
+  assert.deepEqual(result.inputs, { test_mode: true, only: 'invoice', ignore_window: true });
+});
+
+test('weekly_fri accepts test_mode, only, ignore_window', () => {
+  const result = validateWorkflowRequest({
+    workflowId: 'weekly_fri',
+    inputs: { test_mode: false, only: 'lemur', ignore_window: false },
+  });
+
+  assert.equal(result.ok, true);
+  assert.deepEqual(result.inputs, { test_mode: false, only: 'lemur', ignore_window: false });
+});
+
+test('weekly_sety_price accepts test_mode and skip_if_sent', () => {
+  const result = validateWorkflowRequest({
+    workflowId: 'weekly_sety_price',
+    inputs: { test_mode: true, skip_if_sent: false },
+  });
+
+  assert.equal(result.ok, true);
+  assert.deepEqual(result.inputs, { test_mode: true, skip_if_sent: false });
+});
+
+test('weekly_residues accepts test_mode', () => {
+  const result = validateWorkflowRequest({
+    workflowId: 'weekly_residues',
+    inputs: { test_mode: true },
+  });
+
+  assert.equal(result.ok, true);
+  assert.deepEqual(result.inputs, { test_mode: true });
+});
+
+test('kpi_sales accepts no inputs', () => {
+  const result = validateWorkflowRequest({
+    workflowId: 'kpi_sales',
+    inputs: {},
+  });
+
+  assert.equal(result.ok, true);
+  assert.deepEqual(result.inputs, {});
+});
