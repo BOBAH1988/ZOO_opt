@@ -68,6 +68,18 @@ test('git_check_invoices accepts no inputs', () => {
   assert.deepEqual(result.cleaned, {});
 });
 
+test('git_check_invoices accepts project input', () => {
+  const result = validateInputs('git_check_invoices', { project: 'payments' });
+  assert.equal(result.ok, true);
+  assert.deepEqual(result.cleaned, { project: 'payments' });
+});
+
+test('git_check_invoices accepts project with test_mode', () => {
+  const result = validateInputs('git_check_invoices', { test_mode: true, project: 'clients' });
+  assert.equal(result.ok, true);
+  assert.deepEqual(result.cleaned, { test_mode: true, project: 'clients' });
+});
+
 test('git_check_invoices rejects test_mode with wrong type', () => {
   const result = validateInputs('git_check_invoices', { test_mode: 'true' });
   assert.equal(result.ok, false);
