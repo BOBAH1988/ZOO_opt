@@ -11,10 +11,13 @@
 
 import argparse
 import sys
+from datetime import datetime
 from pathlib import Path
 
 # Добавляем текущую директорию в путь для импорта внутренних модулей
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+
+from residues.calculator import build_order_report
 
 
 def main() -> int:
@@ -45,41 +48,24 @@ def main() -> int:
         print(f"Отсутствуют обязательные файлы: {', '.join(missing)}", file=sys.stderr)
         return 1
 
-    # Заглушка: создаём минимальный выходной файл
-    # В реальном проекте здесь логика сверки остатков и продаж
-    from openpyxl import Workbook
+    try:
+        output_path = build_order_report(project_dir, output_dir)
+        print(f"Отчёт сохранён: {output_path}")
 
-    wb = Workbook()
+        if args.to_downloads:
+            from residues.delivery import dated_name, downloads_dir
+            downloads = downloads_dir()
+            downloads.mkdir(parents=True, exist_ok=True)
+            target = downloads / dated_name(output_path).name
+            import shutil
+            shutil.copy2(output_path, target)
+            print(f"Копия в Загрузки: {target}")
 
-    # Лист 1: Сводка
-    ws1 = wb.active
-    ws1.title = "Сводка"
-    ws1.append(["Показатель", "Значение"])
-    ws1.append(["Дата отчёта", datetime.now().strftime("%d.%m.%Y")])
-    ws1.append(["Статус", "Тестовый прогон (заглушка)"])
-    ws1.append(["", ""])
-    ws1.append(["Для реального расчёта нужен полный код проекта residues"])
-
-    # Лист 2: Рекомендации (пустой шаблон)
-    ws2 = wb.create_sheet("Рекомендации")
-    ws2.append(["Артикул", "Наименование", "Остаток", "Продажи 3 мес", "Рекомендуем заказать"])
-
-    output_path = output_dir / "Рекомендации к заказу.xlsx"
-    wb.save(output_path)
-    print(f"Отчёт сохранён: {output_path}")
-
-    if args.to_downloads:
-        from residues.delivery import dated_name, downloads_dir
-        downloads = downloads_dir()
-        downloads.mkdir(parents=True, exist_ok=True)
-        target = downloads / dated_name(output_path).name
-        import shutil
-        shutil.copy2(output_path, target)
-        print(f"Копия в Загрузки: {target}")
-
-    return 0
+        return 0
+    except Exception as exc:
+        print(f"Ошибка сборки отчёта: {exc}", file=sys.stderr)
+        return 1
 
 
 if __name__ == "__main__":
-    from datetime import datetime
     sys.exit(main())
