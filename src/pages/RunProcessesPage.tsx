@@ -129,10 +129,7 @@ const SCENARIOS: WorkflowScenario[] = [
     description: 'Проверка счетов через репозиторий mail-automation (GitHub Actions workflow). Сверяет актуальность счетов и уведомляет о расхождениях.',
     inputs: [
       { key: 'test_mode', label: 'Тестовый режим', type: 'boolean', defaultValue: false, description: '', required: false },
-      { key: 'project', label: 'Какой проект запустить', type: 'multiselect', defaultValue: ['clients'], description: 'clients — счета клиентам по списку (проект 9), payments — платёжки клиентов оператору (проект 11)', required: true, options: [
-        { label: 'Счета клиентам по списку (проект 9)', value: 'clients' },
-        { label: 'Платёжки клиентов оператору (проект 11)', value: 'payments' },
-      ] },
+      { key: 'project', label: 'Какой проект запустить', type: 'string', defaultValue: 'clients', description: 'clients — счета клиентам по списку (проект 9), payments — платёжки клиентов оператору (проект 11)', required: true },
     ],
   },
 ];

@@ -102,3 +102,9 @@ test('other workflows reject unknown project input', () => {
   assert.equal(result.ok, false);
   assert.equal(result.error, 'Unknown input: project');
 });
+
+test('git_check_invoices rejects project not in clients/payments', () => {
+  const result = validateInputs('git_check_invoices', { project: 'residues' });
+  assert.equal(result.ok, false);
+  assert.equal(result.error, 'Unknown project: residues');
+});

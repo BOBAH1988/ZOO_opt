@@ -64,6 +64,11 @@ export function validateInputs(workflowId, inputs) {
         }
       }
       cleaned[key] = projects.join(',');
+    } else if (key === 'project' && workflowId === 'git_check_invoices') {
+      if (!['clients', 'payments'].includes(value)) {
+        return { ok: false, error: `Unknown project: ${value}` };
+      }
+      cleaned[key] = value;
     } else {
       cleaned[key] = value;
     }
