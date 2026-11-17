@@ -11,7 +11,7 @@ const PROJECT_ALLOWLIST = new Set([
 ]);
 
 export const ALLOWED_WORKFLOWS = {
-  kpi_sales: { file: 'kpi_sales.yml', inputs: {} },
+  kpi_sales: { file: 'kpi_sales.yml', inputs: { owner_uid: 'string' } },
   weekly_fri: {
     file: 'weekly_fri.yml',
     inputs: { test_mode: 'boolean', only: 'string', ignore_window: 'boolean' },

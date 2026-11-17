@@ -6,8 +6,16 @@ concurrency:
 
 on:
   workflow_dispatch:
-
-jobs:
+    inputs:
+      owner_uid:
+        description: 'Email владельца, под которым сохранять отчёт в Firestore'
+        type: string
+        required: false
+        default: ''
+      test_mode:
+        description: 'Тестовый режим (всё уйдёт только вам, не клиентам). По умолчанию выключен'
+        type: boolean
+        default: false
   run-kpi:
     runs-on: ubuntu-latest
     timeout-minutes: 15
@@ -38,4 +46,5 @@ jobs:
           MAILRU_APP_PASSWORD: ${{ secrets.MAILRU_APP_PASSWORD }}
           NOTIFY_EMAIL: ${{ secrets.NOTIFY_EMAIL }}
           FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          OWNER_UID: ${{ github.event.inputs.owner_uid || '' }}
         run: python run_all.py --only kpi

@@ -89,12 +89,12 @@ def _get_firestore_db():
     return _firestore_db
 
 
-def _save_kpi_report(uid: str, letter_date, result: dict, html: str, plain: str) -> str:
+def _save_kpi_report(owner_uid: str, letter_date, result: dict, html: str, plain: str) -> str:
     """Сохраняет отчёт KPI в Firestore и возвращает ID документа."""
     db = _get_firestore_db()
     doc_ref = db.collection(KPI_REPORTS_COLLECTION).document()
     doc_data = {
-        "ownerUid": uid,
+        "ownerUid": owner_uid,
         "createdAt": firestore.SERVER_TIMESTAMP,
         "letterDate": letter_date.isoformat() if letter_date else None,
         "result": result,
@@ -190,8 +190,9 @@ class KpiProject(ProjectBase):
         plain = build_body(**result)
 
         # Сохраняем отчёт в Firestore вместо отправки email.
+        owner_uid = os.environ.get("OWNER_UID") or notify_email
         try:
-            doc_id = _save_kpi_report(notify_email, sent, result, html, plain)
+            doc_id = _save_kpi_report(owner_uid, sent, result, html, plain)
             self.logger.info(f"Отчёт KPI сохранён в Firestore: doc_id={doc_id}")
         except Exception as exc:
             self.logger.error(f"Не удалось сохранить отчёт KPI в Firestore: {exc}")

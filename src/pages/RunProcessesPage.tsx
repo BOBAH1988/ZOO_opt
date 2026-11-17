@@ -120,7 +120,9 @@ const SCENARIOS: WorkflowScenario[] = [
     name: 'KPI Продажи',
     day: '',
     description: 'Проект 12. Личный мотивационный отчёт Владимира Соколова (Ухта) по выполнению плана направлений. Разбирает файл «Проекция объема продаж.xlsx», считает достижение ступеней мотивации, начисления и проекцию. Письмо с темой «Выполнение KPI» уходит только на NOTIFY_EMAIL.',
-    inputs: [],
+    inputs: [
+      { key: 'owner_uid', label: 'Email владельца для отчёта', type: 'string', defaultValue: '', description: 'По умолчанию — ваш email из Firebase', required: false },
+    ],
   },
   {
     id: 'git_check_invoices',
@@ -562,6 +564,11 @@ export function RunProcessesPage() {
     const inputs: Record<string, boolean | string> = {};
     for (const [k, v] of Object.entries(rawInputs)) {
       inputs[k] = Array.isArray(v) ? v.join(',') : v;
+    }
+    // KPI отчёт пишется в Firestore с ownerUid = email клиента, чтобы
+    // правила чтения (ownerUid == email токена) пропустили его владельцу.
+    if (scenario.id === 'kpi_sales' && !inputs.owner_uid) {
+      inputs.owner_uid = user?.email || '';
     }
     setRunning(scenario.id);
 

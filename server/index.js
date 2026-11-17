@@ -15,7 +15,7 @@ const REAL_SEND_UIDS = (process.env.REAL_SEND_UIDS || '').split(',').map((s) => 
 const APP_ORIGIN = process.env.APP_ORIGIN || '';
 
 const ALLOWED_WORKFLOWS = {
-  kpi_sales: { path: 'kpi_sales.yml', inputs: {} },
+  kpi_sales: { path: 'kpi_sales.yml', inputs: { owner_uid: 'string' } },
   weekly_fri: { path: 'weekly_fri.yml', inputs: { test_mode: 'boolean', only: 'string', ignore_window: 'boolean' }, realSendGuard: true },
   weekly_mon_tue: { path: 'weekly_mon_tue.yml', inputs: { test_mode: 'boolean', only: 'string', ignore_window: 'boolean' }, realSendGuard: true },
   weekly_wed: { path: 'weekly_wed.yml', inputs: { test_mode: 'boolean', only: 'string', ignore_window: 'boolean' }, realSendGuard: true },

@@ -169,7 +169,17 @@ test('weekly_residues accepts test_mode', () => {
   assert.deepEqual(result.inputs, { test_mode: true });
 });
 
-test('kpi_sales accepts no inputs', () => {
+test('kpi_sales accepts owner_uid', () => {
+  const result = validateWorkflowRequest({
+    workflowId: 'kpi_sales',
+    inputs: { owner_uid: 'user@example.com' },
+  });
+
+  assert.equal(result.ok, true);
+  assert.deepEqual(result.inputs, { owner_uid: 'user@example.com' });
+});
+
+test('kpi_sales accepts empty owner_uid', () => {
   const result = validateWorkflowRequest({
     workflowId: 'kpi_sales',
     inputs: {},
