@@ -52,7 +52,7 @@ jobs:
           NOTIFY_EMAIL: ${{ secrets.NOTIFY_EMAIL }}
           TEST_MODE: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.test_mode || 'false' }}
         run: |
-          ARGS="--group tue"
+          ARGS="--only ukhta"
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             if [ -n "${{ github.event.inputs.only }}" ]; then
               ARGS="--only ${{ github.event.inputs.only }}"
