@@ -48,3 +48,43 @@ test('requires an explicit test_mode for workflows that can send real emails', (
   assert.equal(result.ok, false);
   assert.equal(result.error, 'test_mode must be boolean');
 });
+
+test('git_check_invoices accepts project input', () => {
+  const result = validateWorkflowRequest({
+    workflowId: 'git_check_invoices',
+    inputs: { project: 'payments' },
+  });
+
+  assert.equal(result.ok, true);
+  assert.deepEqual(result.inputs, { project: 'payments' });
+});
+
+test('git_check_invoices accepts project with test_mode', () => {
+  const result = validateWorkflowRequest({
+    workflowId: 'git_check_invoices',
+    inputs: { test_mode: true, project: 'clients' },
+  });
+
+  assert.equal(result.ok, true);
+  assert.deepEqual(result.inputs, { test_mode: true, project: 'clients' });
+});
+
+test('git_check_invoices rejects project with wrong type', () => {
+  const result = validateWorkflowRequest({
+    workflowId: 'git_check_invoices',
+    inputs: { project: 123 },
+  });
+
+  assert.equal(result.ok, false);
+  assert.equal(result.error, 'project must be string');
+});
+
+test('other workflows reject unknown project input', () => {
+  const result = validateWorkflowRequest({
+    workflowId: 'weekly_fri',
+    inputs: { test_mode: true, project: 'clients' },
+  });
+
+  assert.equal(result.ok, false);
+  assert.equal(result.error, 'Unknown input: project');
+});

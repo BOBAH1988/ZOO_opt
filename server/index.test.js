@@ -90,3 +90,15 @@ test('git_check_invoices rejects unknown input', () => {
   const result = validateInputs('git_check_invoices', { arbitrary: 'value' });
   assert.equal(result.ok, false);
 });
+
+test('git_check_invoices rejects project with wrong type', () => {
+  const result = validateInputs('git_check_invoices', { project: 123 });
+  assert.equal(result.ok, false);
+  assert.equal(result.error, 'project must be string');
+});
+
+test('other workflows reject unknown project input', () => {
+  const result = validateInputs('weekly_fri', { test_mode: true, project: 'clients' });
+  assert.equal(result.ok, false);
+  assert.equal(result.error, 'Unknown input: project');
+});
