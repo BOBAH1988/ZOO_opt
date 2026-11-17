@@ -11,7 +11,7 @@ const PROJECT_ALLOWLIST = new Set([
 ]);
 
 export const ALLOWED_WORKFLOWS = {
-  kpi_sales: { file: 'kpi_sales.yml', inputs: { owner_uid: 'string' } },
+  kpi_sales: { file: 'kpi_sales.yml', inputs: { owner_uid: 'string', test_mode: 'boolean' } },
   weekly_fri: {
     file: 'weekly_fri.yml',
     inputs: { test_mode: 'boolean', only: 'string', ignore_window: 'boolean' },
@@ -319,7 +319,7 @@ export default {
     return jsonResponse({
       accepted: true,
       message: 'Запрос на запуск принят сервером и передан в GitHub Actions.',
-      runUrl: `https://github.com/${env.GITHUB_OWNER}/${env.GITHUB_REPO}/actions/workflows/.github/workflows/${validation.workflow.file}`,
+      runUrl: `https://github.com/${env.GITHUB_OWNER}/${env.GITHUB_REPO}/actions/workflows/${validation.workflow.file}`,
       runId: null,
     }, 200, origin, env);
   },

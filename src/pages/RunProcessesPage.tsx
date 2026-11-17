@@ -33,6 +33,8 @@ const MON_TUE_PROJECT_OPTIONS = [
 
 const TUE_PROJECT_OPTIONS = [
   { label: 'ukhta', value: 'ukhta' },
+  { label: 'clients', value: 'clients' },
+  { label: 'payments', value: 'payments' },
 ];
 
 const WED_PROJECT_OPTIONS = [
@@ -74,20 +76,20 @@ const SCENARIOS: WorkflowScenario[] = [
     name: 'Рекомендации к заказу по остаткам',
     day: 'пн',
     time: '10:00',
-    description: 'Проект 13. Сверяет полный прайс с остатком на складе и продажами за три месяца, собирает список того, что заказать. Считает автоматически и показывает только проверяемые цифры. Запускает пакет residues и присылает результат на почту.',
+    description: 'Проект 13 (новая схема). Использует актуальный прайс остатка из репозитория/почты и отчёт о продажах за 3 месяца из почты, формирует базовые рекомендации к заказу и отправляет XLSX на почту.',
     inputs: [
       { key: 'test_mode', label: 'Тестовый режим (только вам)', type: 'boolean', defaultValue: false, description: '', required: false },
     ],
   },
-  {
+{
     id: 'weekly_tue',
     name: 'Прайс Ухта',
     day: 'вт',
     time: '9:00',
-    description: 'Группа вторник. Прайс Ухта: проверка, конвертация, раскраска и рассылка клиентам. Счета клиентам по списку: пересылка Excel-вложений получателям по ключам тем. Платёжки клиентов оператору: пересылка вложений Excel/PDF от 4 клиентов оператору zookingdom@mail.ru.',
+    description: 'Прайс Ухта: проверка, конвертация, раскраска и рассылка клиентам. По умолчанию запускает только Ухту. Можно добавить проекты clients/payments через настройку "Проекты для запуска".',
     inputs: [
       { key: 'test_mode', label: 'Тестовый режим (только вам, не клиентам)', type: 'boolean', defaultValue: false, description: '', required: false },
-      { key: 'only', label: 'Проекты для запуска', type: 'multiselect', defaultValue: [], description: 'Пусто = вся группа', required: false, options: TUE_PROJECT_OPTIONS },
+      { key: 'only', label: 'Проекты для запуска', type: 'multiselect', defaultValue: [], description: 'Пусто = только Ухта (ukhta)', required: false, options: TUE_PROJECT_OPTIONS },
       { key: 'ignore_window', label: 'Игнорировать время и день недели', type: 'boolean', defaultValue: true, description: '', required: false },
     ],
   },
@@ -128,7 +130,7 @@ const SCENARIOS: WorkflowScenario[] = [
     id: 'git_check_invoices',
     name: 'Проверка счетов',
     day: 'вт',
-    description: 'Проверка счетов через репозиторий mail-automation (GitHub Actions workflow). Сверяет актуальность счетов и уведомляет о расхождениях.',
+    description: 'Проверка счетов через GitHub Actions workflow. Запускает проекты 9 (счета клиентам) и 11 (платёжки) последовательно в одном прогоне. Выберите проекты или оставьте пусто для запуска обоих.',
     inputs: [
       { key: 'test_mode', label: 'Тестовый режим', type: 'boolean', defaultValue: false, description: '', required: false },
       { key: 'project', label: 'Какой проект запустить', type: 'multiselect', defaultValue: [], description: 'clients — счета клиентам по списку (проект 9), payments — платёжки клиентов оператору (проект 11). Пусто — запустить оба.', required: false, options: [
@@ -137,11 +139,11 @@ const SCENARIOS: WorkflowScenario[] = [
       ] },
     ],
   },
-  {
+{
     id: 'update_sales_report',
     name: 'Обновить отчёт за 3 мес.',
     day: '',
-    description: 'Проект 13. Ищет на почте письмо от yuriy.novikov1980@mail.ru за последние 7 дней с темой, содержащей «отчет по продажам», и вложением «Весь ассортимент за 3 мес.xls». Сохраняет вложение как mail-automation/project residues/Весь ассортимент за 3 мес.xlsx для проекта рекомендаций к заказу.',
+    description: 'Проект 13. Ищет на почте письмо от yuriy.novikov1980@mail.ru за последние 7 дней с темой, содержащей «отчет по продажам», и вложением «Весь ассортимент за 3 мес.xls». Сохраняет вложение в репозиторий для проекта рекомендаций к заказу.',
     inputs: [],
   },
 ];

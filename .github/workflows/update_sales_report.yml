@@ -7,6 +7,9 @@ concurrency:
 on:
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   update-sales-report:
     runs-on: ubuntu-latest
@@ -38,6 +41,12 @@ jobs:
           git config user.name "GitHub Actions"
           git config user.email "actions@github.com"
           git remote set-url origin "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
-          git add "mail-automation/project residues/Весь ассортимент за 3 мес.xlsx"
+          REPORT_PATH="mail-automation/project residues/Весь ассортимент за 3 мес.xlsx"
+          if [ ! -f "$REPORT_PATH" ]; then
+            echo "Файл отчёта не создан — коммит пропущен"
+            exit 0
+          fi
+          # Ensure directory exists in git (add .gitkeep if needed)
+          git add "$REPORT_PATH"
           git commit -m "chore: обновить отчёт о продажах за 3 мес." || echo "Нет изменений для коммита"
           git push

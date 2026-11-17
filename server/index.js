@@ -5,6 +5,7 @@ import express from 'express';
 import cors from 'cors';
 import crypto from 'node:crypto';
 import admin from 'firebase-admin';
+import { pathToFileURL } from 'node:url';
 
 const PORT = process.env.PORT || 8787;
 const GITHUB_OWNER = process.env.GITHUB_OWNER || 'BOBAH1988';
@@ -15,7 +16,7 @@ const REAL_SEND_UIDS = (process.env.REAL_SEND_UIDS || '').split(',').map((s) => 
 const APP_ORIGIN = process.env.APP_ORIGIN || '';
 
 const ALLOWED_WORKFLOWS = {
-  kpi_sales: { path: 'kpi_sales.yml', inputs: { owner_uid: 'string' } },
+  kpi_sales: { path: 'kpi_sales.yml', inputs: { owner_uid: 'string', test_mode: 'boolean' } },
   weekly_fri: { path: 'weekly_fri.yml', inputs: { test_mode: 'boolean', only: 'string', ignore_window: 'boolean' }, realSendGuard: true },
   weekly_mon_tue: { path: 'weekly_mon_tue.yml', inputs: { test_mode: 'boolean', only: 'string', ignore_window: 'boolean' }, realSendGuard: true },
   weekly_wed: { path: 'weekly_wed.yml', inputs: { test_mode: 'boolean', only: 'string', ignore_window: 'boolean' }, realSendGuard: true },
@@ -179,7 +180,7 @@ app.post('/run', async (req, res) => {
     return res.json({
       accepted: true,
       message: 'Запрос на запуск принят сервером и передан в GitHub Actions.',
-      runUrl: `https://github.com/${GITHUB_OWNER}/${GITHUB_REPO}/actions/workflows/.github/workflows/${ALLOWED_WORKFLOWS[workflowId].path}`,
+      runUrl: `https://github.com/${GITHUB_OWNER}/${GITHUB_REPO}/actions/workflows/${ALLOWED_WORKFLOWS[workflowId].path}`,
       runId: null,
     });
   } catch (err) {
@@ -204,6 +205,7 @@ app.post('/run', async (req, res) => {
   }
 });
 
-if (import.meta.main) {
+const isDirectRun = process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href;
+if (isDirectRun) {
   app.listen(PORT, () => logEvent({ level: 'info', type: 'server_start', port: Number(PORT) }));
 }

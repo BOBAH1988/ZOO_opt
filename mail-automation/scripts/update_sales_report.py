@@ -41,8 +41,22 @@ SALES_PATH = PROJECT_DIR / SALES_FILENAME
 
 
 def update_sales_report() -> bool:
-    """Скачивает отчёт о продажах из почты и сохраняет в репозиторий."""
-    imap = imap_connect()
+    """Скачивает отчёт о продажах из почты и сохраняет в репозиторий.
+    
+    Returns:
+        True — отчёт обновлён, False — подходящего письма нет (нормальная ситуация).
+    """
+    # Проверяем переменные окружения заранее
+    if not os.environ.get("MAILRU_LOGIN") or not os.environ.get("MAILRU_APP_PASSWORD"):
+        logger.error("Не заданы MAILRU_LOGIN или MAILRU_APP_PASSWORD")
+        return False
+
+    imap = None
+    try:
+        imap = imap_connect()
+    except Exception as exc:
+        logger.error("Не удалось подключиться к IMAP: %s", exc)
+        return False
 
     try:
         letters = find_messages(
@@ -94,8 +108,18 @@ def update_sales_report() -> bool:
             return False
 
         # Сохраняем как .xlsx (каноническое имя для проекта residues)
-        PROJECT_DIR.mkdir(parents=True, exist_ok=True)
-        SALES_PATH.write_bytes(payload)
+        try:
+            PROJECT_DIR.mkdir(parents=True, exist_ok=True)
+        except Exception as exc:
+            logger.error("Не удалось создать директорию %s: %s", PROJECT_DIR, exc)
+            return False
+
+        try:
+            SALES_PATH.write_bytes(payload)
+        except Exception as exc:
+            logger.error("Не удалось записать файл %s: %s", SALES_PATH, exc)
+            return False
+
         logger.info(
             "Отчёт о продажах сохранён: %s (из вложения '%s' письма '%s')",
             SALES_PATH,
@@ -106,7 +130,8 @@ def update_sales_report() -> bool:
         return True
 
     finally:
-        imap_safe_logout(imap)
+        if imap is not None:
+            imap_safe_logout(imap)
 
 
 def main() -> bool:
@@ -115,7 +140,7 @@ def main() -> bool:
         if ok:
             print("Отчёт о продажах за 3 мес. обновлён.")
         else:
-            print("Отчёт о продажах не обновлён — подходящее письмо или вложение не найдены.")
+            print("Отчёт о продажах не обновлён — подходящее письмо или вложение не найдены (это нормально).")
         return True
     except Exception as exc:
         print(f"Ошибка обновления отчёта о продажах: {exc}")

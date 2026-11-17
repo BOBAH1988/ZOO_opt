@@ -51,6 +51,6 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: order-report-${{ github.run_id }}
-          path: mail-automation/scripts/project residues/output/
+          path: mail-automation/scripts/residues_output/
           if-no-files-found: ignore
           retention-days: 30

@@ -35,6 +35,8 @@ def test_update_sales_report_saves_attachment(monkeypatch, tmp_path):
     fake_dir.mkdir()
     monkeypatch.setattr(update_sales_report, "PROJECT_DIR", fake_dir)
     monkeypatch.setattr(update_sales_report, "SALES_PATH", fake_dir / "Весь ассортимент за 3 мес.xlsx")
+    monkeypatch.setenv("MAILRU_LOGIN", "test@example.com")
+    monkeypatch.setenv("MAILRU_APP_PASSWORD", "testpassword")
 
     # Подделываем find_messages, чтобы вернуть одно письмо с вложением
     fake_letter = {
@@ -64,6 +66,8 @@ def test_update_sales_report_saves_attachment(monkeypatch, tmp_path):
 
 def test_update_sales_report_no_matching_email(monkeypatch):
     """update_sales_report должен вернуть False, если подходящего письма нет."""
+    monkeypatch.setenv("MAILRU_LOGIN", "test@example.com")
+    monkeypatch.setenv("MAILRU_APP_PASSWORD", "testpassword")
     monkeypatch.setattr(update_sales_report, "find_messages", lambda *a, **k: [])
     monkeypatch.setattr(update_sales_report, "imap_connect", lambda: None)
     monkeypatch.setattr(update_sales_report, "imap_safe_logout", lambda imap: None)
@@ -75,6 +79,8 @@ def test_update_sales_report_no_matching_email(monkeypatch):
 
 def test_update_sales_report_no_attachment(monkeypatch):
     """update_sales_report должен вернуть False, если нет подходящего вложения."""
+    monkeypatch.setenv("MAILRU_LOGIN", "test@example.com")
+    monkeypatch.setenv("MAILRU_APP_PASSWORD", "testpassword")
     fake_letter = {
         "subject": "Отчет по продажам за октябрь",
         "attachments": [
