@@ -36,7 +36,7 @@ const TUE_PROJECT_OPTIONS = [
 ];
 
 const WED_PROJECT_OPTIONS = [
-  { label: 'счёт Прусакова клиенту', value: 'prusakova' },
+  { label: 'счёт Прусакова клиенту', value: 'invoice' },
   { label: 'счета в Велес', value: 'veles' },
 ];
 
@@ -249,6 +249,17 @@ const ACTION_BUTTON_STYLE = { width: 112, justifyContent: 'center' } as const;
 
 const SETTINGS_VERSION = 4;
 const STORAGE_KEY = 'zoo-opt-run-settings';
+const HISTORY_COLLAPSED_KEY = 'zoo-opt-history-collapsed';
+
+function loadHistoryCollapsed(): boolean {
+  try {
+    const raw = localStorage.getItem(HISTORY_COLLAPSED_KEY);
+    if (raw !== null) return raw === 'true';
+  } catch {
+    // игнорируем ошибки чтения localStorage
+  }
+  return false;
+}
 
 function defaultInputs(scenario: WorkflowScenario): Record<string, boolean | string | string[]> {
   const out: Record<string, boolean | string | string[]> = {};
@@ -300,7 +311,7 @@ export function RunProcessesPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState(0);
-  const [historyCollapsed, setHistoryCollapsed] = useState(false);
+  const [historyCollapsed, setHistoryCollapsed] = useState(loadHistoryCollapsed);
   const [tooltip, setTooltip] = useState<{ left: number; top: number; message: string } | null>(null);
   const tipRef = useRef<HTMLDivElement>(null);
   const PAGE_SIZE = 3;
@@ -323,6 +334,15 @@ export function RunProcessesPage() {
       // игнорируем ошибки записи localStorage
     }
   }, [inputValues]);
+
+  // Сохраняем состояние раскрытия блока «История запусков»
+  useEffect(() => {
+    try {
+      localStorage.setItem(HISTORY_COLLAPSED_KEY, String(historyCollapsed));
+    } catch {
+      // игнорируем ошибки записи localStorage
+    }
+  }, [historyCollapsed]);
 
   // Закрыть help-меню при клике снаружи
   useEffect(() => {

@@ -41,7 +41,8 @@ function logEvent(event) {
 
 // Допустимые значения для поля 'only' ( Projekты рассылки, совпадает с клиентом и воркере ).
 const PROJECT_ALLOWLIST = new Set([
-  'order', 'ukhta', 'veta', 'clients', 'payments', 'invoice', 'veles', 'lemur', 'dz', 'sety', 'prusakova',
+  'order', 'ukhta', 'veta', 'clients', 'payments', 'invoice', 'veles',
+  'lemur', 'dz', 'sety', 'debt_ukhta', 'mamedov',
 ]);
 
 function validateInputs(workflowId, inputs) {
