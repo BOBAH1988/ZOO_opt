@@ -49,8 +49,10 @@ DEADLINE_TIME = (10, 0)
 # при каждой последующей проверке.
 DEADLINE_END = (10, 30)
 
-INPUT_FILE = "downloaded_price_ukhta.xls"
-RECIPIENTS_FILE = "recipients_ukhta.txt"
+SCRIPT_DIR = Path(__file__).resolve().parent
+
+INPUT_FILE = SCRIPT_DIR / "downloaded_price_ukhta.xls"
+RECIPIENTS_FILE = SCRIPT_DIR / "recipients_ukhta.txt"
 
 
 def subject_matcher(subject: str) -> bool:
