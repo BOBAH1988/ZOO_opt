@@ -23,8 +23,6 @@ const MON_TUE_PROJECT_OPTIONS = [
 
 const TUE_PROJECT_OPTIONS = [
   { label: 'ukhta', value: 'ukhta' },
-  { label: 'clients', value: 'clients' },
-  { label: 'payments', value: 'payments' },
 ];
 
 const WED_PROJECT_OPTIONS = [
