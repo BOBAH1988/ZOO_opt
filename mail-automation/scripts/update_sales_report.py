@@ -114,9 +114,9 @@ def main() -> bool:
         ok = update_sales_report()
         if ok:
             print("Отчёт о продажах за 3 мес. обновлён.")
-            return True
-        print("Отчёт о продажах не обновлён — подходящее письмо или вложение не найдены.")
-        return False
+        else:
+            print("Отчёт о продажах не обновлён — подходящее письмо или вложение не найдены.")
+        return True
     except Exception as exc:
         print(f"Ошибка обновления отчёта о продажах: {exc}")
         return False
