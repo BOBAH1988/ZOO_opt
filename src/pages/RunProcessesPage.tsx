@@ -1,13 +1,23 @@
-import { useState, useEffect } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import {
   collection,
   addDoc,
+  onSnapshot,
+  orderBy,
+  query,
   serverTimestamp,
+  where,
+  type DocumentData,
+  type QueryDocumentSnapshot,
 } from 'firebase/firestore';
 import { runWorkflow, isApiConfigured } from '@/api';
 import { DialogCloseButton } from '@/components/DialogCloseButton';
+import { EmptyState } from '@/components/EmptyState';
 import { db } from '@/firebase';
+import { isFirebaseConfigured } from '@/firebase.config';
 import { useAuth } from '@/context/AuthContext';
+import { toIsoString } from '@/lib/clientData';
+import type { RunLog } from '@/types';
 import type { WorkflowScenario, WorkflowInput } from '@/types';
 
 // Наборы проектов строго по составу конкретного workflow.
@@ -212,6 +222,27 @@ const ALL_SCRIPTS = [
 
 type InputValues = Record<string, Record<string, boolean | string | string[]>>;
 
+function docToLog(snap: QueryDocumentSnapshot<DocumentData>): RunLog | null {
+  const d = snap.data();
+  if (typeof d.workflowId !== 'string' || typeof d.workflowName !== 'string') return null;
+  if (d.status !== 'accepted' && d.status !== 'error') return null;
+  if (typeof d.message !== 'string') return null;
+  if (typeof d.requestedBy !== 'string') return null;
+  const inputs = d.inputs && typeof d.inputs === 'object' && !Array.isArray(d.inputs) ? (d.inputs as Record<string, boolean | string>) : {};
+  return {
+    id: snap.id,
+    workflowId: d.workflowId,
+    workflowName: d.workflowName,
+    status: d.status,
+    message: d.message,
+    runUrl: typeof d.runUrl === 'string' ? d.runUrl : null,
+    requestedBy: d.requestedBy,
+    requestedByEmail: typeof d.requestedByEmail === 'string' ? d.requestedByEmail : null,
+    inputs,
+    createdAt: toIsoString(d.createdAt),
+  };
+}
+
 // Кнопки действия в строке сценария («Запустить» / «Ок») должны быть одной ширины,
 // чтобы колонка не «прыгала» после успешного запуска.
 const ACTION_BUTTON_STYLE = { width: 112, justifyContent: 'center' } as const;
@@ -265,6 +296,20 @@ export function RunProcessesPage() {
   const [runStatus, setRunStatus] = useState<Record<string, { status: 'ok' | 'error'; message?: string }>>({});
   const [helpMenuOpen, setHelpMenuOpen] = useState(false);
   const [inputValues, setInputValues] = useState<InputValues>(loadSettings);
+  const [logs, setLogs] = useState<RunLog[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [page, setPage] = useState(0);
+  const [historyCollapsed, setHistoryCollapsed] = useState(false);
+  const [tooltip, setTooltip] = useState<{ left: number; top: number; message: string } | null>(null);
+  const tipRef = useRef<HTMLDivElement>(null);
+  const PAGE_SIZE = 3;
+  const prevPage = () => setPage((p) => Math.max(0, p - 1));
+  const nextPage = () => setPage((p) => {
+    const maxPage = Math.max(0, Math.ceil(logs.length / PAGE_SIZE) - 1);
+    return Math.min(maxPage, p + 1);
+  });
+  const pagedLogs = logs.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
 
   const apiConfigured = isApiConfigured();
   // Режим выбранного сценария для полноэкранного подтверждения запуска.
@@ -305,6 +350,76 @@ export function RunProcessesPage() {
       document.body.style.overflow = previousOverflow;
     };
   }, [confirmOpen]);
+
+  // Загрузка истории запусков из Firestore
+  useEffect(() => {
+    if (!user) {
+      setLogs([]);
+      setLoading(false);
+      return;
+    }
+    if (!isFirebaseConfigured() || !db) {
+      setLoading(false);
+      return;
+    }
+    setLoading(true);
+    setError(null);
+    const q = query(
+      collection(db, 'runLogs'),
+      where('requestedBy', '==', user.uid),
+      orderBy('createdAt', 'desc'),
+    );
+    const unsub = onSnapshot(
+      q,
+      (snapshot) => {
+        const list: RunLog[] = [];
+        snapshot.forEach((snap) => {
+          const parsed = docToLog(snap);
+          if (parsed) list.push(parsed);
+        });
+        setLogs(list);
+        setLoading(false);
+      },
+      (err) => {
+        setError(err?.message || 'Ошибка загрузки истории запусков');
+        setLoading(false);
+      },
+    );
+    return () => unsub();
+  }, [user]);
+
+  // Сброс страницы при изменении списка логов
+  useEffect(() => {
+    const maxPage = Math.max(0, Math.ceil(logs.length / PAGE_SIZE) - 1);
+    if (page > maxPage) {
+      setPage(maxPage);
+    }
+  }, [logs.length, page]);
+
+  // Закрыть подсказку при клике снаружи
+  useEffect(() => {
+    const onDocClick = () => setTooltip(null);
+    document.addEventListener('mousedown', onDocClick);
+    return () => document.removeEventListener('mousedown', onDocClick);
+  }, []);
+
+  // Позиционирование подсказки
+  useEffect(() => {
+    if (!tooltip || !tipRef.current) return;
+    const el = tipRef.current;
+    const raf = requestAnimationFrame(() => {
+      const rect = el.getBoundingClientRect();
+      let left = tooltip.left;
+      let top = tooltip.top;
+      if (left + rect.width > window.innerWidth) left = window.innerWidth - rect.width;
+      if (left < 0) left = 0;
+      if (top + rect.height > window.innerHeight) top = window.innerHeight - rect.height;
+      if (top < 0) top = 0;
+      el.style.left = `${left}px`;
+      el.style.top = `${top}px`;
+    });
+    return () => cancelAnimationFrame(raf);
+  }, [tooltip]);
 
   function inputsEqual(
     a: Record<string, boolean | string | string[]>,
@@ -642,6 +757,133 @@ export function RunProcessesPage() {
         })}
       </div>
 
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          cursor: 'pointer',
+          marginTop: 20,
+          marginBottom: 8,
+          padding: 6,
+          borderRadius: 6,
+          ...(historyCollapsed && { background: 'var(--color-surface)' }),
+        }}
+        onClick={() => setHistoryCollapsed((prev) => !prev)}
+      >
+        <h2 style={{ margin: 0, fontSize: 18, fontWeight: 600 }}>
+          История запусков
+        </h2>
+        {!historyCollapsed && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <button className="btn btn-outline btn-sm" onClick={(e) => { e.stopPropagation(); prevPage(); }} disabled={page === 0}>←</button>
+            <button className="btn btn-outline btn-sm" onClick={(e) => { e.stopPropagation(); nextPage(); }} disabled={(page + 1) * PAGE_SIZE >= logs.length}>→</button>
+            <span style={{ fontWeight: 600 }}>{historyCollapsed ? '▶' : '▼'}</span>
+          </div>
+        )}
+        {historyCollapsed && (
+          <span style={{ fontWeight: 600 }}>{historyCollapsed ? '▶' : '▼'}</span>
+        )}
+      </div>
+
+      {!historyCollapsed && (
+        <>
+          {error && <div className="alert alert-danger">{error}</div>}
+          {loading ? (
+            <div className="card"><p style={{ textAlign: 'center', color: '#6b7280', padding: 24 }}>Загрузка истории…</p></div>
+          ) : pagedLogs.length === 0 ? (
+            <div className="card">
+              <EmptyState
+                title="Запусков пока нет"
+                description="Здесь отображается история запросов на запуск процессов, их статусы, ошибки и ссылки на результаты в GitHub Actions."
+              />
+            </div>
+          ) : (
+            <>
+              <div className="card">
+                <table className="table">
+                  <thead>
+                    <tr>
+                      <th>Дата</th>
+                      <th>Процесс</th>
+                      <th>Статус</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {pagedLogs.map((log) => (
+                      <tr key={log.id}>
+                        <td style={{ fontSize: 12, lineHeight: 1 }}>
+                          {log.createdAt ? (
+                            <>
+                              <div style={{ fontWeight: 600 }}>
+                                {(() => {
+                                  const d = new Date(log.createdAt);
+                                  return isNaN(d.getTime()) ? '—' : d.toLocaleDateString('ru-RU');
+                                })()}
+                              </div>
+                              <div style={{ color: '#6b7280', fontSize: 11, marginTop: 2 }}>
+                                {(() => {
+                                  const d = new Date(log.createdAt);
+                                  return isNaN(d.getTime()) ? '—' : d.toLocaleTimeString('ru-RU');
+                                })()}
+                              </div>
+                            </>
+                          ) : '—'}
+                        </td>
+                        <td>{log.workflowName}</td>
+                        <td>
+                          <span
+                            className={`badge ${log.status === 'accepted' ? 'bg-test' : 'bg-real'}`}
+                            style={{ cursor: 'pointer', userSelect: 'none' }}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              const row = (e.target as HTMLElement).closest('tr');
+                              if (!row) return;
+                              const rect = row.getBoundingClientRect();
+                              setTooltip({
+                                left: rect.left,
+                                top: rect.top,
+                                message: log.message,
+                              });
+                            }}
+                          >
+                            {log.status === 'accepted' ? 'Ок' : 'Сбой'}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                {tooltip && (
+                  <div
+                    ref={tipRef}
+                    onClick={(e) => e.stopPropagation()}
+                    style={{
+                      position: 'fixed',
+                      zIndex: 50,
+                      background: '#111',
+                      color: '#fff',
+                      padding: '8px 10px',
+                      borderRadius: 6,
+                      fontSize: 12,
+                      lineHeight: 1.4,
+                      maxWidth: '60vw',
+                      wordBreak: 'break-word',
+                      whiteSpace: 'pre-wrap',
+                      pointerEvents: 'auto',
+                      left: tooltip.left,
+                      top: tooltip.top,
+                      boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
+                    }}
+                  >
+                    {tooltip.message}
+                  </div>
+                )}
+              </div>
+            </>
+          )}
+        </>
+      )}
 
 
       {confirmOpen && (
