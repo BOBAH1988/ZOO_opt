@@ -55,36 +55,44 @@ INVOICE_SUBJECT = "Счет от ЗОО Логистик"
 # Ключ — начало темы письма-триггера (без учёта регистра, после ключа
 # в теме может быть что угодно ещё). "to" — получатель(и), "cc" —
 # опциональная копия (список email или NOTIFY_EMAIL для "меня в копию").
+# "subject_keys" — альтернативные ключи тем, когда оператор шлет счет
+# под фамилией клиента (например, "Солодовник") вместо полного названия.
 CLIENTS = [
     {
         "key": "Рулев Павел Юрьевич ИП Ухта Пионергорский 3.xls",
         "to": ["taya.mun.20@mail.ru"],
         "cc": [],
+        "subject_keys": ["рулев"],
     },
     {
         "key": "Солодовник Виктория Юрьевна ИП Ухта Ленина 53.xls",
         "to": ["lerika.17@mail.ru"],
         "cc": [],
+        "subject_keys": ["солодовник"],
     },
     {
         "key": "Лахтюшко Валерий Валерьевич ИП Ухта",
         "to": ["ssherstt@mail.ru"],
         "cc": ["__NOTIFY_EMAIL__"],  # "меня в копию"
+        "subject_keys": ["лахтюшко"],
     },
     {
         "key": "Бабкина Юлия Витальевна ИП Сосногорск 6й мкр 28б.xls",
         "to": ["y.babkina@inbox.ru"],
         "cc": [],
+        "subject_keys": ["бабкина"],
     },
     {
         "key": "Русских Олег Леонидович ИП Ухта Ленина 36.xls",
         "to": ["ask.zoo.kom@inbox.ru"],
         "cc": [],
+        "subject_keys": ["русских"],
     },
     {
         "key": "Панкова Ольга Андреевна ИП Ухта Ленина 24.xls",
         "to": ["793364@mail.ru"],
         "cc": [],
+        "subject_keys": ["панкова"],
     },
 ]
 
@@ -94,8 +102,12 @@ def match_client(subject: str) -> dict | None:
     # в пробелах ('Рулев ... 3 .xls' найдётся как обычное).
     s = normalize_subject(subject)
     for client in CLIENTS:
+        # Полное название темы (ключ) или альтернативные ключи (фамилии).
         if s.startswith(normalize_subject(client["key"])):
             return client
+        for alt_key in client.get("subject_keys") or []:
+            if s.startswith(normalize_subject(alt_key)):
+                return client
     return None
 
 
