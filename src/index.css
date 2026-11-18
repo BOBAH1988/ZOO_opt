@@ -281,6 +281,8 @@ button:disabled {
   max-width: 1000px;
   width: 100%;
   margin: 0 auto;
+  /* Вертикальный скролл работает браузером, горизонтальный перехват — под свайп между страницами */
+  touch-action: pan-y;
 }
 
 .page-title {
@@ -914,6 +916,8 @@ button:disabled {
   width: 100%;
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
+  /* Горизонтальный скролл таблицы маршрута не должен переключать страницу */
+  touch-action: pan-x pan-y;
 }
 
 /* Компактные строки маршрута: больше клиентов помещается на экран. */
@@ -1535,6 +1539,11 @@ button:disabled {
     flex: 0 0 auto;
     width: 100%;
   }
+}
+
+.swipe-dragging {
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 .footer {

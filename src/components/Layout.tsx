@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Link, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { Footer } from '@/components/Footer';
+import { usePageSwipe } from '@/hooks/usePageSwipe';
 import { PWAInstallPrompt } from '@/components/PWAInstallPrompt';
 import { PWAInstallDialog } from '@/components/PWAInstallDialog';
 import {
@@ -54,6 +55,9 @@ export function Layout() {
   });
   const menuRef = useRef<HTMLDivElement>(null);
   const accountRef = useRef<HTMLDivElement>(null);
+  const mainRef = useRef<HTMLDivElement>(null);
+
+  usePageSwipe(mainRef);
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
@@ -194,7 +198,7 @@ export function Layout() {
         installed={installDialog?.installed ?? false}
         onClose={() => setInstallDialog(null)}
       />
-      <main className="main">
+      <main className="main" ref={mainRef}>
         <Outlet />
       </main>
       <Footer />
