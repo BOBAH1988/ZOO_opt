@@ -817,36 +817,48 @@ button:disabled {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  font-size: 19.2px;
+  line-height: 1.5;
+}
+
+.clients-table th {
+  padding-top: 10px;
+  padding-bottom: 10px;
+}
+
+.clients-table td {
+  padding-top: 8px;
+  padding-bottom: 8px;
 }
 
 /* Колонка «№»: минимальная ширина под двузначный номер. */
 .clients-col-number {
-  width: 28px;
+  width: 34px;
   text-align: center;
 }
 
 .clients-col-active {
-  width: 48px;
+  width: 58px;
   text-align: center;
 }
 
 /* Колонка «Форма» — по ширине значений (ИП/ООО), чтобы не растягивать таблицу. */
 .clients-table th:nth-child(3),
 .clients-table td:nth-child(3) {
-  width: 72px;
+  width: 86px;
 }
 
 .clients-col-grade {
-  width: 56px;
+  width: 67px;
   text-align: center;
 }
 
 /* Колонка «Порядок» в таблице клиентов: компактные кнопки без роста высоты строки. */
 .clients-table .route-col-order {
-  width: 72px;
+  width: 86px;
   min-width: 0;
-  padding-left: 4px;
-  padding-right: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
 }
 
 .clients-table .route-move-buttons {
@@ -857,16 +869,16 @@ button:disabled {
 }
 
 .clients-table .route-move-btn {
-  /* 17px — не выше строки текста (14px × 1.25), поэтому высота строки не меняется */
-  width: 17px;
-  height: 17px;
-  min-height: 17px;
+  /* 20px — не выше строки текста (16px × 1.25), поэтому высота строки не меняется */
+  width: 20px;
+  height: 20px;
+  min-height: 20px;
   border-radius: 4px;
 }
 
 .clients-table .route-move-btn svg {
-  width: 11px;
-  height: 11px;
+  width: 13px;
+  height: 13px;
 }
 
 .table tr:last-child td {
