@@ -1,0 +1,53 @@
+name: "Очередь запусков из приложения"
+
+# Резервный путь запуска. Кнопка в приложении сначала идёт в серверный API;
+# если он недоступен из сети пользователя, заявка ложится в Firestore
+# `run_requests`, и этот workflow выполняет её тем же кодом, что профильные
+# workflow. Расписание — минимальный интервал GitHub (5 минут).
+
+concurrency:
+  group: zoo-opt-mail
+  cancel-in-progress: false
+
+on:
+  schedule:
+    - cron: '*/5 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  process-queue:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: pip install -r mail-automation/requirements.txt
+
+      - name: Check secrets format
+        working-directory: mail-automation/scripts
+        env:
+          MAILRU_LOGIN: ${{ secrets.MAILRU_LOGIN }}
+          MAILRU_APP_PASSWORD: ${{ secrets.MAILRU_APP_PASSWORD }}
+        run: python check_secrets.py
+
+      - name: Process run queue
+        working-directory: mail-automation/scripts
+        env:
+          MAILRU_LOGIN: ${{ secrets.MAILRU_LOGIN }}
+          MAILRU_APP_PASSWORD: ${{ secrets.MAILRU_APP_PASSWORD }}
+          MAIL_RECIPIENTS: ${{ secrets.MAIL_RECIPIENTS }}
+          NOTIFY_EMAIL: ${{ secrets.NOTIFY_EMAIL }}
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python process_run_queue.py

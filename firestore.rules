@@ -138,6 +138,35 @@ service cloud.firestore {
       allow delete: if isEmailVerified() && ownerUid == request.auth.uid;
     }
 
+    // Очередь запусков: клиент пишет заявку, workflow «Очередь запусков»
+    // забирает её через Firebase Admin SDK и запускает сценарий.
+    // Обновлять и удалять заявку клиент не может — статусы ставит только сервер.
+    function hasOnlyRunRequestFields(data) {
+      return data.keys().hasOnly([
+        'ownerUid', 'requestedBy', 'requestedByEmail', 'workflowId',
+        'inputs', 'status', 'createdAt', 'updatedAt'
+      ])
+        && data.ownerUid == request.auth.uid
+        && data.requestedBy == request.auth.uid
+        && data.workflowId is string
+        && data.workflowId.size() > 0
+        && data.workflowId.size() <= 100
+        && data.inputs is map
+        && data.inputs.size() <= 20
+        && data.status == 'pending'
+        && data.createdAt == request.time
+        && data.updatedAt == request.time
+        && (!('requestedByEmail' in data)
+          || data.requestedByEmail == null
+          || (data.requestedByEmail is string && data.requestedByEmail.size() <= 320));
+    }
+
+    match /run_requests/{requestId} {
+      allow read: if isEmailVerified() && resource.data.requestedBy == request.auth.uid;
+      allow create: if isEmailVerified() && hasOnlyRunRequestFields(request.resource.data);
+      allow update, delete: if false;
+    }
+
     match /{document=**} {
       allow read, write: if false;
     }

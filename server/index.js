@@ -35,6 +35,20 @@ const APP_ORIGIN = process.env.APP_ORIGIN || '';
 
 export { ALLOWED_WORKFLOWS, PROJECT_ALLOWLIST } from './shared/workflows.js';
 
+function initFirebaseAdmin() {
+  if (admin.apps.length) return;
+  const projectId = process.env.FIREBASE_PROJECT_ID;
+  const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
+  let privateKey = process.env.FIREBASE_PRIVATE_KEY;
+  if (privateKey) privateKey = privateKey.replace(/\\n/g, '\n');
+  if (!projectId || !clientEmail || !privateKey) throw new Error('Firebase Admin env vars are required');
+  admin.initializeApp({ credential: admin.credential.cert({ projectId, clientEmail, privateKey }) });
+}
+
+function logEvent(event) {
+  console.log(JSON.stringify({ ts: new Date().toISOString(), ...event }));
+}
+
 /** Обёртка над общей валидацией: оставляет прежний контракт { ok, cleaned }. */
 export function validateInputs(workflowId, inputs) {
   const result = validateWorkflowInputs(workflowId, inputs);

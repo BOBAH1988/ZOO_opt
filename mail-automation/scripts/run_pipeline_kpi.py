@@ -3,6 +3,7 @@
 
 Логика:
 1. Ищем письма от yuriy.novikov1980@mail.ru с темой ровно «Продажи»
+   (допускается также тема «Проекция объема продаж.xlsx»)
    и вложением «Проекция объема продаж.xlsx» за последние 7 дней,
    не более 10 самых свежих писем (и прочитанные, и нет). Ограничение
    нужно, иначе скрипт переберет всю переписку с вложениями и запуск
@@ -56,6 +57,11 @@ from project_base import RESULT_RETRY, RESULT_SUCCESS, ProjectBase
 
 SENDER_KPI = "yuriy.novikov1980@mail.ru"
 SUBJECT_KPI = "продажи"
+# Юрий иногда называет письмо по имени файла — принимаем и такой вариант темы.
+SUBJECT_KPI_VARIANTS = (
+    SUBJECT_KPI,
+    "проекция объема продаж.xlsx",
+)
 ATTACHMENT_NAME = "проекция объема продаж.xlsx"
 LETTER_SUBJECT = "Выполнение KPI"
 
@@ -106,7 +112,9 @@ def _save_kpi_report(owner_uid: str, letter_date, result: dict, html: str, plain
 
 
 def subject_matches(subject: str) -> bool:
-    return normalize_subject(subject) == normalize_subject(SUBJECT_KPI)
+    normalized = normalize_subject(subject)
+    return any(normalized == normalize_subject(variant)
+               for variant in SUBJECT_KPI_VARIANTS)
 
 
 class KpiProject(ProjectBase):
@@ -125,10 +133,10 @@ class KpiProject(ProjectBase):
 
         imap = imap_connect()
 
-        # Ищем ВСЕ письма от Юрия с темой "Продажи" (и прочитанные, и нет),
-        # самые свежие первыми. unread_only=False — нужно, чтобы найти
-        # письмо, которое пользователь уже открыл в почтовом клиенте, но
-        # ещё не обработал скриптом.
+        # Ищем ВСЕ письма от Юрия с темой "Продажи" или "Проекция объема
+        # продаж.xlsx" (и прочитанные, и нет), самые свежие первыми.
+        # unread_only=False — нужно, чтобы найти письмо, которое пользователь
+        # уже открыл в почтовом клиенте, но ещё не обработал скриптом.
         all_messages = find_messages(
             imap, SENDER_KPI, subject_matches,
             unseen_only=False, newest_first=True,
@@ -147,7 +155,8 @@ class KpiProject(ProjectBase):
             imap_safe_logout(imap)
             send_notification(
                 "Отчет не обнаружен",
-                f"Письма от {SENDER_KPI} с темой «Продажи» и вложением «{ATTACHMENT_NAME}» "
+                f"Письма от {SENDER_KPI} с темой «Продажи» (или «Проекция объема продаж.xlsx») "
+                f"и вложением «{ATTACHMENT_NAME}» "
                 f"не найдено за последние 7 дней — ничего не сделано.",
             )
             return RESULT_RETRY

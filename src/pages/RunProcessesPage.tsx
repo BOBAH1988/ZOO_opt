@@ -10,7 +10,14 @@ import {
   type DocumentData,
   type QueryDocumentSnapshot,
 } from 'firebase/firestore';
-import { runWorkflow, isApiConfigured } from '@/api';
+import {
+  runWorkflow,
+  isApiConfigured,
+  enqueueWorkflow,
+  isQueueSupported,
+  isTransportError,
+  watchQueuedRun,
+} from '@/api';
 import { DialogCloseButton } from '@/components/DialogCloseButton';
 import { CopyIcon, CheckIcon } from '@/components/navIcons';
 import { copyToClipboard } from '@/lib/clipboard';
@@ -326,6 +333,13 @@ export function RunProcessesPage() {
   const [tooltip, setTooltip] = useState<{ left: number; top: number; message: string } | null>(null);
   /** id сценария, чья ошибка только что скопирована — для галочки «скопировано». */
   const [copiedErrorId, setCopiedErrorId] = useState<string | null>(null);
+  /** Подписки на статусы заявок в очереди — снимаем при уходе со страницы. */
+  const queueUnsubs = useRef<Array<() => void>>([]);
+
+  useEffect(() => () => {
+    queueUnsubs.current.forEach((unsubscribe) => unsubscribe());
+    queueUnsubs.current = [];
+  }, []);
   const tipRef = useRef<HTMLDivElement>(null);
   const PAGE_SIZE = 3;
   const prevPage = () => setPage((p) => Math.max(0, p - 1));
@@ -579,7 +593,40 @@ export function RunProcessesPage() {
     }
     setRunning(scenario.id);
 
+    const params = Object.entries(inputs)
+      .map(([key, value]) => `${key}=${value}`)
+      .join(', ');
+
+    // Резервный путь: сервер запуска недоступен из сети (запрос виснет до
+    // таймаута или сеть рвёт соединение). Заявка уходит в Firestore, её
+    // забирает workflow «Очередь запусков» и выполняет тот же сценарий.
+    const queueRun = async (reason: string): Promise<boolean> => {
+      if (!isQueueSupported(scenario.id)) return false;
+      try {
+        const { id } = await enqueueWorkflow({ workflowId: scenario.id, inputs });
+        const message = `Сценарий «${scenario.name}» (${scenario.id})${params ? `, параметры: ${params}` : ''}: ${reason}. Заявка поставлена в очередь (${id}), GitHub Actions выполнит её в течение ~10 минут.`;
+        setRunStatus((prev) => ({ ...prev, [scenario.id]: { status: 'ok', message } }));
+        await writeLog({ workflowId: scenario.id, workflowName: scenario.name, status: 'accepted', message, inputs });
+        queueUnsubs.current.push(watchQueuedRun(id, (status, queueMessage) => {
+          if (status === 'running') {
+            setRunStatus((prev) => ({ ...prev, [scenario.id]: { status: 'ok', message: 'Сценарий взят из очереди в работу…' } }));
+          } else if (status === 'done') {
+            setRunStatus((prev) => ({ ...prev, [scenario.id]: { status: 'ok', message: `Сценарий выполнен из очереди. ${queueMessage ?? ''}`.trim() } }));
+          } else if (status === 'failed') {
+            setRunStatus((prev) => ({ ...prev, [scenario.id]: { status: 'error', message: `Сбой сценария из очереди: ${queueMessage || 'подробности в журнале GitHub Actions'}` } }));
+          }
+        }));
+        return true;
+      } catch {
+        return false;
+      }
+    };
+
     if (!apiConfigured) {
+      if (await queueRun('серверный API не настроен')) {
+        setRunning(null);
+        return;
+      }
       const message = `Сценарий «${scenario.name}» (${scenario.id}): запуск не настроен — отсутствует серверный API.`;
       await writeLog({ workflowId: scenario.id, workflowName: scenario.name, status: 'error', message, inputs });
       setRunning(null);
@@ -598,12 +645,14 @@ export function RunProcessesPage() {
         inputs,
       });
     } catch (err: unknown) {
+      // Транспортный сбой (таймаут, обрыв соединения) — не ошибка данных:
+      // такой запрос безопасно повторить через очередь.
+      if (isTransportError(err) && await queueRun('сервер запуска не ответил')) {
+        return;
+      }
       const reason = err instanceof Error ? err.message : 'Неизвестная ошибка при запуске';
       // В тексте ошибки сразу видно, какой сценарий запускали и с какими
       // параметрами: по одному сообщению сервера бывает непонятно, чей это сбой.
-      const params = Object.entries(inputs)
-        .map(([key, value]) => `${key}=${value}`)
-        .join(', ');
       const message = `Сценарий «${scenario.name}» (${scenario.id})${params ? `, параметры: ${params}` : ''}: ${reason}`;
       setRunStatus((prev) => ({ ...prev, [scenario.id]: { status: 'error', message } }));
       await writeLog({ workflowId: scenario.id, workflowName: scenario.name, status: 'error', message, inputs });

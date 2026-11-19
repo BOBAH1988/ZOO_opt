@@ -81,7 +81,7 @@ function githubErrorCode(status) {
 }
 
 async function dispatchWorkflow(env, workflow, inputs) {
-  const url = `https://api.github.com/repos/${env.GITHUB_OWNER}/${env.GITHUB_REPO}/actions/workflows/${workflow.file}/dispatches`;
+  const url = `https://api.github.com/repos/${env.GITHUB_OWNER}/${env.GITHUB_REPO}/actions/workflows/${workflow.path}/dispatches`;
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), GITHUB_FETCH_TIMEOUT_MS);
   try {
@@ -107,7 +107,7 @@ async function dispatchWorkflow(env, workflow, inputs) {
       console.error(JSON.stringify({
         type: 'github_dispatch_failed',
         status: response.status,
-        workflow: workflow.file,
+        workflow: workflow.path,
         body: text,
       }));
       const err = new Error(`GitHub rejected the workflow dispatch request (${response.status})`);
@@ -245,7 +245,7 @@ export default {
     return jsonResponse({
       accepted: true,
       message: 'Запрос на запуск принят сервером и передан в GitHub Actions.',
-      runUrl: `https://github.com/${env.GITHUB_OWNER}/${env.GITHUB_REPO}/actions/workflows/${validation.workflow.file}`,
+      runUrl: `https://github.com/${env.GITHUB_OWNER}/${env.GITHUB_REPO}/actions/workflows/${validation.workflow.path}`,
       runId: null,
     }, 200, origin, env);
   },
