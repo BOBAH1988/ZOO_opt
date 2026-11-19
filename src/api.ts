@@ -56,7 +56,11 @@ export class ApiUnauthorizedError extends Error {
   }
 }
 
-const REQUEST_TIMEOUT_MS = 30_000;
+// Быстрый отказ вместо 30-секундного зависания: если соединение до
+// сервера не устанавливается, это видно за секунды, и запуск повторяется
+// сразу (вторая попытка может попасть на рабочий адрес).
+const REQUEST_TIMEOUT_MS = 10_000;
+const REQUEST_ATTEMPTS = 2;
 
 // Маппинг кодов причин сервера на понятные русские тексты.
 // Коды возвращаются в поле `code` ответа сервера (server/index.js).
@@ -91,24 +95,39 @@ export async function runWorkflow(
   }
 
   const token = await user.getIdToken();
-  let response: Response;
-  try {
-    response = await fetchWithTimeout(`${API_BASE_URL}/run`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify(request),
-    });
-  } catch (err) {
-    if (err instanceof Error && err.name === 'AbortError') {
+  const options: RequestInit = {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(request),
+  };
+
+  let response: Response | null = null;
+  let lastError: unknown = null;
+  for (let attempt = 0; attempt < REQUEST_ATTEMPTS; attempt += 1) {
+    try {
+      // Новая попытка — новое соединение: адрес сервера может резолвиться
+      // в несколько IP, и вторая попытка иногда попадает на рабочий.
+      response = await fetchWithTimeout(`${API_BASE_URL}/run`, options);
+      break;
+    } catch (err) {
+      lastError = err;
+      if (!(err instanceof Error) || (err.name !== 'AbortError' && err.name !== 'TypeError')) {
+        throw err;
+      }
+    }
+  }
+
+  if (!response) {
+    if (lastError instanceof Error && lastError.name === 'AbortError') {
       const timeoutErr = new Error(`Ошибка сервера: превышено время ожидания (${REQUEST_TIMEOUT_MS / 1000} с)`) as ApiError;
       timeoutErr.status = 504;
       timeoutErr.isTimeout = true;
       throw timeoutErr;
     }
-    throw err;
+    throw lastError;
   }
 
   if (!response.ok) {
