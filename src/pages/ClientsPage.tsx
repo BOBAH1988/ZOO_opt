@@ -687,8 +687,8 @@ export function ClientsPage() {
             type="button"
             className="btn btn-outline btn-sm sort-btn"
             onClick={() => fileInputRef.current?.click()}
-            aria-label="Загрузить клиентов из Excel"
-            title="Загрузить клиентов из Excel"
+            aria-label="Загрузить клиентов из файла .xlsx или .csv"
+            title="Загрузить клиентов из .xlsx или .csv. Файл .xls нужно сначала сохранить как .xlsx в Excel."
             disabled={!user}
           >
             <UploadIcon />

@@ -55,6 +55,9 @@ declare module 'firebase/firestore' {
     data(): T;
   }
   export interface QuerySnapshot<T = DocumentData> {
+    docs: QueryDocumentSnapshot<T>[];
+    empty: boolean;
+    size: number;
     forEach(cb: (doc: QueryDocumentSnapshot<T>) => void): void;
   }
 
