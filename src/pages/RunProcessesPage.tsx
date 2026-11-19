@@ -12,6 +12,8 @@ import {
 } from 'firebase/firestore';
 import { runWorkflow, isApiConfigured } from '@/api';
 import { DialogCloseButton } from '@/components/DialogCloseButton';
+import { CopyIcon, CheckIcon } from '@/components/navIcons';
+import { copyToClipboard } from '@/lib/clipboard';
 import { EmptyState } from '@/components/EmptyState';
 import { db } from '@/firebase';
 import { isFirebaseConfigured } from '@/firebase.config';
@@ -322,6 +324,8 @@ export function RunProcessesPage() {
   const [page, setPage] = useState(0);
   const [historyCollapsed, setHistoryCollapsed] = useState(loadHistoryCollapsed);
   const [tooltip, setTooltip] = useState<{ left: number; top: number; message: string } | null>(null);
+  /** id сценария, чья ошибка только что скопирована — для галочки «скопировано». */
+  const [copiedErrorId, setCopiedErrorId] = useState<string | null>(null);
   const tipRef = useRef<HTMLDivElement>(null);
   const PAGE_SIZE = 3;
   const prevPage = () => setPage((p) => Math.max(0, p - 1));
@@ -576,7 +580,7 @@ export function RunProcessesPage() {
     setRunning(scenario.id);
 
     if (!apiConfigured) {
-      const message = 'Запуск не настроен: отсутствует серверный API.';
+      const message = `Сценарий «${scenario.name}» (${scenario.id}): запуск не настроен — отсутствует серверный API.`;
       await writeLog({ workflowId: scenario.id, workflowName: scenario.name, status: 'error', message, inputs });
       setRunning(null);
       return;
@@ -594,7 +598,13 @@ export function RunProcessesPage() {
         inputs,
       });
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Неизвестная ошибка при запуске';
+      const reason = err instanceof Error ? err.message : 'Неизвестная ошибка при запуске';
+      // В тексте ошибки сразу видно, какой сценарий запускали и с какими
+      // параметрами: по одному сообщению сервера бывает непонятно, чей это сбой.
+      const params = Object.entries(inputs)
+        .map(([key, value]) => `${key}=${value}`)
+        .join(', ');
+      const message = `Сценарий «${scenario.name}» (${scenario.id})${params ? `, параметры: ${params}` : ''}: ${reason}`;
       setRunStatus((prev) => ({ ...prev, [scenario.id]: { status: 'error', message } }));
       await writeLog({ workflowId: scenario.id, workflowName: scenario.name, status: 'error', message, inputs });
     } finally {
@@ -761,28 +771,30 @@ export function RunProcessesPage() {
                 <div style={{ gridColumn: '1 / -1', display: 'flex', alignItems: 'center', gap: 6, padding: 6, background: '#fee2e2', borderRadius: 6, fontSize: 11, color: '#991b1b', overflowWrap: 'anywhere', wordBreak: 'break-word' }}>
                   <span style={{ minWidth: 0, overflowWrap: 'anywhere' }}>Сбой: {runStatus[scenario.id]?.message}</span>
                   <button
-                    onClick={() => {
-                      void navigator.clipboard.writeText(runStatus[scenario.id]?.message || '').catch(() => {
-                        // Копирование не критично для работы приложения
-                      });
+                    type="button"
+                    className="copy-error-btn"
+                    onClick={async () => {
+                      const ok = await copyToClipboard(runStatus[scenario.id]?.message || '');
+                      if (!ok) {
+                        // Копирование может быть запрещено браузером — показываем
+                        // текст в окне, чтобы его можно было выделить вручную.
+                        setTooltip({
+                          left: window.innerWidth / 2 - 160,
+                          top: window.innerHeight / 2 - 60,
+                          message: runStatus[scenario.id]?.message || '',
+                        });
+                        return;
+                      }
+                      setCopiedErrorId(scenario.id);
+                      window.setTimeout(
+                        () => setCopiedErrorId((current) => (current === scenario.id ? null : current)),
+                        2000,
+                      );
                     }}
-                    style={{
-                      background: 'transparent',
-                      border: '1px solid #dc2626',
-                      color: '#dc2626',
-                      borderRadius: 4,
-                      width: 24,
-                      height: 24,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      cursor: 'pointer',
-                      fontSize: 12,
-                      padding: 0,
-                    }}
-                    title="Скопировать ошибку"
+                    title={copiedErrorId === scenario.id ? 'Скопировано' : 'Скопировать ошибку'}
+                    aria-label={copiedErrorId === scenario.id ? 'Скопировано' : 'Скопировать текст ошибки'}
                   >
-                    📋
+                    {copiedErrorId === scenario.id ? <CheckIcon /> : <CopyIcon />}
                   </button>
                 </div>
               )}

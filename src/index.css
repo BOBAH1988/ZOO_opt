@@ -323,6 +323,43 @@ button:disabled {
 }
 
 /*
+ * Кнопка «Скопировать ошибку» в строке сбоя.
+ *
+ * Оформлена как квадратная кнопка проекта (как .sort-btn и кнопка настроек):
+ * те же скругления, размер значка и переход при наведении. Иконка —
+ * stroke-SVG, поэтому цвет задаётся через currentColor.
+ */
+.copy-error-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 1px solid currentColor;
+  border-radius: var(--radius);
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.copy-error-btn svg {
+  display: block;
+  width: 16px;
+  height: 16px;
+}
+
+.copy-error-btn:hover {
+  background: rgba(220, 38, 38, 0.12);
+}
+
+.copy-error-btn:active {
+  transform: scale(0.94);
+}
+
+/*
  * Кнопка подсвечивается голубым фоном, когда включён режим сортировки.
  * Селекторы усилены классами .btn/.btn-outline, иначе фон из .btn-outline
  * (объявлен ниже в файле) перекрывает подсветку.
