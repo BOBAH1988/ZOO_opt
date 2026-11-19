@@ -32,6 +32,7 @@ from datetime import datetime, timedelta, timezone
 
 import firebase_admin
 from firebase_admin import credentials, firestore
+from google.cloud.firestore_v1.base_query import FieldFilter
 
 COLLECTION = "run_requests"
 MAX_PER_RUN = 5
@@ -191,8 +192,13 @@ def _tail(text: str, limit: int = MESSAGE_LIMIT) -> str:
     return text if len(text) <= limit else "…" + text[-limit:]
 
 
+@firestore.transactional
 def _claim(transaction, doc_ref):
-    """Атомарно переводит заявку pending → running. Возвращает данные или None."""
+    """Атомарно переводит заявку pending → running. Возвращает данные или None.
+
+    Декоратор сам начинает транзакцию и коммитит её: читать документ вне
+    активной транзакции библиотека не разрешает.
+    """
     snapshot = doc_ref.get(transaction=transaction)
     data = snapshot.to_dict() if snapshot.exists else None
     if not data or data.get("status") != "pending":
@@ -219,7 +225,8 @@ def _finish(doc_ref, status: str, message: str) -> None:
 def _fail_stale(db) -> None:
     """Заявки, зависшие в running дольше STALE_MINUTES, помечаем failed."""
     deadline = datetime.now(timezone.utc) - timedelta(minutes=STALE_MINUTES)
-    for snapshot in db.collection(COLLECTION).where("status", "==", "running").stream():
+    running = db.collection(COLLECTION).where(filter=FieldFilter("status", "==", "running"))
+    for snapshot in running.stream():
         data = snapshot.to_dict() or {}
         started = data.get("startedAt")
         if started is not None and started < deadline:
@@ -229,9 +236,7 @@ def _fail_stale(db) -> None:
 def process_one(db, snapshot) -> None:
     doc_ref = snapshot.reference
 
-    transaction = db.transaction()
-    data = _claim(transaction, doc_ref)
-    transaction.commit()
+    data = _claim(db.transaction(), doc_ref)
     if data is None:
         return
 
@@ -264,9 +269,10 @@ def main() -> int:
     db = _init_firestore()
     _fail_stale(db)
 
-    pending = list(
-        db.collection(COLLECTION).where("status", "==", "pending").limit(MAX_PER_RUN).stream()
-    )
+    pending_query = db.collection(COLLECTION).where(
+        filter=FieldFilter("status", "==", "pending")
+    ).limit(MAX_PER_RUN)
+    pending = list(pending_query.stream())
     if not pending:
         print("Очередь пуста.")
         return 0
