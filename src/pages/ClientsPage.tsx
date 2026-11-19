@@ -566,6 +566,14 @@ export function ClientsPage() {
     setError(null);
     setImportMessage(null);
     setImportError(null);
+
+    // Старый формат .xls не поддерживается: exceljs читает только .xlsx и .csv.
+    // Понятная ошибка вместо «File is not a zip file» из недр библиотеки.
+    if (/\.xls$/i.test(file.name)) {
+      setError('Формат .xls не поддерживается. Откройте файл в Excel и сохраните как .xlsx.');
+      return;
+    }
+
     try {
       const buffer = await file.arrayBuffer();
       const parsed = await parseSalesWorkbook(buffer);
@@ -671,7 +679,7 @@ export function ClientsPage() {
           <input
             ref={fileInputRef}
             type="file"
-            accept=".xlsx,.xls,.csv"
+            accept=".xlsx,.csv"
             style={{ display: 'none' }}
             onChange={handleImportFile}
           />

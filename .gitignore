@@ -59,3 +59,13 @@ mail-automation/scripts/*clients_debt*.txt
 !mail-automation/scripts/recipients_ukhta.txt
 !mail-automation/scripts/recipients_sety_ukhta.txt
 !mail-automation/scripts/clients_debt_ukhta.txt
+
+# Данные проекта «Остатки» — приходят из почты, в репозиторий не кладутся
+mail-automation/project residues/*.xls
+mail-automation/project residues/*.xlsx
+mail-automation/project residues/output/*.xlsx
+mail-automation/project residues/output/.sent_marker
+mail-automation/project residues/data/last_week_pricelist.txt
+
+# Серверные секреты — вне репозитория (~/.config/zoo-opt/server.env)
+server/.env

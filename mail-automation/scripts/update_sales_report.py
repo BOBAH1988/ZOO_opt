@@ -42,7 +42,7 @@ SALES_PATH = PROJECT_DIR / SALES_FILENAME
 
 def update_sales_report() -> bool:
     """Скачивает отчёт о продажах из почты и сохраняет в репозиторий.
-    
+
     Returns:
         True — отчёт обновлён, False — подходящего письма нет (нормальная ситуация).
     """

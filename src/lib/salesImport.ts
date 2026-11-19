@@ -1,4 +1,7 @@
+import type { Row } from 'exceljs';
 import type { NewClientInput } from '@/types';
+
+type CellRow = Row;
 
 /** Клиент, извлечённый из отчёта о продажах. */
 export type ImportedClient = NewClientInput;
@@ -161,37 +164,58 @@ export function parseClientLine(raw: string): ImportedClient | null {
     };
 }
 
+/**
+ * Текст первой ячейки строки: как его видел бы Excel.
+ * exceljs отдаёт значения типизированными объектами, а строки отчёта 1С
+ * лежат в первой колонке текстом. Формулы и rich-text разворачиваем в текст,
+ * числа приводим к строке — код клиента вроде 06031 иначе потеряет ведущий ноль.
+ */
+function cellText(row: CellRow): string | null {
+    const value = row.getCell(1).value;
+    if (value === null || value === undefined) return null;
+    if (typeof value === 'string') return value;
+    if (typeof value === 'number' || typeof value === 'boolean') return String(value);
+    if (typeof value === 'object') {
+        if ('richText' in value && Array.isArray((value as { richText?: unknown }).richText)) {
+            return (value as { richText: Array<{ text: string }> }).richText
+                .map((part) => part.text)
+                .join('');
+        }
+        if ('formula' in value) {
+            const result = (value as { result?: unknown }).result;
+            return result === null || result === undefined ? null : String(result);
+        }
+        if ('text' in value && typeof (value as { text?: unknown }).text === 'string') {
+            return (value as { text: string }).text;
+        }
+    }
+    return null;
+}
+
 /** Читает все листы Excel-файла и возвращает уникальных клиентов. */
 export async function parseSalesWorkbook(data: ArrayBuffer): Promise<ImportedClient[]> {
-    const XLSX = await import('xlsx');
-    const workbook = XLSX.read(data, { type: 'array' });
+    // exceljs грузится лениво: модуль тяжёлый, а нужен только при импорте.
+    const { default: ExcelJS } = await import('exceljs');
+    const workbook = new ExcelJS.Workbook();
+    await workbook.xlsx.load(new Uint8Array(data));
 
     const clients: ImportedClient[] = [];
     const seen = new Set<string>();
 
-    for (const sheetName of workbook.SheetNames) {
-        const sheet = workbook.Sheets[sheetName];
-        if (!sheet) continue;
-        const rows = XLSX.utils.sheet_to_json<unknown[]>(sheet, {
-            header: 1,
-            raw: false,
-            defval: '',
-            blankrows: false,
-        });
-
-        for (const row of rows) {
-            const first = Array.isArray(row) ? row[0] : undefined;
-            if (typeof first !== 'string') continue;
-            const parsed = parseClientLine(first);
-            if (!parsed) continue;
+    workbook.eachSheet((sheet) => {
+        sheet.eachRow({ includeEmpty: false }, (row) => {
+            const text = cellText(row);
+            if (!text) return;
+            const parsed = parseClientLine(text);
+            if (!parsed) return;
 
             const code = normalizeClientCode(parsed.clientCode);
             const key = code ? `code:${code}` : `name:${normalizeText(parsed.name)}`;
-            if (seen.has(key)) continue;
+            if (seen.has(key)) return;
             seen.add(key);
             clients.push(parsed);
-        }
-    }
+        });
+    });
 
     return clients;
 }

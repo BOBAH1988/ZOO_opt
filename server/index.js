@@ -1,11 +1,29 @@
 import dotenv from 'dotenv';
-dotenv.config();
+import os from 'node:os';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+// Секреты (GITHUB_TOKEN, FIREBASE_PRIVATE_KEY) держим вне папки репозитория:
+// иначе бэкап или архив рабочей папки уносит их вместе с кодом.
+// Порядок поиска: ZOO_SERVER_ENV -> ~/.config/zoo-opt/server.env
+//                -> server/.env (старый путь, поддержан для совместимости).
+const envCandidates = [
+  process.env.ZOO_SERVER_ENV,
+  path.join(os.homedir(), '.config', 'zoo-opt', 'server.env'),
+  path.join(path.dirname(fileURLToPath(import.meta.url)), '.env'),
+].filter(Boolean);
+
+for (const candidate of envCandidates) {
+  const result = dotenv.config({ path: candidate });
+  if (!result.error) break;
+}
 
 import express from 'express';
 import cors from 'cors';
 import crypto from 'node:crypto';
 import admin from 'firebase-admin';
 import { pathToFileURL } from 'node:url';
+import { ALLOWED_WORKFLOWS, PROJECT_ALLOWLIST, validateWorkflowInputs } from './shared/workflows.js';
 
 const PORT = process.env.PORT || 8787;
 const GITHUB_OWNER = process.env.GITHUB_OWNER || 'BOBAH1988';
@@ -15,73 +33,14 @@ const ALLOWED_UIDS = (process.env.ALLOWED_UIDS || '').split(',').map((s) => s.tr
 const REAL_SEND_UIDS = (process.env.REAL_SEND_UIDS || '').split(',').map((s) => s.trim()).filter(Boolean);
 const APP_ORIGIN = process.env.APP_ORIGIN || '';
 
-const ALLOWED_WORKFLOWS = {
-  kpi_sales: { path: 'kpi_sales.yml', inputs: { owner_uid: 'string', test_mode: 'boolean' } },
-  weekly_fri: { path: 'weekly_fri.yml', inputs: { test_mode: 'boolean', only: 'string', ignore_window: 'boolean' }, realSendGuard: true },
-  weekly_mon_tue: { path: 'weekly_mon_tue.yml', inputs: { test_mode: 'boolean', only: 'string', ignore_window: 'boolean' }, realSendGuard: true },
-  weekly_wed: { path: 'weekly_wed.yml', inputs: { test_mode: 'boolean', only: 'string', ignore_window: 'boolean' }, realSendGuard: true },
-  weekly_residues: { path: 'weekly_residues.yml', inputs: { test_mode: 'boolean' }, realSendGuard: true },
-  weekly_sety_price: { path: 'weekly_sety_price.yml', inputs: { test_mode: 'boolean', skip_if_sent: 'boolean' }, realSendGuard: true },
-  weekly_tue: { path: 'weekly_tue.yml', inputs: { test_mode: 'boolean', only: 'string', ignore_window: 'boolean' }, realSendGuard: true },
-  git_check_invoices: { path: 'git_check_invoices.yml', inputs: { test_mode: 'boolean', project: 'string' } },
-  update_sales_report: { path: 'update_sales_report.yml', inputs: {} },
-};
+export { ALLOWED_WORKFLOWS, PROJECT_ALLOWLIST } from './shared/workflows.js';
 
-function initFirebaseAdmin() {
-  if (admin.apps.length) return;
-  const projectId = process.env.FIREBASE_PROJECT_ID;
-  const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
-  let privateKey = process.env.FIREBASE_PRIVATE_KEY;
-  if (privateKey) privateKey = privateKey.replace(/\\n/g, '\n');
-  if (!projectId || !clientEmail || !privateKey) throw new Error('Firebase Admin env vars are required');
-  admin.initializeApp({ credential: admin.credential.cert({ projectId, clientEmail, privateKey }) });
-}
-
-function logEvent(event) {
-  console.log(JSON.stringify({ ts: new Date().toISOString(), ...event }));
-}
-
-// Допустимые значения для поля 'only' ( Projekты рассылки, совпадает с клиентом и воркере ).
-export const PROJECT_ALLOWLIST = new Set([
-  'order', 'ukhta', 'veta', 'clients', 'payments', 'invoice', 'veles',
-  'lemur', 'dz', 'sety', 'debt_ukhta', 'mamedov',
-]);
-
+/** Обёртка над общей валидацией: оставляет прежний контракт { ok, cleaned }. */
 export function validateInputs(workflowId, inputs) {
-  const spec = ALLOWED_WORKFLOWS[workflowId];
-  if (!spec) return { ok: false, error: 'Workflow is not allowed' };
-  if (!inputs || typeof inputs !== 'object' || Array.isArray(inputs)) return { ok: false, error: 'inputs must be an object' };
-  const cleaned = {};
-  for (const [key, value] of Object.entries(inputs)) {
-    const expected = spec.inputs[key];
-    if (!expected) return { ok: false, error: `Unknown input: ${key}` };
-    if (expected === 'boolean' && typeof value !== 'boolean') return { ok: false, error: `${key} must be boolean` };
-    if (expected === 'string' && typeof value !== 'string') return { ok: false, error: `${key} must be string` };
-    if (expected === 'string' && value.length > 100) return { ok: false, error: `${key} is too long` };
-    if (key === 'only') {
-      const projects = String(value).split(',').map((p) => p.trim()).filter(Boolean);
-      for (const p of projects) {
-        if (!PROJECT_ALLOWLIST.has(p)) {
-          return { ok: false, error: `Unknown project in only: ${p}` };
-        }
-      }
-      cleaned[key] = projects.join(',');
-    } else if (key === 'project' && workflowId === 'git_check_invoices') {
-      if (value === '') {
-        cleaned[key] = 'clients,payments';
-      } else if (!['clients', 'payments'].includes(value)) {
-        return { ok: false, error: `Unknown project: ${value}` };
-      } else {
-        cleaned[key] = value;
-      }
-    } else {
-      cleaned[key] = value;
-    }
-  }
-  if (spec.realSendGuard && typeof cleaned.test_mode !== 'boolean') {
-    return { ok: false, error: 'test_mode must be boolean' };
-  }
-  return { ok: true, cleaned };
+  const result = validateWorkflowInputs(workflowId, inputs);
+  return result.ok
+    ? { ok: true, cleaned: result.cleaned }
+    : { ok: false, error: result.error };
 }
 
 const GITHUB_FETCH_TIMEOUT_MS = 15_000;

@@ -40,7 +40,6 @@ import os
 
 import firebase_admin
 from firebase_admin import credentials, firestore
-
 from kpi_processors import _norm, build_body, build_html, process_workbook
 from mail_common import (
     find_messages,
@@ -184,8 +183,7 @@ class KpiProject(ProjectBase):
             )
             return RESULT_SUCCESS
 
-        # Построим HTML и текст versions письма (для хранения в Firestore).
-        recipients = [notify_email]
+        # Построим HTML и текстовую версию письма (для хранения в Firestore).
         html = build_html(**result)
         plain = build_body(**result)
 
