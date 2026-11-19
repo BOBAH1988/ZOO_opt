@@ -6,6 +6,7 @@ import { usePageSwipe } from '@/hooks/usePageSwipe';
 import { PWAInstallPrompt } from '@/components/PWAInstallPrompt';
 import { PWAInstallDialog } from '@/components/PWAInstallDialog';
 import {
+  AtIcon,
   ClientsIcon,
   HomeIcon,
   InstallIcon,
@@ -31,7 +32,7 @@ const NAV_ITEMS: NavItem[] = [
   { to: '/run', label: 'Автозапуск', icon: <RunIcon /> },
   { to: '/kpi', label: 'KPI задачи', icon: <KpiIcon /> },
   { to: '/clients', label: 'Клиенты', icon: <ClientsIcon /> },
-  { to: '/lists', label: 'Списки', icon: <ClientsIcon /> },
+  { to: '/lists', label: 'Списки', icon: <AtIcon /> },
 ];
 
 export function Layout() {
