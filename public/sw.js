@@ -8,24 +8,28 @@
  *  - Персональные данные клиентов, токены и результаты авторизованных запросов — НЕ кэшируются.
  */
 
-const CACHE_NAME = 'zoo-control-shell-v6';
+const CACHE_NAME = 'zoo-control-shell-v7';
 // ?v=3 — единый набор иконок (щит в щите с лапой животного).
 const SHELL_URLS = [
-  '/ZOO_opt/',
-  '/ZOO_opt/index.html',
-  '/ZOO_opt/manifest.json?v=3',
-  '/ZOO_opt/favicon.svg?v=3',
-  '/ZOO_opt/favicon.ico?v=3',
-  '/ZOO_opt/favicon-16.png?v=3',
-  '/ZOO_opt/favicon-32.png?v=3',
-  '/ZOO_opt/favicon-48.png?v=3',
-  '/ZOO_opt/apple-touch-icon.png?v=3',
-  '/ZOO_opt/icon.svg?v=3',
-  '/ZOO_opt/icon-192.png?v=3',
-  '/ZOO_opt/icon-512.png?v=3',
-  '/ZOO_opt/maskable-icon-192.png?v=3',
-  '/ZOO_opt/maskable-icon-512.png?v=3',
+  './',
+  './index.html',
+  './manifest.json?v=3',
+  './favicon.svg?v=3',
+  './favicon.ico?v=3',
+  './favicon-16.png?v=3',
+  './favicon-32.png?v=3',
+  './favicon-48.png?v=3',
+  './apple-touch-icon.png?v=3',
+  './icon.svg?v=3',
+  './icon-192.png?v=3',
+  './icon-512.png?v=3',
+  './maskable-icon-192.png?v=3',
+  './maskable-icon-512.png?v=3',
 ];
+
+// Путь оболочки считается от самого скрипта: service worker может лежать
+// не в корне домена (GitHub Pages: /ZOO_opt/sw.js).
+const SHELL_INDEX = new URL('index.html', self.registration.scope).href;
 
 // Firebase, API и внешние сервисы — никогда не кэшируем.
 const UNCACHEABLE_PATTERNS = [
@@ -90,11 +94,11 @@ self.addEventListener('fetch', (event) => {
         .then((response) => {
           if (response && response.ok) {
             const clone = response.clone();
-            caches.open(CACHE_NAME).then((cache) => cache.put('/ZOO_opt/index.html', clone));
+            caches.open(CACHE_NAME).then((cache) => cache.put(SHELL_INDEX, clone));
           }
           return response;
         })
-        .catch(() => caches.match('/ZOO_opt/index.html')),
+        .catch(() => caches.match(SHELL_INDEX)),
     );
     return;
   }

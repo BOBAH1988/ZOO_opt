@@ -1,6 +1,6 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
-import path from 'path';
+import { fileURLToPath } from 'node:url';
 
 // GitHub Pages: сайт публикуется по адресу https://BOBAH1988.github.io/ZOO_opt/
 // base должен совпадать с именем репозитория.
@@ -11,7 +11,7 @@ export default defineConfig({
   base: BASE,
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, './src'),
+      '@': fileURLToPath(new URL('./src', import.meta.url)),
     },
   },
   build: {

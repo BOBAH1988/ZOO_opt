@@ -24,7 +24,9 @@ if ('serviceWorker' in navigator) {
   if (import.meta.env.PROD) {
     window.addEventListener('load', () => {
       const swUrl = `${import.meta.env.BASE_URL}sw.js`;
-      navigator.serviceWorker.register(swUrl).catch(() => {
+      // scope явно ограничиваем base: без него браузер берёт каталог скрипта и
+      // SW перехватывает запросы в dev-режиме при другом base, мешая HMR.
+      navigator.serviceWorker.register(swUrl, { scope: import.meta.env.BASE_URL }).catch(() => {
         // Регистрация SW не критична для основной функциональности
       });
     });

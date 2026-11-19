@@ -7,17 +7,22 @@
 </head>
 <body>
   <script>
-    // SPA fallback для GitHub Pages с HashRouter:
-    // перенаправляет на index.html, сохраняя путь в hash-фрагменте.
+    // SPA fallback для GitHub Pages с HashRouter.
+    //
+    // База вычисляется от адреса страницы, а не вписана числом: при смене
+    // имени репозитория или развёртывании в корне домена редирект продолжает
+    // работать. Глубина пути — один сегмент (/<репозиторий>/<маршрут>), как у
+    // GitHub Pages project site.
     (function () {
-      var path = window.location.pathname;
-      var base = '/ZOO_opt/';
-      if (path.startsWith(base)) {
-        path = path.slice(base.length);
+      var parts = window.location.pathname.split('/').filter(Boolean);
+      // Первый сегмент — имя проекта на Pages; остальное — маршрут SPA.
+      var repo = parts.length > 0 ? parts[0] + '/' : '';
+      var rest = parts.slice(1).join('/');
+      var target = window.location.origin + '/' + repo + 'index.html';
+      if (rest) {
+        target += '#/' + rest;
       }
-      window.location.replace(
-        window.location.origin + base + 'index.html#/' + path
-      );
+      window.location.replace(target);
     })();
   </script>
 </body>
