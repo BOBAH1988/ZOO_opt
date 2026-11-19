@@ -10,8 +10,7 @@
  * Никаких GitHub-токенов или секретов не передаётся из браузера.
  */
 
-import { addDoc, collection, doc, onSnapshot, serverTimestamp } from 'firebase/firestore';
-import { auth, db } from '@/firebase';
+import { auth } from '@/firebase';
 
 // Базовый URL серверного API. Настраивается через переменную окружения.
 // Завершающий слеш удаляется, чтобы избежать двойного //run.
@@ -172,84 +171,3 @@ export function isApiConfigured(): boolean {
 
 // Белый список workflow хранится только на сервере (server/index.js, server/cloudflare/src/index.js).
 // Клиент не хранит дубликат, чтобы списки не расходились.
-
-/**
- * Очередь запусков через Firestore.
- *
- * Зачем: адрес серверного API (Cloudflare Worker) бывает недоступен из сети
- * пользователя, и запрос виснет до таймаута. Тогда заявка пишется в
- * `run_requests`, а workflow `.github/workflows/run_queue.yml` забирает её
- * по расписанию и выполняет тот же сценарий. GitHub и Firestore доступны
- * там, где Worker — нет.
- *
- * Очередь — резервный путь: пока API отвечает, запуск идёт напрямую.
- */
-export const QUEUED_WORKFLOWS = new Set([
-  'kpi_sales',
-  'weekly_mon_tue',
-  'weekly_wed',
-  'weekly_tue',
-  'weekly_fri',
-  'weekly_sety_price',
-  'weekly_residues',
-  'git_check_invoices',
-  'update_sales_report',
-]);
-
-export function isQueueSupported(workflowId: string): boolean {
-  return QUEUED_WORKFLOWS.has(workflowId);
-}
-
-/**
- * Ошибка транспорта: запрос не дошёл до сервера или ответ не пришёл вовремя.
- * Серверные ответы (400/403/502 с кодом причины) сюда не попадают — их
- * повторять через очередь нельзя, причина в самих данных запроса.
- */
-export function isTransportError(err: unknown): boolean {
-  if (!(err instanceof Error)) return false;
-  // Клиентский таймаут: ответ от сервера не пришёл вовсе.
-  if ((err as ApiError).isTimeout) return true;
-  // fetch отклоняется с TypeError, когда сеть недоступна или соединение сброшено.
-  return err.name === 'TypeError';
-}
-
-export interface QueuedRun {
-  id: string;
-}
-
-/** Ставит заявку на запуск в очередь Firestore. */
-export async function enqueueWorkflow(request: RunWorkflowRequest): Promise<QueuedRun> {
-  if (!db) {
-    throw new ApiNotConfiguredError('Очередь недоступна: Firestore не настроен');
-  }
-  const user = auth?.currentUser;
-  if (!user) {
-    throw new ApiUnauthorizedError('Войдите в систему, чтобы запускать процессы');
-  }
-  const ref = await addDoc(collection(db, 'run_requests'), {
-    ownerUid: user.uid,
-    requestedBy: user.uid,
-    requestedByEmail: user.email || null,
-    workflowId: request.workflowId,
-    inputs: request.inputs,
-    status: 'pending',
-    createdAt: serverTimestamp(),
-    updatedAt: serverTimestamp(),
-  });
-  return { id: ref.id };
-}
-
-/** Следит за статусом заявки: pending → running → done | failed. */
-export function watchQueuedRun(
-  id: string,
-  onChange: (status: string, message: string | null) => void,
-): () => void {
-  if (!db) return () => {};
-  return onSnapshot(doc(db, 'run_requests', id), (snapshot) => {
-    const data = snapshot.data();
-    if (!data) return;
-    onChange(String(data.status || ''), typeof data.message === 'string' ? data.message : null);
-  }, () => {
-    // Сеть отвалилась — просто перестаём обновлять статус.
-  });
-}
