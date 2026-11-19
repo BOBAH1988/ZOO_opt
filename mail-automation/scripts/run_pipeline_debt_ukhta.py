@@ -124,19 +124,13 @@ def fmt_amount(amount: float) -> str:
 
 
 def load_clients_map() -> list[tuple[str, str]]:
-    """Читает clients_debt_ukhta.txt: список (чистое_имя, email)."""
-    path = Path(CLIENTS_FILE)
-    result = []
-    if not path.exists():
-        return result
-    for line in path.read_text(encoding="utf-8").splitlines():
-        line = line.strip()
-        if not line or " - " not in line:
-            continue
-        name, addr = line.rsplit(" - ", 1)
-        clean_name = name.replace(".xls", "").strip()
-        result.append((clean_name, addr.strip()))
-    return result
+    """Клиенты дебиторки: список из приложения, иначе файл.
+
+    Возвращает пары (чистое_имя, email).
+    """
+    from mail_list import load_debt_clients
+
+    return load_debt_clients(CLIENTS_FILE)
 
 
 def normalize(s: str) -> str:

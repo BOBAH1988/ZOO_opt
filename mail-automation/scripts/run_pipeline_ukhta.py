@@ -62,17 +62,10 @@ def subject_matcher(subject: str) -> bool:
 
 
 def load_recipients() -> list[str]:
-    path = Path(RECIPIENTS_FILE)
-    if not path.exists():
-        raise RuntimeError(f"Файл со списком получателей не найден: {path}")
+    """Получатели прайса Ухты: список из приложения, иначе файл по умолчанию."""
+    from mail_list import load_recipients as load_from_store
 
-    lines = path.read_text(encoding="utf-8").splitlines()
-    recipients = [line.strip() for line in lines if line.strip() and not line.strip().startswith("#")]
-
-    if not recipients:
-        raise RuntimeError(f"Список получателей пуст: {path}")
-
-    return recipients
+    return load_from_store("ukhta", RECIPIENTS_FILE)
 
 
 def notify_missing() -> None:

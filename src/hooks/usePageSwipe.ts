@@ -1,7 +1,7 @@
 import { useCallback, useEffect, type RefObject } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 
-const PAGES: readonly string[] = ['/reports', '/route', '/run', '/kpi', '/clients'];
+const PAGES: readonly string[] = ['/reports', '/route', '/run', '/kpi', '/clients', '/lists'];
 
 const SWIPE_THRESHOLD = 70;
 const QUICK_SWIPES = 35;

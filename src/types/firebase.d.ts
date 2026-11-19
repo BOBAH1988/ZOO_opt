@@ -54,6 +54,11 @@ declare module 'firebase/firestore' {
     id: string;
     data(): T;
   }
+  export interface DocumentSnapshot<T = DocumentData> {
+    id: string;
+    exists: boolean;
+    data(): T | undefined;
+  }
   export interface QuerySnapshot<T = DocumentData> {
     docs: QueryDocumentSnapshot<T>[];
     empty: boolean;
@@ -84,12 +89,18 @@ declare module 'firebase/firestore' {
   export function where(field: string, op: WhereFilterOp, value: any): QueryConstraint;
   export function orderBy(field: string, direction?: OrderByDirection): QueryConstraint;
   export function onSnapshot(
+    ref: DocumentReference,
+    next: (snap: DocumentSnapshot) => void,
+    error?: (err: Error) => void,
+  ): () => void;
+  export function onSnapshot(
     query: Query,
     next: (snap: QuerySnapshot) => void,
     error?: (err: Error) => void,
   ): () => void;
   export function enableNetwork(db: Firestore): Promise<void>;
   export function addDoc(ref: CollectionReference, data: DocumentData): Promise<DocumentReference>;
+  export function setDoc(ref: DocumentReference, data: DocumentData): Promise<void>;
   export function updateDoc(ref: DocumentReference, data: Partial<DocumentData>): Promise<void>;
   export function deleteDoc(ref: DocumentReference): Promise<void>;
   export function writeBatch(db: Firestore): WriteBatch;

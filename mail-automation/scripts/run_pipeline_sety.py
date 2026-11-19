@@ -100,18 +100,10 @@ class SetyProject(ProjectBase):
         self.skip_if_sent = is_skip_if_sent()
 
     def load_recipients(self) -> list[str]:
-        """Загрузить список получателей из файла."""
-        path = Path(self.RECIPIENTS_FILE)
-        if not path.exists():
-            raise RuntimeError(f"Файл со списком получателей не найден: {path}")
+        """Получатели прайса сетям: список из приложения, иначе файл."""
+        from mail_list import load_recipients as load_from_store
 
-        lines = path.read_text(encoding="utf-8").splitlines()
-        recipients = [line.strip() for line in lines if line.strip() and not line.strip().startswith("#")]
-
-        if not recipients:
-            raise RuntimeError(f"Список получателей пуст: {path}")
-
-        return recipients
+        return load_from_store("sety", self.RECIPIENTS_FILE)
 
     def process(self) -> str:
         """Основная логика: отправка прайса.

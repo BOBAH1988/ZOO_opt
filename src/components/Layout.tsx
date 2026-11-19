@@ -31,6 +31,7 @@ const NAV_ITEMS: NavItem[] = [
   { to: '/run', label: 'Автозапуск', icon: <RunIcon /> },
   { to: '/kpi', label: 'KPI задачи', icon: <KpiIcon /> },
   { to: '/clients', label: 'Клиенты', icon: <ClientsIcon /> },
+  { to: '/lists', label: 'Списки', icon: <ClientsIcon /> },
 ];
 
 export function Layout() {

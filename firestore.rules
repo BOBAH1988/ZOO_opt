@@ -115,6 +115,29 @@ service cloud.firestore {
       allow update, delete: if false;
     }
 
+    // Списки получателей рассылок (прайс Ухта, сети, дебиторка).
+    //
+    // Один документ на пользователя:
+    //   { ownerUid, addresses: [{id, email, name?, kinds: [...], active}], updatedAt }
+    //
+    // id — стабильный ключ записи, на него ссылаются скрипты рассылки.
+    // kinds — массив сценариев: один адрес может получать несколько рассылок.
+    function hasOnlyListFields(data) {
+      return data.keys().hasOnly(['ownerUid', 'addresses', 'updatedAt'])
+        && data.ownerUid is string
+        && data.ownerUid == request.auth.uid
+        && data.addresses is list
+        && data.addresses.size() <= 500;
+    }
+
+    match /mail_lists/{ownerUid} {
+      allow read: if isEmailVerified() && ownerUid == request.auth.uid;
+      allow create, update: if isEmailVerified()
+        && ownerUid == request.auth.uid
+        && hasOnlyListFields(request.resource.data);
+      allow delete: if isEmailVerified() && ownerUid == request.auth.uid;
+    }
+
     match /{document=**} {
       allow read, write: if false;
     }

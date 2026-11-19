@@ -10,6 +10,7 @@ import { RoutePage } from '@/pages/RoutePage';
 import { RunProcessesPage } from '@/pages/RunProcessesPage';
 import { KpiPage } from '@/pages/KpiPage';
 import { ClientsPage } from '@/pages/ClientsPage';
+import { ListsPage } from '@/pages/ListsPage';
 
 export default function App() {
   const { initialized, loading, user, emailVerified } = useAuth();
@@ -40,6 +41,7 @@ export default function App() {
               <Route path="run" element={<RunProcessesPage />} />
               <Route path="kpi" element={<KpiPage />} />
               <Route path="clients" element={<ClientsPage />} />
+              <Route path="lists" element={<ListsPage />} />
             </Route>
           </Route>
           <Route path="*" element={<Navigate to="/reports" replace />} />
