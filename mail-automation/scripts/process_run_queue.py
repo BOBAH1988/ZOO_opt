@@ -246,6 +246,7 @@ def process_one(db, snapshot) -> None:
 
     if not plan:
         _finish(doc_ref, "failed", f"Сценарий «{workflow_id}» в очереди не поддерживается.")
+        print(f"{workflow_id}: не поддерживается")
         return
 
     steps, commit_needed = plan
@@ -253,16 +254,20 @@ def process_one(db, snapshot) -> None:
         code, output = run_steps(steps)
     except Exception as exc:  # noqa: BLE001 — статус важнее типа ошибки
         _finish(doc_ref, "failed", f"Запуск не удался: {exc}")
+        print(f"{workflow_id}: сбой запуска — {exc}")
         return
 
     if code != 0:
         _finish(doc_ref, "failed", f"Сценарий завершился с кодом {code}.\n{output}")
+        print(f"{workflow_id}: код {code}")
+        print(_tail(output))
         return
 
     message = f"Сценарий «{workflow_id}» выполнен."
     if commit_needed:
         message += " " + commit_sales_report()
     _finish(doc_ref, "done", message + "\n" + output)
+    print(f"{workflow_id}: выполнено")
 
 
 def main() -> int:
