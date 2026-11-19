@@ -829,6 +829,57 @@ button:disabled {
   letter-spacing: 0.4px;
 }
 
+/*
+ * Таблица KPI на телефоне: пять колонок должны помещаться без прокрутки.
+ * Уменьшены горизонтальные отступы ячеек и разрешён перенос названия
+ * направления — оно длиннее остальных данных.
+ */
+.kpi-table th,
+.kpi-table td {
+  padding: 8px 6px;
+}
+
+.kpi-table th {
+  font-size: 11px;
+  letter-spacing: 0.2px;
+}
+
+.kpi-table td {
+  font-size: 12.5px;
+}
+
+.kpi-table th:first-child,
+.kpi-table td:first-child {
+  padding-left: 0;
+  line-height: 1.25;
+}
+
+.kpi-table th:last-child,
+.kpi-table td:last-child {
+  padding-right: 0;
+}
+
+/* Итоговая строка не переносится: суммы в одну строку, иначе число
+   рвётся на две части и читается неверно. */
+.kpi-table tr.table-summary td {
+  white-space: nowrap;
+}
+
+@media (max-width: 480px) {
+  .kpi-table th,
+  .kpi-table td {
+    padding: 6px 3px;
+  }
+
+  .kpi-table th {
+    font-size: 10px;
+  }
+
+  .kpi-table td {
+    font-size: 11.5px;
+  }
+}
+
 /* Компактные строки: больше записей на экране (страница клиентов). */
 .table--compact th,
 .table--compact td {

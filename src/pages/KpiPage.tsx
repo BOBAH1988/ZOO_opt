@@ -236,14 +236,14 @@ export function KpiPage() {
         </div>
 
         <div style={{ marginTop: 12, overflowX: 'auto' }}>
-          <table className="table">
+          <table className="table kpi-table">
             <thead>
               <tr>
                 <th>Направление</th>
                 <th>План</th>
                 <th>Факт</th>
                 <th>Факт %</th>
-                <th>Начислено</th>
+                <th title="Начислено">₽</th>
               </tr>
             </thead>
             <tbody>
