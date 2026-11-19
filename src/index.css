@@ -873,8 +873,21 @@ button:disabled {
   border-bottom: none;
 }
 
-.table tr:hover td {
+/* Наведение подсвечивает только обычные строки. Итоговая строка сохраняет
+   свой фон: белая полоса, становившаяся тёмной под курсором, читалась
+   как ошибка оформления. */
+.table tbody tr:hover td {
   background: var(--color-bg);
+}
+
+.table tbody tr.table-summary:hover td {
+  background: #f3f4f6;
+}
+
+/* В тёмной теме итоговая строка тоже не должна светиться белым. */
+[data-theme="dark"] .table tbody tr.table-summary td,
+[data-theme="dark"] .table tbody tr.table-summary:hover td {
+  background: #273449;
 }
 
 /* ---------- Страница маршрута: блоки по дням недели ---------- */
