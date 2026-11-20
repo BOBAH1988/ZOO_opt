@@ -14,7 +14,7 @@ const KIND_LABELS: Record<ListKind, string> = {
   ukhta: 'Прайс Ухта',
   sety: 'Прайс Сети',
   debt: 'Дебиторка Ухта',
-  lemur: 'Прайс Прусакова',
+  lemur: 'Прайс Лемур',
 };
 
 const KIND_SHORT: Record<ListKind, string> = {
@@ -406,33 +406,6 @@ export function ListsPage() {
     }
   };
 
-  /**
-   * Включает рассылку «Прайс Прусакова» всем текущим адресам.
-   *
-   * Прайс Прусакова рассылается тем же клиентам, что и прайс Ухты, поэтому
-   * заводить их заново не нужно: достаточно проставить галочку «Лемур»
-   * каждой записи. Номера и имена сохраняются, дублей не появляется.
-   */
-  const handleEnableLemurForAll = async () => {
-    const targets = entries.filter((item) => !item.kinds.includes('lemur'));
-    if (targets.length === 0) {
-      setError('Все адреса уже включены в «Прайс Прусакова».');
-      return;
-    }
-    const confirmed = window.confirm(
-      `Включить «Прайс Прусакова» для ${targets.length} адресов?\n\n` +
-      'Их номера и имена не изменятся — добавится только новая рассылка.',
-    );
-    if (!confirmed) return;
-
-    const next = entries.map((item) =>
-      item.kinds.includes('lemur')
-        ? item
-        : { ...item, kinds: [...item.kinds, 'lemur' as ListKind] },
-    );
-    await save(next);
-  };
-
   const visible = useMemo(() => {
     const needle = search.trim().toLowerCase();
     return entries
@@ -499,7 +472,7 @@ export function ListsPage() {
             <div className="stat-value">{counts.debt}</div>
           </div>
           <div className="stat-tile">
-            <div className="stat-label">Прайс Прусакова</div>
+            <div className="stat-label">Прайс Лемур</div>
             <div className="stat-value">{counts.lemur}</div>
           </div>
         </div>
@@ -534,15 +507,6 @@ export function ListsPage() {
             title="Прочитать адреса из файлов recipients_ukhta, recipients_sety_ukhta и clients_debt_ukhta"
           >
             {importing ? 'Чтение файлов…' : 'Загрузить из файлов'}
-          </button>
-          <button
-            type="button"
-            className="btn btn-outline"
-            onClick={handleEnableLemurForAll}
-            disabled={saving || entries.length === 0}
-            title="Проставить рассылку «Прайс Прусакова» всем адресам из списка"
-          >
-            + Лемур всем
           </button>
         </div>
 
