@@ -6,6 +6,12 @@
   --color-text: #1f2937;
   --color-text-secondary: #6b7280;
   --color-border: #e5e7eb;
+  /*
+   * Заметная граница для элементов на фоне той же поверхности (кнопки,
+   * поля ввода): обычная --color-border на светлом фоне почти не видна,
+   * а кнопка сливается с карточкой.
+   */
+  --color-border-strong: #c3ced9;
   --color-success: #15803d;
   --color-danger: #b91c1c;
   --color-warning: #b45309;
@@ -25,6 +31,8 @@
   --color-text: #e5e7eb;
   --color-text-secondary: #9ca3af;
   --color-border: #334155;
+  /* Контрастнее обычной границы: иначе кнопки сливаются с фоном карточки. */
+  --color-border-strong: #55708f;
   --color-success: #22c55e;
   --color-danger: #f87171;
   --color-warning: #fbbf24;
@@ -497,7 +505,7 @@ button:disabled {
 
 .btn-outline {
   background: var(--color-surface);
-  border-color: var(--color-border);
+  border-color: var(--color-border-strong);
   color: var(--color-text);
 }
 
@@ -729,7 +737,7 @@ button:disabled {
 .form-input {
   width: 100%;
   padding: 8px 12px;
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--color-border-strong);
   border-radius: var(--radius);
   background: var(--color-surface);
   color: var(--color-text);

@@ -494,15 +494,20 @@ export function RunProcessesPage() {
     });
   };
 
+  /**
+   * Сброс только тех настроек, которые относятся к открытому сейчас сценарию.
+   * Остальные группы остаются нетронутыми — пользователь настраивал их отдельно.
+   */
   const resetSettings = () => {
-    try {
-      localStorage.removeItem(STORAGE_KEY);
-    } catch {
-      // игнорируем ошибки очистки localStorage
-    }
-    setInputValues(loadSettings());
-    // Сброс настроек должен вернуть кнопку «Запустить» для всех сценариев.
-    setRunStatus({});
+    if (!settingsOpen) return;
+    const scenario = settingsOpen;
+    setInputValues((prev) => ({ ...prev, [scenario.id]: defaultInputs(scenario) }));
+    // Сброс должен вернуть кнопку «Запустить» только для этого сценария.
+    setRunStatus((prev) => {
+      const next = { ...prev };
+      delete next[scenario.id];
+      return next;
+    });
   };
 
   const toggleMultiselect = (scenarioId: string, key: string, value: string) => {
@@ -969,7 +974,7 @@ export function RunProcessesPage() {
         <div className="dialog-overlay" onClick={() => setSettingsOpen(null)}>
           <div className="dialog" onClick={(e) => e.stopPropagation()}>
             <DialogCloseButton onClick={() => setSettingsOpen(null)} label="Закрыть настройки" />
-            <div className="dialog-title">Настройка</div>
+            <div className="dialog-title">Настройка: {settingsOpen.name}</div>
             <div className="dialog-body">
               <p style={{ fontSize: 13, color: '#6b7280', marginBottom: 16 }}>{settingsOpen.description}</p>
               {settingsOpen.inputs.length > 0 ? (
@@ -1045,7 +1050,13 @@ export function RunProcessesPage() {
               )}
             </div>
             <div className="dialog-actions">
-              <button className="btn btn-outline" onClick={resetSettings}>Сброс к настройкам по умолчанию</button>
+              <button
+                className="btn btn-outline"
+                onClick={resetSettings}
+                title="Вернуть исходные значения только для этого сценария. Настройки остальных сценариев не изменятся."
+              >
+                Сбросить этот сценарий
+              </button>
               <button className="btn btn-outline" onClick={() => setSettingsOpen(null)}>Закрыть</button>
             </div>
           </div>
