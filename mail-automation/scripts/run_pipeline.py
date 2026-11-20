@@ -17,6 +17,7 @@
 """
 
 import logging
+import os
 
 from convert_xls import convert_to_xlsx
 from fetch_attachment import SENDER, SUBJECT, fetch_latest_attachment
@@ -75,6 +76,39 @@ def send_reminder_to_supplier(test_mode: bool = False) -> None:
     logger.info(f"Отправлено напоминание поставщику ({recipients[0]}): 'Вышлите Прайс Прусакова'")
 
 
+def load_recipients() -> list[str]:
+    """Получатели прайса Прусакова.
+
+    Раньше список брался только из секрета MAIL_RECIPIENTS, и при пустом
+    секрете боевой запуск падал с «Не задана переменная окружения».
+    Теперь приоритет такой: список «Прайс Прусакова» из приложения
+    (Firestore), затем секрет MAIL_RECIPIENTS как совместимость со старыми
+    запусками. Оба пусты — понятная ошибка с подсказкой, что заполнить.
+    """
+    from mail_list import load_recipients as load_from_store
+
+    try:
+        recipients = load_from_store("lemur", None)
+    except RuntimeError:
+        # Файла нет и в базе пусто — переходим к секрету ниже.
+        recipients = []
+
+    if recipients:
+        return recipients
+
+    raw = os.environ.get("MAIL_RECIPIENTS", "")
+    recipients = [addr.strip() for addr in raw.split(",") if addr.strip()]
+    if recipients:
+        logger.info("Получатели прайса Прусакова из секрета MAIL_RECIPIENTS: %d", len(recipients))
+        return recipients
+
+    raise RuntimeError(
+        "Не задан список получателей прайса Прусакова. Заполните список "
+        "«Прайс Прусакова» на странице «Списки» в приложении или задайте "
+        "секрет MAIL_RECIPIENTS в GitHub Actions."
+    )
+
+
 class LemurProject(ProjectBase):
     """Проект: прайс Прусакова (Лемур)."""
 
@@ -123,14 +157,14 @@ class LemurProject(ProjectBase):
 
         if is_test_mode():
             # Без этой ветки тестовый прогон разослал бы прайс РЕАЛЬНЫМ клиентам
-            # из MAIL_RECIPIENTS — send_file берёт их сам, если не передать список.
+            # — список берётся из приложения или секрета, send_file их не знает.
             recipients = [get_notify_email()]
             self.logger.info(
                 f"ТЕСТОВЫЙ РЕЖИМ: прайс уйдёт только на {recipients[0]}, "
                 "реальный список игнорируется"
             )
         else:
-            recipients = None  # send_file возьмёт список из MAIL_RECIPIENTS
+            recipients = load_recipients()
 
         send_file(processed_path, recipients=recipients)
         self.logger.info("Готово: письмо обработано и отправлено.")

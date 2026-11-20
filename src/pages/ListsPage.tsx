@@ -8,21 +8,23 @@ import { EmptyState } from '@/components/EmptyState';
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
 /** Сценарий рассылки, в который входит адрес. */
-type ListKind = 'ukhta' | 'sety' | 'debt';
+type ListKind = 'ukhta' | 'sety' | 'debt' | 'lemur';
 
 const KIND_LABELS: Record<ListKind, string> = {
   ukhta: 'Прайс Ухта',
   sety: 'Прайс Сети',
   debt: 'Дебиторка Ухта',
+  lemur: 'Прайс Прусакова',
 };
 
 const KIND_SHORT: Record<ListKind, string> = {
   ukhta: 'Ухта',
   sety: 'Сети',
   debt: 'Долг',
+  lemur: 'Лемур',
 };
 
-const ALL_KINDS: ListKind[] = ['ukhta', 'sety', 'debt'];
+const ALL_KINDS: ListKind[] = ['ukhta', 'sety', 'debt', 'lemur'];
 
 /**
  * Одна запись списка.
@@ -404,6 +406,33 @@ export function ListsPage() {
     }
   };
 
+  /**
+   * Включает рассылку «Прайс Прусакова» всем текущим адресам.
+   *
+   * Прайс Прусакова рассылается тем же клиентам, что и прайс Ухты, поэтому
+   * заводить их заново не нужно: достаточно проставить галочку «Лемур»
+   * каждой записи. Номера и имена сохраняются, дублей не появляется.
+   */
+  const handleEnableLemurForAll = async () => {
+    const targets = entries.filter((item) => !item.kinds.includes('lemur'));
+    if (targets.length === 0) {
+      setError('Все адреса уже включены в «Прайс Прусакова».');
+      return;
+    }
+    const confirmed = window.confirm(
+      `Включить «Прайс Прусакова» для ${targets.length} адресов?\n\n` +
+      'Их номера и имена не изменятся — добавится только новая рассылка.',
+    );
+    if (!confirmed) return;
+
+    const next = entries.map((item) =>
+      item.kinds.includes('lemur')
+        ? item
+        : { ...item, kinds: [...item.kinds, 'lemur' as ListKind] },
+    );
+    await save(next);
+  };
+
   const visible = useMemo(() => {
     const needle = search.trim().toLowerCase();
     return entries
@@ -423,6 +452,7 @@ export function ListsPage() {
       ukhta: entries.filter((e) => e.kinds.includes('ukhta')).length,
       sety: entries.filter((e) => e.kinds.includes('sety')).length,
       debt: entries.filter((e) => e.kinds.includes('debt')).length,
+      lemur: entries.filter((e) => e.kinds.includes('lemur')).length,
       active: entries.filter((e) => e.active).length,
     }),
     [entries],
@@ -468,6 +498,10 @@ export function ListsPage() {
             <div className="stat-label">Дебиторка</div>
             <div className="stat-value">{counts.debt}</div>
           </div>
+          <div className="stat-tile">
+            <div className="stat-label">Прайс Прусакова</div>
+            <div className="stat-value">{counts.lemur}</div>
+          </div>
         </div>
       </div>
 
@@ -500,6 +534,15 @@ export function ListsPage() {
             title="Прочитать адреса из файлов recipients_ukhta, recipients_sety_ukhta и clients_debt_ukhta"
           >
             {importing ? 'Чтение файлов…' : 'Загрузить из файлов'}
+          </button>
+          <button
+            type="button"
+            className="btn btn-outline"
+            onClick={handleEnableLemurForAll}
+            disabled={saving || entries.length === 0}
+            title="Проставить рассылку «Прайс Прусакова» всем адресам из списка"
+          >
+            + Лемур всем
           </button>
         </div>
 

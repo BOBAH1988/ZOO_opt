@@ -16,7 +16,7 @@
         addresses: [{email, name?, kind, active, addedAt?}],
         updatedAt: <timestamp>,
     }
-kind: ukhta | sety | debt — к какой рассылке относится адрес.
+kind: ukhta | sety | debt | lemur — к какой рассылке относится адрес.
 """
 
 import logging
@@ -62,7 +62,7 @@ def load_recipients(kind: str, fallback_file) -> list[str]:
     """Адреса рассылки kind: из Firestore, иначе из файла.
 
     Args:
-        kind: 'ukhta', 'sety' или 'debt'.
+        kind: 'ukhta', 'sety', 'debt' или 'lemur'.
         fallback_file: путь к txt со списком (по одному адресу на строку).
 
     Returns:
