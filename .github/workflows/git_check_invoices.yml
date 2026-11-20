@@ -13,9 +13,9 @@ on:
         required: false
         default: "clients,payments"
       test_mode:
-        description: "Тестовый режим (письма уйдут только вам, не клиентам/оператору)"
+        description: "Не используется: сценарий всегда работает в тестовом режиме (письма только вам)"
         type: boolean
-        default: false
+        default: true
 
 jobs:
   run-invoices:
@@ -47,7 +47,7 @@ jobs:
           MAILRU_LOGIN: ${{ secrets.MAILRU_LOGIN }}
           MAILRU_APP_PASSWORD: ${{ secrets.MAILRU_APP_PASSWORD }}
           NOTIFY_EMAIL: ${{ secrets.NOTIFY_EMAIL }}
-          TEST_MODE: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.test_mode || 'false' }}
+          TEST_MODE: 'true'
         run: python run_all.py --only clients
 
       - name: "Run pipeline (Проект 11: платёжки клиентов)"
@@ -57,5 +57,5 @@ jobs:
           MAILRU_LOGIN: ${{ secrets.MAILRU_LOGIN }}
           MAILRU_APP_PASSWORD: ${{ secrets.MAILRU_APP_PASSWORD }}
           NOTIFY_EMAIL: ${{ secrets.NOTIFY_EMAIL }}
-          TEST_MODE: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.test_mode || 'false' }}
+          TEST_MODE: 'true'
         run: python run_all.py --only payments

@@ -129,7 +129,7 @@ JOBS = [
         "module": "run_pipeline_clients_invoice",
         "days": {TUE},
         "window": ((9, 0), (17, 30)),   # дедлайна нет
-        "standalone": True,  # запуск только вручную: сценарий "Прайс Ухта" (вт)
+        "standalone": True,  # запуск только вручную: сценарий "Проверка счетов" (тестовый режим)
     },
     {
         "key": "payments",
@@ -138,7 +138,7 @@ JOBS = [
         "module": "run_pipeline_payments",
         "days": {TUE},
         "window": ((10, 0), (17, 30)),  # дедлайна нет
-        "standalone": True,  # запуск только вручную: сценарий "Прайс Ухта" (вт)
+        "standalone": True,  # запуск только вручную: сценарий "Проверка счетов" (тестовый режим)
     },
     {
         "key": "invoice",

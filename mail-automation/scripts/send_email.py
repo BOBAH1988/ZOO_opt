@@ -33,7 +33,7 @@ from email.mime.text import MIMEText
 from pathlib import Path
 
 from constants import BODY, PROMO_ATTACHMENTS_DIR, PROMO_MESSAGE_FILE, SIGNATURE, SUBJECT
-from mail_common import smtp_send
+from mail_common import get_notify_email, is_test_mode, smtp_send
 
 logger = logging.getLogger("mail-automation")
 
@@ -93,6 +93,17 @@ def send_file(
         if not recipients_raw:
             raise RuntimeError("Не задана переменная окружения MAIL_RECIPIENTS")
         recipients = [r.strip() for r in recipients_raw.split(",") if r.strip()]
+
+    # Страховка тестового режима: даже если вызывающий проект забыл
+    # подменить список, рассылка уйдёт только владельцу.
+    if is_test_mode():
+        notify_to = get_notify_email()
+        if recipients != [notify_to]:
+            logger.warning(
+                "ТЕСТОВЫЙ РЕЖИМ: вместо %s письмо уйдёт на %s",
+                ", ".join(recipients) or "(пусто)", notify_to,
+            )
+        recipients = [notify_to]
 
     file_path = Path(attachment_path)
     if not file_path.exists():

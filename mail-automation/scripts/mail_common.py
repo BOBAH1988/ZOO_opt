@@ -1156,6 +1156,28 @@ def smtp_send(msg: EmailMsg, recipients: list[str]) -> None:
     raise last_error
 
 
+def _guard_test_mode(recipients: list[str], cc: list[str] | None = None) -> tuple[list[str], list[str]]:
+    """Страховка тестового режима на уровне отправки.
+
+    Проверки в отдельных проектах можно забыть, поэтому подмена адресов
+    делается здесь, в единственном месте, откуда письмо уходит в SMTP.
+    Если TEST_MODE=true, получатели и копии заменяются на NOTIFY_EMAIL:
+    клиент, поставщик или руководитель письма не получат.
+    """
+    cc = cc or []
+    if not is_test_mode():
+        return recipients, cc
+    notify_to = get_notify_email()
+    real = recipients + cc
+    if real == [notify_to]:
+        return recipients, cc
+    logger.warning(
+        "ТЕСТОВЫЙ РЕЖИМ: вместо %s письмо уйдёт на %s",
+        ", ".join(real) or "(пусто)", notify_to,
+    )
+    return [notify_to], []
+
+
 def send_mail_with_attachments(
     recipients: list[str],
     subject: str,
@@ -1168,7 +1190,7 @@ def send_mail_with_attachments(
     files — список (имя_файла, содержимое), как отдаёт get_attachments().
     """
     login = os.environ["MAILRU_LOGIN"]
-    cc = cc or []
+    recipients, cc = _guard_test_mode(recipients, cc)
 
     msg = MIMEMultipart()
     msg["From"] = login
@@ -1192,6 +1214,7 @@ def send_mail_with_attachments(
 def send_plain_mail(recipients: list[str], subject: str, body: str) -> None:
     """Простое письмо без вложений (напоминания поставщику, ответы)."""
     login = os.environ["MAILRU_LOGIN"]
+    recipients, _ = _guard_test_mode(recipients)
 
     msg = MIMEMultipart()
     msg["From"] = login
@@ -1222,6 +1245,7 @@ def send_html_mail(
     угадывании получатель видит вместо кириллицы мусор вида "Áàæóêîâà".
     """
     login = os.environ["MAILRU_LOGIN"]
+    recipients, _ = _guard_test_mode(recipients)
 
     msg = MIMEMultipart("alternative")
     msg["From"] = login

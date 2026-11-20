@@ -62,16 +62,22 @@ test('git_check_invoices accepts valid inputs', () => {
   assert.deepEqual(result.cleaned, { test_mode: true });
 });
 
-test('git_check_invoices accepts no inputs', () => {
+test('git_check_invoices accepts no inputs and forces test_mode', () => {
   const result = validateInputs('git_check_invoices', {});
   assert.equal(result.ok, true);
-  assert.deepEqual(result.cleaned, {});
+  assert.deepEqual(result.cleaned, { test_mode: true });
+});
+
+test('git_check_invoices forces test_mode even when asked to send for real', () => {
+  const result = validateInputs('git_check_invoices', { test_mode: false, project: 'clients' });
+  assert.equal(result.ok, true);
+  assert.deepEqual(result.cleaned, { test_mode: true, project: 'clients' });
 });
 
 test('git_check_invoices accepts project input', () => {
   const result = validateInputs('git_check_invoices', { project: 'payments' });
   assert.equal(result.ok, true);
-  assert.deepEqual(result.cleaned, { project: 'payments' });
+  assert.deepEqual(result.cleaned, { project: 'payments', test_mode: true });
 });
 
 test('git_check_invoices accepts project with test_mode', () => {
@@ -112,7 +118,7 @@ test('git_check_invoices rejects project not in clients/payments', () => {
 test('git_check_invoices empty project runs both clients and payments', () => {
   const result = validateInputs('git_check_invoices', { project: '' });
   assert.equal(result.ok, true);
-  assert.deepEqual(result.cleaned, { project: 'clients,payments' });
+  assert.deepEqual(result.cleaned, { project: 'clients,payments', test_mode: true });
 });
 
 test('weekly_mon_tue accepts test_mode, only, ignore_window', () => {

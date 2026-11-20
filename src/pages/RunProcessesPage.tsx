@@ -31,12 +31,6 @@ const MON_TUE_PROJECT_OPTIONS = [
   { label: 'veta', value: 'veta' },
 ];
 
-const TUE_PROJECT_OPTIONS = [
-  { label: 'ukhta', value: 'ukhta' },
-  { label: 'clients', value: 'clients' },
-  { label: 'payments', value: 'payments' },
-];
-
 const WED_PROJECT_OPTIONS = [
   { label: 'счёт Прусакова клиенту', value: 'invoice' },
   { label: 'счета в Велес', value: 'veles' },
@@ -86,10 +80,9 @@ const SCENARIOS: WorkflowScenario[] = [
     name: 'Прайс Ухта',
     day: 'вт',
     time: '9:00',
-    description: 'Прайс Ухта: проверка, конвертация, раскраска и рассылка клиентам. По умолчанию запускает только Ухту. Можно добавить проекты clients/payments через настройку "Проекты для запуска".',
+    description: 'Прайс Ухта: проверка, конвертация, раскраска и рассылка клиентам. Счета клиентам и платёжки запускаются отдельным сценарием «Проверка счетов».',
     inputs: [
       { key: 'test_mode', label: 'Тестовый режим (только вам, не клиентам)', type: 'boolean', defaultValue: false, description: '', required: false },
-      { key: 'only', label: 'Проекты для запуска', type: 'multiselect', defaultValue: [], description: 'Пусто = только Ухта (ukhta)', required: false, options: TUE_PROJECT_OPTIONS },
       { key: 'ignore_window', label: 'Игнорировать время и день недели', type: 'boolean', defaultValue: true, description: '', required: false },
     ],
   },
@@ -130,12 +123,11 @@ const SCENARIOS: WorkflowScenario[] = [
     id: 'git_check_invoices',
     name: 'Проверка счетов',
     day: 'вт',
-    description: 'Проверка счетов через GitHub Actions workflow. Запускает проекты 9 (счета клиентам) и 11 (платёжки) последовательно в одном прогоне. Выберите проекты или оставьте пусто для запуска обоих.',
+    description: 'Проверка счетов через GitHub Actions workflow. Запускает скрипты clients (счета клиентам, проект 9) и payments (платёжки клиентов, проект 11) последовательно в одном прогоне. Выберите скрипты или оставьте пусто для запуска обоих. Прогон всегда идёт в тестовом режиме: письма приходят только вам, клиенты и оператор ничего не получают.',
     inputs: [
-      { key: 'test_mode', label: 'Тестовый режим', type: 'boolean', defaultValue: false, description: '', required: false },
-      { key: 'project', label: 'Какой проект запустить', type: 'multiselect', defaultValue: [], description: 'clients — счета клиентам по списку (проект 9), payments — платёжки клиентов оператору (проект 11). Пусто — запустить оба.', required: false, options: [
-        { label: 'Счета клиентам по списку (проект 9)', value: 'clients' },
-        { label: 'Платёжки клиентов оператору (проект 11)', value: 'payments' },
+      { key: 'project', label: 'Какие скрипты запустить', type: 'multiselect', defaultValue: [], description: 'clients — счета клиентам по списку (проект 9), payments — платёжки клиентов оператору (проект 11). Пусто — запустить оба.', required: false, options: [
+        { label: 'clients — счета клиентам по списку', value: 'clients' },
+        { label: 'payments — платёжки клиентов оператору', value: 'payments' },
       ] },
     ],
   },
@@ -201,7 +193,7 @@ const ALL_SCRIPTS = [
     id: 'clients',
     name: 'Счета клиентам по списку',
     description: 'Пересылает Excel-вложения из писем от zookingdom@mail.ru получателям по ключам тем (8 клиентов). Уведомляет "Счет отправлен клиенту <Имя>".',
-    schedule: 'вт — 09:24–17:24 МСК (сценарий «Прайс Ухта»)',
+    schedule: 'вт — 09:24–17:24 МСК (сценарий «Проверка счетов», только тестовый режим)',
   },
   {
     id: 'debt_ukhta',
@@ -213,7 +205,7 @@ const ALL_SCRIPTS = [
     id: 'payments',
     name: 'Платёжки клиентов оператору',
     description: 'Пересылает вложения Excel/PDF от 4 клиентов (Солодовник, Прусакова, ООО "Вета", Смирнов) оператору zookingdom@mail.ru с темой "Платежка от <Имя>". Уведомляет об успешной передаче.',
-    schedule: 'вт — 10:27–17:27 МСК (сценарий «Прайс Ухта»)',
+    schedule: 'вт — 10:27–17:27 МСК (сценарий «Проверка счетов», только тестовый режим)',
   },
   {
     id: 'kpi',
@@ -286,7 +278,15 @@ function loadSettings(): InputValues {
       if (parsed.version === SETTINGS_VERSION && parsed.values) {
         for (const s of SCENARIOS) {
           if (parsed.values[s.id]) {
-            init[s.id] = { ...init[s.id], ...parsed.values[s.id] };
+            // Берём только те поля, что есть в текущем наборе сценария:
+            // устаревшие ключи (например, test_mode у «Проверки счетов»)
+            // иначе остались бы в настройках и подсвечивали шестерёнку.
+            const stored = parsed.values[s.id];
+            const merged = { ...init[s.id] };
+            for (const input of s.inputs) {
+              if (input.key in stored) merged[input.key] = stored[input.key];
+            }
+            init[s.id] = merged;
           }
           // Отбрасываем сохранённые проекты, которых нет в наборе текущего workflow.
           for (const input of s.inputs) {
@@ -580,6 +580,11 @@ export function RunProcessesPage() {
     // правила чтения (ownerUid == email токена) пропустили его владельцу.
     if (scenario.id === 'kpi_sales' && !inputs.owner_uid) {
       inputs.owner_uid = user?.email || '';
+    }
+    // «Проверка счетов» — только проверка: письма не должны уходить клиентам,
+    // поэтому тестовый режим включается принудительно, без переключателя.
+    if (scenario.id === 'git_check_invoices') {
+      inputs.test_mode = true;
     }
     setRunning(scenario.id);
 

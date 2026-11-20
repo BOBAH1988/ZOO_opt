@@ -12,7 +12,7 @@ on:
         type: boolean
         default: false
       only:
-        description: 'Проекты: ukhta/clients/payments. Пусто = прайс Ухта (ukhta)'
+        description: 'Проект: ukhta. Пусто = прайс Ухта (ukhta)'
         type: string
         default: ''
       ignore_window:

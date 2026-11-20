@@ -74,12 +74,19 @@ export function validateWorkflowInputs(workflowId, inputs) {
       }
       cleaned[key] = projects.join(',');
     } else if (key === 'project' && workflowId === 'git_check_invoices') {
-      if (value === '') {
+      // Интерфейс присылает выбранные скрипты одной строкой через запятую:
+      // если отмечены оба, приходит "clients,payments". Раньше такое значение
+      // сравнивалось с одиночными именами и запуск падал с «Unknown project».
+      const projects = value.split(',').map((p) => p.trim()).filter(Boolean);
+      if (projects.length === 0) {
         cleaned[key] = 'clients,payments';
-      } else if (!['clients', 'payments'].includes(value)) {
-        return { ok: false, error: `Unknown project: ${value}` };
       } else {
-        cleaned[key] = value;
+        for (const project of projects) {
+          if (!['clients', 'payments'].includes(project)) {
+            return { ok: false, error: `Unknown project: ${project}` };
+          }
+        }
+        cleaned[key] = [...new Set(projects)].join(',');
       }
     } else {
       cleaned[key] = value;
@@ -88,6 +95,13 @@ export function validateWorkflowInputs(workflowId, inputs) {
 
   if (spec.realSendGuard && typeof cleaned.test_mode !== 'boolean') {
     return { ok: false, error: 'test_mode must be boolean' };
+  }
+
+  // «Проверка счетов» — сценарий только для проверки: настоящая отправка
+  // клиентам и оператору из него запрещена, тестовый режим включается здесь,
+  // а не в интерфейсе, чтобы его нельзя было обойти.
+  if (workflowId === 'git_check_invoices') {
+    cleaned.test_mode = true;
   }
 
   return { ok: true, workflow: spec, cleaned };

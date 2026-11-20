@@ -49,14 +49,24 @@ test('requires an explicit test_mode for workflows that can send real emails', (
   assert.equal(result.error, 'test_mode must be boolean');
 });
 
-test('git_check_invoices accepts project input', () => {
+test('git_check_invoices accepts project input and forces test_mode', () => {
   const result = validateWorkflowRequest({
     workflowId: 'git_check_invoices',
     inputs: { project: 'payments' },
   });
 
   assert.equal(result.ok, true);
-  assert.deepEqual(result.inputs, { project: 'payments' });
+  assert.deepEqual(result.inputs, { project: 'payments', test_mode: true });
+});
+
+test('git_check_invoices forces test_mode even when asked to send for real', () => {
+  const result = validateWorkflowRequest({
+    workflowId: 'git_check_invoices',
+    inputs: { test_mode: false, project: 'clients' },
+  });
+
+  assert.equal(result.ok, true);
+  assert.equal(result.inputs.test_mode, true);
 });
 
 test('git_check_invoices accepts project with test_mode', () => {
@@ -106,7 +116,7 @@ test('git_check_invoices empty project runs both clients and payments', () => {
   });
 
   assert.equal(result.ok, true);
-  assert.deepEqual(result.inputs, { project: 'clients,payments' });
+  assert.deepEqual(result.inputs, { project: 'clients,payments', test_mode: true });
 });
 
 test('weekly_mon_tue accepts test_mode, only, ignore_window', () => {
