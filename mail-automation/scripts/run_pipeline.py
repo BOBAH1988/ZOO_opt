@@ -18,7 +18,7 @@
 """
 
 import logging
-import os
+from pathlib import Path
 
 from convert_xls import convert_to_xlsx
 from fetch_attachment import SENDER, SUBJECT, fetch_latest_attachment
@@ -45,6 +45,10 @@ DEADLINE_TIME = (10, 0)   # с этого времени — уведомлен�
 DEADLINE_END = (10, 30)
 
 INPUT_FILE = "downloaded_price.xls"
+
+# Список получателей прайса Лемур. Основной источник — этот файл;
+# список «Прайс Лемур» в приложении используется, если файла нет.
+RECIPIENTS_FILE = Path(__file__).resolve().parent / "recipients_lemur.txt"
 
 logger = logging.getLogger("mail-automation.lemur")
 
@@ -80,34 +84,16 @@ def send_reminder_to_supplier(test_mode: bool = False) -> None:
 def load_recipients() -> list[str]:
     """Получатели прайса Лемур.
 
-    Раньше список брался только из секрета MAIL_RECIPIENTS, и при пустом
-    секрете боевой запуск падал с «Не задана переменная окружения».
-    Теперь приоритет такой: список «Прайс Лемур» из приложения
-    (Firestore), затем секрет MAIL_RECIPIENTS как совместимость со старыми
-    запусками. Оба пусты — понятная ошибка с подсказкой, что заполнить.
+    Источники по порядку: файл recipients_lemur.txt рядом со скриптом,
+    затем список «Прайс Лемур» в приложении (Firestore). Оба пусты —
+    понятная ошибка с подсказкой, что заполнить.
+
+    Файл первый намеренно: рассылка не должна зависеть от настроек CI
+    и доступа к базе. Боевые запуски падали именно из-за обратного порядка.
     """
     from mail_list import load_recipients as load_from_store
 
-    try:
-        recipients = load_from_store("lemur", None)
-    except RuntimeError:
-        # Файла нет и в базе пусто — переходим к секрету ниже.
-        recipients = []
-
-    if recipients:
-        return recipients
-
-    raw = os.environ.get("MAIL_RECIPIENTS", "")
-    recipients = [addr.strip() for addr in raw.split(",") if addr.strip()]
-    if recipients:
-        logger.info("Получатели прайса Лемур из секрета MAIL_RECIPIENTS: %d", len(recipients))
-        return recipients
-
-    raise RuntimeError(
-        "Не задан список получателей прайса Лемур. Заполните список "
-        "«Прайс Лемур» на странице «Списки» в приложении или задайте "
-        "секрет MAIL_RECIPIENTS в GitHub Actions."
-    )
+    return load_from_store("lemur", RECIPIENTS_FILE)
 
 
 class LemurProject(ProjectBase):
@@ -161,16 +147,28 @@ class LemurProject(ProjectBase):
 
         processed_path = process_file(convert_to_xlsx(attachment_path))
 
+        # Список читается ВСЕГДА — и в тестовом режиме тоже.
+        #
+        # Раньше в тестовом режиме он не читался вовсе: подставлялся свой
+        # адрес. Из-за этого тест проходил, хотя боевой запуск падал на
+        # пустом списке — проверялось не то. Теперь тест проверяет и
+        # конфигурацию: если список не читается, это видно сразу.
+        real_recipients = load_recipients()
+        self.logger.info(
+            "Получатели прайса Лемур: %d (%s)",
+            len(real_recipients),
+            ", ".join(real_recipients),
+        )
+
         if is_test_mode():
-            # Без этой ветки тестовый прогон разослал бы прайс РЕАЛЬНЫМ клиентам
-            # — список берётся из приложения или секрета, send_file их не знает.
+            # Письмо уходит только вам, но список уже прочитан и проверен.
             recipients = [get_notify_email()]
             self.logger.info(
-                f"ТЕСТОВЫЙ РЕЖИМ: прайс уйдёт только на {recipients[0]}, "
-                "реальный список игнорируется"
+                f"ТЕСТОВЫЙ РЕЖИМ: письмо уйдёт на {recipients[0]}, "
+                f"в боевом режиме ушло бы {len(real_recipients)} получателям"
             )
         else:
-            recipients = load_recipients()
+            recipients = real_recipients
 
         send_file(processed_path, recipients=recipients)
         self.logger.info("Готово: письмо обработано и отправлено.")

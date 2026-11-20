@@ -1,14 +1,16 @@
-"""Список получателей рассылок: Firestore с откатом на текстовый файл.
+"""Список получателей рассылок: файл в репозитории, затем Firestore.
 
-ЗАЧЕМ
-Раньше получатели жили только в .txt внутри репозитория, и чтобы добавить
-клиента или убрать лишнего, приходилось править файл руками. Теперь список
-ведётся в приложении (страница «Списки»): Firestore, документ mail_lists/<uid>.
+ПОЧЕМУ ФАЙЛ ПЕРВЫЙ
+Файл рядом с кодом работает всегда: без сервисного аккаунта, без сети,
+без настроек CI. Рассылка — критичный процесс, и он не должен зависеть от
+внешней инфраструктуры. Firestore остаётся вторым источником: он удобен
+для просмотра и правки из приложения, но не обязателен для отправки.
 
-ПОЧЕМУ С ОТКАТОМ
-Если Firebase недоступен или сервисный аккаунт не задан, рассылка не должна
-падать: список берётся из прежнего txt. Так старые запуски продолжают
-работать, пока список в базе не заполнен.
+ИСТОРИЯ
+Сначала списки жили только в txt. Потом их перенесли в Firestore и убрали
+файлы из репозитория — тогда боевые запуски в GitHub Actions начали падать:
+база не читалась, а запасного файла не было вовсе. Порядок восстановлен:
+файл — основа, база — дополнение.
 
 ФОРМАТ ДОКУМЕНТА
     mail_lists/<uid> = {
@@ -68,12 +70,23 @@ def load_recipients(kind: str, fallback_file) -> list[str]:
     Returns:
         Список адресов без дублей, в исходном порядке.
     """
+    # 1. Файл в репозитории — основной источник: не зависит от настроек CI.
+    if fallback_file is not None:
+        from_file = _read_from_file(kind, fallback_file, required=False)
+        if from_file:
+            logger.info(f"Получатели «{kind}» из файла: {len(from_file)}")
+            return from_file
+
+    # 2. Firestore — если файла нет или он пуст.
     from_firestore = _read_from_firestore(kind)
     if from_firestore:
         logger.info(f"Получатели «{kind}» из Firestore: {len(from_firestore)}")
         return from_firestore
 
-    return _read_from_file(kind, fallback_file)
+    raise RuntimeError(
+        f"Список получателей «{kind}» пуст: нет ни файла-списка, ни адресов "
+        "в приложении. Заполните файл в репозитории или список «Списки»."
+    )
 
 
 def _has_kind(item: dict, kind: str) -> bool:
@@ -119,25 +132,35 @@ def _read_from_firestore(kind: str) -> list[str]:
     return result
 
 
-def _read_from_file(kind: str, fallback_file) -> list[str]:
+def _read_from_file(kind: str, fallback_file, required: bool = True) -> list[str]:
+    """Адреса из txt-файла.
+
+    required=False — файла может не быть: тогда возвращается пустой список,
+    и вызывающий код пробует следующий источник (Firestore). Так список
+    живёт в репозитории, но не мешает рассылкам без своего файла.
+    """
     from pathlib import Path
+
+    if fallback_file is None:
+        return []
 
     path = Path(fallback_file)
     if not path.exists():
-        raise RuntimeError(
-            f"Список получателей «{kind}» пуст: в Firestore нет адресов, "
-            f"а файл {path} не найден. Заполните список на странице «Списки»."
-        )
+        if required:
+            raise RuntimeError(
+                f"Файл со списком получателей «{kind}» не найден: {path}. "
+                "Заполните файл в репозитории или список «Списки» в приложении."
+            )
+        return []
 
     lines = path.read_text(encoding="utf-8").splitlines()
     recipients = [
         line.strip() for line in lines
         if line.strip() and not line.strip().startswith("#")
     ]
-    if not recipients:
+    if not recipients and required:
         raise RuntimeError(f"Список получателей пуст: {path}")
 
-    logger.info(f"Получатели «{kind}» из файла {path.name}: {len(recipients)}")
     return recipients
 
 
