@@ -26,10 +26,8 @@ import type { WorkflowScenario, WorkflowInput } from '@/types';
 const MON_TUE_PROJECT_OPTIONS = [
   { label: 'lemur', value: 'lemur' },
   { label: 'ukhta', value: 'ukhta' },
-  { label: 'order', value: 'order' },
+  { label: 'order_prus', value: 'order_prus' },
   { label: 'dz', value: 'dz' },
-  { label: 'clients', value: 'clients' },
-  { label: 'payments', value: 'payments' },
   { label: 'veta', value: 'veta' },
 ];
 
@@ -55,7 +53,7 @@ const SCENARIOS: WorkflowScenario[] = [
     name: 'Прайс Ухта, Лемур, Дебеторка, счет Вета',
     day: 'пн',
     time: '9:00',
-    description: 'Группа понедельник–вторник. Лемур (Прусакова): проверка письма от zookingdom@mail.ru с прайсом, конвертация .xls→.xlsx, раскраска и рассылка клиентам. Ухта: проверка прайса, конвертация, удаление строк «Мит Гарден», рассылка. Заказ Прусакова оператору: пересылка заказов от zoo2017ukhta@yandex.ru на zookingdom@mail.ru. Дебиторка Ухта: разбор файла задолженности, отчёт по просрочкам. Счета клиентам по списку: пересылка Excel-вложений получателям по ключам тем. Платёжки клиентов оператору: пересылка вложений Excel/PDF от 4 клиентов оператору zookingdom@mail.ru.',
+    description: 'Группа понедельника. Проекты для запуска: lemur, ukhta, order_prus, dz, veta. Лемур (Прусакова): проверка письма от zookingdom@mail.ru с прайсом, конвертация .xls→.xlsx, раскраска и рассылка клиентам. Ухта: проверка прайса, конвертация, удаление строк «Мит Гарден», рассылка. Заказ Прусакова оператору: пересылка заказов от zoo2017ukhta@yandex.ru на zookingdom@mail.ru. Дебиторка Ухта: разбор файла задолженности, отчёт по просрочкам.',
     inputs: [
       { key: 'test_mode', label: 'Тестовый режим (только вам, не клиентам)', type: 'boolean', defaultValue: false, description: '', required: false },
       { key: 'only', label: 'Проекты для запуска', type: 'multiselect', defaultValue: [], description: 'Пусто = вся группа', required: false, options: MON_TUE_PROJECT_OPTIONS },
@@ -170,7 +168,7 @@ const ALL_SCRIPTS = [
     schedule: 'пн — в любое время (слот дня)',
   },
   {
-    id: 'order',
+    id: 'order_prus',
     name: 'Заказ Прусакова оператору',
     description: 'Пересылает заказы клиента zoo2017ukhta@yandex.ru оператору zookingdom@mail.ru. Классифицирует темы: заказ, корректировка, доп.заказ, игнорирует "ЗАКАЗ АММА". Уведомляет о комментариях к заказу.',
     schedule: 'пн — 07:00–11:30 МСК',
@@ -203,7 +201,7 @@ const ALL_SCRIPTS = [
     id: 'clients',
     name: 'Счета клиентам по списку',
     description: 'Пересылает Excel-вложения из писем от zookingdom@mail.ru получателям по ключам тем (8 клиентов). Уведомляет "Счет отправлен клиенту <Имя>".',
-    schedule: 'пн, вт — 09:24–17:24 МСК',
+    schedule: 'вт — 09:24–17:24 МСК (сценарий «Прайс Ухта»)',
   },
   {
     id: 'debt_ukhta',
@@ -215,7 +213,7 @@ const ALL_SCRIPTS = [
     id: 'payments',
     name: 'Платёжки клиентов оператору',
     description: 'Пересылает вложения Excel/PDF от 4 клиентов (Солодовник, Прусакова, ООО "Вета", Смирнов) оператору zookingdom@mail.ru с темой "Платежка от <Имя>". Уведомляет об успешной передаче.',
-    schedule: 'пн, вт — 10:27–17:27 МСК',
+    schedule: 'вт — 10:27–17:27 МСК (сценарий «Прайс Ухта»)',
   },
   {
     id: 'kpi',

@@ -40,7 +40,7 @@ test('requires an explicit test_mode for workflows that can send real emails', (
 
 test('PROJECT_ALLOWLIST contains all real project keys from run_all.py', () => {
   const expected = new Set([
-    'order', 'ukhta', 'veta', 'clients', 'payments', 'invoice', 'veles',
+    'order_prus', 'ukhta', 'veta', 'clients', 'payments', 'invoice', 'veles',
     'lemur', 'dz', 'sety', 'debt_ukhta', 'mamedov',
   ]);
   assert.deepEqual([...PROJECT_ALLOWLIST].sort(), [...expected].sort());

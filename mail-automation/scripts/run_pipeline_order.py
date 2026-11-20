@@ -268,7 +268,7 @@ class OrderProject(ProjectBase):
 
     def __init__(self) -> None:
         super().__init__(
-            key="order",
+            key="order_prus",
             title="Заказ Прусакова",
             retry_before=FIRST_CHECK_TIME,
             deadline=DEADLINE_TIME,

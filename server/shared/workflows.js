@@ -13,7 +13,7 @@
  */
 
 export const PROJECT_ALLOWLIST = new Set([
-  'order', 'ukhta', 'veta', 'clients', 'payments', 'invoice', 'veles',
+  'order_prus', 'ukhta', 'veta', 'clients', 'payments', 'invoice', 'veles',
   'lemur', 'dz', 'sety', 'debt_ukhta', 'mamedov',
 ]);
 

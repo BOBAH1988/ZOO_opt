@@ -12,7 +12,7 @@ on:
         type: boolean
         default: false
       only:
-        description: 'Один проект (можно любой, даже из другой группы): invoice/veles/order/ukhta/veta/debt_ukhta/clients/payments/lemur/dz/sety. Пусто = вся группа'
+        description: 'Один проект (можно любой, даже из другой группы): invoice/veles/order_prus/ukhta/veta/debt_ukhta/clients/payments/lemur/dz/sety. Пусто = вся группа'
         type: string
         default: ''
       ignore_window:

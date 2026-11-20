@@ -91,7 +91,7 @@ SAT, SUN = 5, 6
 # напоминание уходит один раз, а не при каждой последующей проверке.
 JOBS = [
     {
-        "key": "order",
+        "key": "order_prus",
         "group": "mon_tue",
         "title": "Проект 4: заказ Прусакова оператору",
         "module": "run_pipeline_order",
@@ -127,18 +127,18 @@ JOBS = [
         "group": "mon_tue",
         "title": "Проект 9: счета клиентам по списку",
         "module": "run_pipeline_clients_invoice",
-        "days": {MON, TUE},
+        "days": {TUE},
         "window": ((9, 0), (17, 30)),   # дедлайна нет
-        "standalone": True,  # свой workflow для ручного запуска: weekly_project_9.yml
+        "standalone": True,  # запуск только вручную: сценарий "Прайс Ухта" (вт)
     },
     {
         "key": "payments",
         "group": "mon_tue",
         "title": "Проект 11: платёжки клиентов оператору",
         "module": "run_pipeline_payments",
-        "days": {MON, TUE},
+        "days": {TUE},
         "window": ((10, 0), (17, 30)),  # дедлайна нет
-        "standalone": True,  # свой workflow для ручного запуска: weekly_project_11.yml
+        "standalone": True,  # запуск только вручную: сценарий "Прайс Ухта" (вт)
     },
     {
         "key": "invoice",
