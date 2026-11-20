@@ -26,6 +26,22 @@ const KIND_SHORT: Record<ListKind, string> = {
 
 const ALL_KINDS: ListKind[] = ['ukhta', 'sety', 'debt', 'lemur'];
 
+/** Имена файлов в репозитории — ровно те, что читают скрипты рассылок. */
+const KIND_FILES: Record<ListKind, string> = {
+  ukhta: 'recipients_ukhta.txt',
+  sety: 'recipients_sety_ukhta.txt',
+  debt: 'clients_debt_ukhta.txt',
+  lemur: 'recipients_lemur.txt',
+};
+
+/** Заголовок файла: пояснение для того, кто откроет его в репозитории. */
+const KIND_FILE_HEADERS: Record<ListKind, string> = {
+  ukhta: '# Получатели прайса Ухты. Один адрес на строку.',
+  sety: '# Получатели прайса сетям. Один адрес на строку.',
+  debt: '# Клиенты дебиторки: «Имя - email», по одному на строку.',
+  lemur: '# Получатели прайса Лемур. Один адрес на строку.',
+};
+
 /**
  * Одна запись списка.
  *
@@ -406,6 +422,48 @@ export function ListsPage() {
     }
   };
 
+  /**
+   * Скачивает список в том формате, который читают скрипты рассылок.
+   *
+   * Зачем: файл в репозитории — основной источник для рассылки, а
+   * приложение — удобный редактор. Кнопка замыкает цикл: поправили в
+   * приложении, скачали, заменили файл в репозитории, закоммитили.
+   *
+   * Отключённые адреса в файл не попадают: рассылка их пропускает, и
+   * держать их в списке получателей незачем.
+   */
+  const handleDownload = (kind: ListKind) => {
+    const rows = entries
+      .filter((item) => item.kinds.includes(kind) && item.active)
+      .sort((a, b) => a.email.localeCompare(b.email));
+
+    if (rows.length === 0) {
+      setError(`В списке «${KIND_LABELS[kind]}» нет активных адресов — файл не создан.`);
+      return;
+    }
+
+    const lines = rows.map((item) => {
+      // Для дебиторки скрипт ждёт пару «Имя - email»: по имени он ищет
+      // клиента в файле задолженности.
+      if (kind === 'debt') {
+        const name = (item.name ?? '').trim() || item.email;
+        return `${name} - ${item.email}`;
+      }
+      return item.email;
+    });
+
+    const content = [KIND_FILE_HEADERS[kind], '', ...lines, ''].join('\n');
+    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = KIND_FILES[kind];
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
   const visible = useMemo(() => {
     const needle = search.trim().toLowerCase();
     return entries
@@ -507,6 +565,19 @@ export function ListsPage() {
             title="Прочитать адреса из файлов recipients_ukhta, recipients_sety_ukhta и clients_debt_ukhta"
           >
             {importing ? 'Чтение файлов…' : 'Загрузить из файлов'}
+          </button>
+          <button
+            type="button"
+            className="btn btn-outline"
+            onClick={() => filterKind !== 'all' && handleDownload(filterKind)}
+            disabled={entries.length === 0 || filterKind === 'all'}
+            title={
+              filterKind === 'all'
+                ? 'Выберите конкретный список в фильтре слева — файл скачается в формате, который читают скрипты рассылок'
+                : `Скачать «${KIND_LABELS[filterKind]}» как ${KIND_FILES[filterKind]}`
+            }
+          >
+            Скачать .txt
           </button>
         </div>
 
